@@ -1,0 +1,127 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum BoxLevel {
+  BASIC
+  SILVER
+  GOLD
+  PLATINUM
+}
+
+enum VoucherCategory {
+  TRAFFIC_MAGNET
+  LIFESTYLE
+  ANCHOR
+}
+
+enum PartnerCategory {
+  HORECA
+  BEAUTY_SPA
+  AUTO_MOTO
+  SERVICES
+  ENTERTAINMENT
+}
+
+enum StaffRole {
+  WAITER
+  MANAGER
+  OWNER
+}
+
+enum VoucherStatus {
+  ACTIVE
+  REDEEMED
+  EXPIRED
+}
+
+model User {
+  id          String           @id @default(uuid())
+  telegramId  BigInt           @unique
+  username    String?
+  firstName   String
+  lastName    String?
+  createdAt   DateTime         @default(now())
+  wallet      ClaimedVoucher[]
+}
+
+model Partner {
+  id             String          @id @default(uuid())
+  name           String
+  category       PartnerCategory
+  logoUrl        String
+  address        String
+  lat            Float?
+  lng            Float?
+  activeStatus   Boolean         @default(true)
+  basicThreshold Float           @default(0)
+  silverThreshold Float          @default(300000)
+  goldThreshold  Float           @default(600000)
+  platinumThreshold Float        @default(1000000)
+  
+  staffMembers   StaffMember[]
+  voucherOffers  VoucherOffer[]
+  tokens         StaffIssuanceToken[]
+}
+
+model StaffMember {
+  id                String               @id @default(uuid())
+  partnerId         String
+  partner           Partner              @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  telegramId        BigInt?
+  name              String
+  role              StaffRole            @default(WAITER)
+  activeShiftsCount Int                  @default(1)
+  boxesIssuedCount  Int                  @default(0)
+  
+  tokens            StaffIssuanceToken[]
+}
+
+model VoucherOffer {
+  id            String          @id @default(uuid())
+  partnerId     String
+  partner       Partner         @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  title         String
+  description   String
+  category      VoucherCategory
+  discountValue String
+  imageUrl      String
+  validityHours Int             @default(48)
+  totalLimit    Int             @default(1000)
+  claimedCount  Int             @default(0)
+
+  claimed       ClaimedVoucher[]
+}
+
+model ClaimedVoucher {
+  id             String       @id @default(uuid())
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  voucherOfferId String
+  voucherOffer   VoucherOffer @relation(fields: [voucherOfferId], references: [id], onDelete: Cascade)
+  status         VoucherStatus @default(ACTIVE)
+  claimedAt      DateTime     @default(now())
+  expiresAt      DateTime
+  redeemedAt     DateTime?
+  qrCodeSecret   String       @unique @default(uuid())
+}
+
+model StaffIssuanceToken {
+  token           String       @id @default(uuid())
+  staffId         String
+  staff           StaffMember  @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  partnerId       String
+  partner         Partner      @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  boxLevel        BoxLevel
+  checkAmount     Float?
+  createdAt       DateTime     @default(now())
+  expiresAt       DateTime
+  isUsed          Boolean      @default(false)
+  claimedByUserId String?
+}
