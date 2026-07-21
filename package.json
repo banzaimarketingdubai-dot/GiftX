@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "npm --prefix server run prisma:generate && npm --prefix client run build",
+    "build": "cd server && npm install && npx prisma generate && cd ../client && npm install && npm run build",
     "dev:server": "npm --prefix server run dev",
     "dev:client": "npm --prefix client run dev",
     "prisma:generate": "npm --prefix server run prisma:generate",
