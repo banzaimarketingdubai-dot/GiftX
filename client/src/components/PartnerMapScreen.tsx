@@ -99,6 +99,20 @@ export const PartnerMapScreen: React.FC = () => {
     }
   };
 
+  const [mapStyle, setMapStyle] = useState<'GOOGLE_ROADMAP' | 'GOOGLE_SATELLITE' | 'DARK'>('GOOGLE_ROADMAP');
+  const activeTileLayerRef = useRef<L.TileLayer | null>(null);
+
+  const getTileUrl = (style: string) => {
+    switch (style) {
+      case 'GOOGLE_SATELLITE':
+        return 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}';
+      case 'DARK':
+        return 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+      default:
+        return 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}';
+    }
+  };
+
   // Инициализация интерактивной карты Leaflet
   useEffect(() => {
     if (!mapContainerRef.current || leafletMapRef.current) return;
@@ -108,10 +122,11 @@ export const PartnerMapScreen: React.FC = () => {
       attributionControl: false,
     }).setView([10.15, 103.98], 11);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
+    const initialTileLayer = L.tileLayer(getTileUrl(mapStyle), {
+      maxZoom: 20,
     }).addTo(map);
 
+    activeTileLayerRef.current = initialTileLayer;
     markersGroupRef.current = L.layerGroup().addTo(map);
     leafletMapRef.current = map;
 
@@ -123,6 +138,18 @@ export const PartnerMapScreen: React.FC = () => {
       leafletMapRef.current = null;
     };
   }, []);
+
+  // Переключение слоя карты
+  useEffect(() => {
+    if (!leafletMapRef.current) return;
+
+    if (activeTileLayerRef.current) {
+      leafletMapRef.current.removeLayer(activeTileLayerRef.current);
+    }
+
+    const newLayer = L.tileLayer(getTileUrl(mapStyle), { maxZoom: 20 }).addTo(leafletMapRef.current);
+    activeTileLayerRef.current = newLayer;
+  }, [mapStyle]);
 
   // Обновление меток партнеров на карте при фильтрации
   useEffect(() => {
@@ -300,6 +327,31 @@ export const PartnerMapScreen: React.FC = () => {
               <span>{cat.label}</span>
             </button>
           ))}
+        </div>
+
+        {/* Переключатель стилей Google Maps */}
+        <div className="flex items-center justify-between pt-0.5">
+          <span className="text-[10px] uppercase font-bold text-slate-400">Карта:</span>
+          <div className="flex space-x-1 bg-slate-900/90 p-0.5 rounded-xl border border-slate-800">
+            <button
+              onClick={() => { triggerHaptic('light'); setMapStyle('GOOGLE_ROADMAP'); }}
+              className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all ${mapStyle === 'GOOGLE_ROADMAP' ? 'bg-amber-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-slate-200'}`}
+            >
+              🗺️ Google
+            </button>
+            <button
+              onClick={() => { triggerHaptic('light'); setMapStyle('GOOGLE_SATELLITE'); }}
+              className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all ${mapStyle === 'GOOGLE_SATELLITE' ? 'bg-amber-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-slate-200'}`}
+            >
+              🛰️ Спутник
+            </button>
+            <button
+              onClick={() => { triggerHaptic('light'); setMapStyle('DARK'); }}
+              className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all ${mapStyle === 'DARK' ? 'bg-amber-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-slate-200'}`}
+            >
+              🌙 Ночь
+            </button>
+          </div>
         </div>
       </div>
 

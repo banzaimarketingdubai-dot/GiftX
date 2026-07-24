@@ -27,9 +27,61 @@ export const PartnerRegistrationModal: React.FC<PartnerRegistrationModalProps> =
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Живой поиск мест на Google Maps
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showSearchResults, setShowSearchResults] = useState(false);
+
   const mapRef = useRef<HTMLDivElement>(null);
   const leafletMap = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
+
+  // Обработчик живого поиска по названию/адресу
+  useEffect(() => {
+    if (!searchQuery || searchQuery.trim().length < 2) {
+      setSearchResults([]);
+      setShowSearchResults(false);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        setIsSearching(true);
+        const res = await fetch(`/api/guest/places-search?query=${encodeURIComponent(searchQuery)}`);
+        const data = await res.json();
+        if (data.success && data.results) {
+          setSearchResults(data.results);
+          setShowSearchResults(true);
+        }
+      } catch (err) {
+        console.error('Places search failed', err);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const selectPlaceResult = (place: any) => {
+    setName(place.name);
+    setAddress(place.address);
+    setLat(place.lat);
+    setLng(place.lng);
+    if (place.googleRating) setGoogleRating(place.googleRating);
+    if (place.googleReviewsCount) setGoogleReviewsCount(place.googleReviewsCount);
+    if (place.googleMapsUrl) setGoogleMapsUrl(place.googleMapsUrl);
+
+    if (leafletMap.current && markerRef.current) {
+      leafletMap.current.setView([place.lat, place.lng], 16);
+      markerRef.current.setLatLng([place.lat, place.lng]);
+    }
+
+    setShowSearchResults(false);
+    setSearchQuery('');
+    triggerNotificationHaptic('success');
+  };
 
   // Инициализация карты в модалке для выбора локации
   useEffect(() => {
@@ -205,6 +257,46 @@ export const PartnerRegistrationModal: React.FC<PartnerRegistrationModalProps> =
               {error}
             </div>
           )}
+
+          {/* Быстрый поиск заведения на Google Maps */}
+          <div className="relative">
+            <label className="block text-[11px] font-bold uppercase tracking-wider text-amber-400 mb-1 flex items-center justify-between">
+              <span>🔍 Быстрый поиск в Google Картах</span>
+              {isSearching && <span className="text-[10px] text-slate-400 animate-pulse">Поиск...</span>}
+            </label>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Введите название заведения (например, Sunset Beach Club)..."
+              className="w-full py-2.5 px-3 rounded-xl bg-slate-950 border border-amber-500/40 text-slate-100 text-xs focus:border-amber-400 outline-none transition-all shadow-md"
+            />
+
+            {/* Выпадающий список подсказок Google Places */}
+            {showSearchResults && searchResults.length > 0 && (
+              <div className="absolute top-full left-0 right-0 z-30 mt-1 bg-slate-900 border border-amber-500/40 rounded-2xl shadow-2xl overflow-hidden max-h-52 overflow-y-auto">
+                {searchResults.map((place, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => selectPlaceResult(place)}
+                    className="w-full p-3 text-left hover:bg-amber-500/10 border-b border-slate-800 last:border-0 flex items-start space-x-2 transition-all"
+                  >
+                    <span className="text-amber-400 text-sm mt-0.5">📍</span>
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-100 line-clamp-1">{place.name}</h4>
+                      <p className="text-[10px] text-slate-400 line-clamp-1">{place.address}</p>
+                      {place.googleRating && (
+                        <span className="text-[9px] text-amber-400 font-semibold mt-0.5 inline-block">
+                          ⭐ {place.googleRating} ({place.googleReviewsCount} отзывов)
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Название и Категория */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
