@@ -28,16 +28,25 @@ export const App: React.FC = () => {
     // Проверка наличия токена из Telegram WebApp start_param или URL (?claim=TOKEN)
     const urlParams = new URLSearchParams(window.location.search);
     let claim = urlParams.get('claim') || urlParams.get('tgWebAppStartParam');
+    const roleParam = urlParams.get('role');
 
     // Если приложение открыто напрямую через Telegram t.me/bot/app?startapp=TOKEN
     const tgStartParam = (window as any).Telegram?.WebApp?.initDataUnsafe?.start_param;
     if (!claim && tgStartParam) {
-      claim = tgStartParam.replace(/^claim_/, '');
+      if (tgStartParam.startsWith('claim_')) {
+        claim = tgStartParam.replace(/^claim_/, '');
+      } else if (['ADMIN', 'MAP', 'WALLET', 'WAITER'].includes(tgStartParam)) {
+        setRole(tgStartParam as any);
+      }
     }
 
     if (claim) {
       setClaimToken(claim);
       setRole('GUEST');
+    } else if (roleParam && ['ADMIN', 'MAP', 'WALLET', 'WAITER'].includes(roleParam)) {
+      setRole(roleParam as any);
+    } else {
+      setRole('WALLET');
     }
   }, []);
 
@@ -60,13 +69,8 @@ export const App: React.FC = () => {
         <PartnerMapScreen />
       ) : role === 'ADMIN' ? (
         <AdminDashboardScreen />
-      ) : role === 'WALLET' ? (
-        <WalletScreen />
       ) : (
-        <GuestUnpackScreen
-          claimToken="demo-token"
-          onFinished={() => setRole('WALLET')}
-        />
+        <WalletScreen />
       )}
 
       {/* Нижняя навигация */}
