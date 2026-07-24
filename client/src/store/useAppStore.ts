@@ -2,8 +2,8 @@ import { create } from 'zustand';
 import { StaffMember, Partner, ClaimedVoucher } from '../types';
 
 interface AppState {
-  role: 'WAITER' | 'GUEST' | 'WALLET' | 'MAP';
-  setRole: (role: 'WAITER' | 'GUEST' | 'WALLET' | 'MAP') => void;
+  role: 'WAITER' | 'GUEST' | 'WALLET' | 'MAP' | 'ADMIN';
+  setRole: (role: 'WAITER' | 'GUEST' | 'WALLET' | 'MAP' | 'ADMIN') => void;
 
   // Waiter B2B state
   partners: Partner[];

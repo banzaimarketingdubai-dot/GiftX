@@ -1,0 +1,234 @@
+import { Router, Request, Response } from 'express';
+import { prisma } from '../db.js';
+
+export const adminRouter = Router();
+
+// 1. Общая аналитика платформы и заведений
+adminRouter.get('/overview', async (_req: Request, res: Response) => {
+  try {
+    const [
+      totalPartners,
+      totalStaff,
+      totalOffers,
+      totalClaimed,
+      totalRedeemed,
+      partners
+    ] = await Promise.all([
+      prisma.partner.count(),
+      prisma.staffMember.count(),
+      prisma.voucherOffer.count(),
+      prisma.claimedVoucher.count(),
+      prisma.claimedVoucher.count({ where: { status: 'REDEEMED' } }),
+      prisma.partner.findMany({
+        include: {
+          staffMembers: true,
+          voucherOffers: {
+            include: {
+              _count: {
+                select: { claimed: true }
+              }
+            }
+          }
+        }
+      })
+    ]);
+
+    const redemptionRate = totalClaimed > 0 ? Math.round((totalRedeemed / totalClaimed) * 100) : 0;
+
+    return res.json({
+      success: true,
+      stats: {
+        totalPartners,
+        totalStaff,
+        totalOffers,
+        totalClaimed,
+        totalRedeemed,
+        redemptionRate
+      },
+      partners
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 2. Добавление / Редактирование партнера (заведения)
+adminRouter.post('/partner', async (req: Request, res: Response) => {
+  try {
+    const {
+      id,
+      name,
+      category,
+      logoUrl,
+      address,
+      activeStatus,
+      basicThreshold,
+      silverThreshold,
+      goldThreshold,
+      platinumThreshold,
+      lat,
+      lng,
+      googleRating,
+      googleReviewsCount,
+      googleMapsUrl
+    } = req.body;
+
+    if (id) {
+      const updated = await prisma.partner.update({
+        where: { id },
+        data: {
+          ...(name && { name }),
+          ...(category && { category }),
+          ...(logoUrl && { logoUrl }),
+          ...(address && { address }),
+          ...(activeStatus !== undefined && { activeStatus }),
+          ...(basicThreshold !== undefined && { basicThreshold: parseFloat(basicThreshold) }),
+          ...(silverThreshold !== undefined && { silverThreshold: parseFloat(silverThreshold) }),
+          ...(goldThreshold !== undefined && { goldThreshold: parseFloat(goldThreshold) }),
+          ...(platinumThreshold !== undefined && { platinumThreshold: parseFloat(platinumThreshold) }),
+          ...(lat !== undefined && { lat: parseFloat(lat) }),
+          ...(lng !== undefined && { lng: parseFloat(lng) }),
+          ...(googleRating !== undefined && { googleRating: parseFloat(googleRating) }),
+          ...(googleReviewsCount !== undefined && { googleReviewsCount: parseInt(googleReviewsCount) }),
+          ...(googleMapsUrl && { googleMapsUrl })
+        }
+      });
+      return res.json({ success: true, partner: updated, message: 'Заведение успешно обновлено' });
+    } else {
+      if (!name || !category || !address) {
+        return res.status(400).json({ success: false, error: 'Укажите название, категорию и адрес заведения' });
+      }
+
+      const created = await prisma.partner.create({
+        data: {
+          name,
+          category,
+          address,
+          logoUrl: logoUrl || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=200&q=80',
+          activeStatus: activeStatus ?? true,
+          basicThreshold: basicThreshold ? parseFloat(basicThreshold) : 0,
+          silverThreshold: silverThreshold ? parseFloat(silverThreshold) : 300000,
+          goldThreshold: goldThreshold ? parseFloat(goldThreshold) : 600000,
+          platinumThreshold: platinumThreshold ? parseFloat(platinumThreshold) : 1000000,
+          lat: lat ? parseFloat(lat) : 10.1982,
+          lng: lng ? parseFloat(lng) : 103.9634,
+          googleRating: googleRating ? parseFloat(googleRating) : 4.8,
+          googleReviewsCount: googleReviewsCount ? parseInt(googleReviewsCount) : 120,
+          googleMapsUrl: googleMapsUrl || `https://maps.google.com/?q=${encodeURIComponent(address)}`
+        }
+      });
+      return res.json({ success: true, partner: created, message: 'Заведение успешно создано' });
+    }
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 3. Создание / Редактирование сотрудника и назначение ролей (WAITER, MANAGER, OWNER)
+adminRouter.post('/staff', async (req: Request, res: Response) => {
+  try {
+    const { id, partnerId, name, role } = req.body;
+
+    if (!partnerId || !name) {
+      return res.status(400).json({ success: false, error: 'Укажите partnerId и имя сотрудника' });
+    }
+
+    if (id) {
+      const updated = await prisma.staffMember.update({
+        where: { id },
+        data: {
+          name,
+          role: role || 'WAITER',
+          partnerId
+        }
+      });
+      return res.json({ success: true, staff: updated, message: 'Сотрудник успешно обновлен' });
+    } else {
+      const created = await prisma.staffMember.create({
+        data: {
+          partnerId,
+          name,
+          role: role || 'WAITER'
+        }
+      });
+      return res.json({ success: true, staff: created, message: 'Сотрудник успешно добавлен' });
+    }
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Удаление сотрудника
+adminRouter.delete('/staff/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    await prisma.staffMember.delete({ where: { id } });
+    return res.json({ success: true, message: 'Сотрудник удален' });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 4. Создание / Редактирование ваучера заведения
+adminRouter.post('/offer', async (req: Request, res: Response) => {
+  try {
+    const {
+      id,
+      partnerId,
+      title,
+      description,
+      category,
+      discountValue,
+      imageUrl,
+      validityHours,
+      totalLimit
+    } = req.body;
+
+    if (!partnerId || !title || !category || !discountValue) {
+      return res.status(400).json({ success: false, error: 'Обязательные поля: partnerId, title, category, discountValue' });
+    }
+
+    if (id) {
+      const updated = await prisma.voucherOffer.update({
+        where: { id },
+        data: {
+          title,
+          description: description || '',
+          category,
+          discountValue,
+          imageUrl: imageUrl || 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=500&q=80',
+          validityHours: validityHours ? parseInt(validityHours) : 48,
+          totalLimit: totalLimit ? parseInt(totalLimit) : 1000
+        }
+      });
+      return res.json({ success: true, offer: updated, message: 'Ваучер успешно обновлен' });
+    } else {
+      const created = await prisma.voucherOffer.create({
+        data: {
+          partnerId,
+          title,
+          description: description || '',
+          category,
+          discountValue,
+          imageUrl: imageUrl || 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=500&q=80',
+          validityHours: validityHours ? parseInt(validityHours) : 48,
+          totalLimit: totalLimit ? parseInt(totalLimit) : 1000
+        }
+      });
+      return res.json({ success: true, offer: created, message: 'Ваучер успешно создан' });
+    }
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Удаление ваучера
+adminRouter.delete('/offer/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    await prisma.voucherOffer.delete({ where: { id } });
+    return res.json({ success: true, message: 'Ваучер удален' });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
