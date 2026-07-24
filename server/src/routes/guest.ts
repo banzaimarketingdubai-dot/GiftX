@@ -289,3 +289,52 @@ guestRouter.get('/map-partners', async (_req: Request, res: Response) => {
   }
 });
 
+// 6. Telegram Bot Webhook (Ответ на команду /start в чате)
+guestRouter.post('/telegram-webhook', async (req: Request, res: Response) => {
+  try {
+    const update = req.body;
+    const message = update?.message;
+
+    if (message && message.text) {
+      const chatId = message.chat.id;
+      const text = message.text;
+
+      if (text.startsWith('/start')) {
+        const botToken = process.env.TELEGRAM_BOT_TOKEN;
+        const appUrl = process.env.CLIENT_URL || 'https://gift-x.vercel.app';
+        const startParam = text.split(' ')[1] || '';
+
+        if (botToken) {
+          const targetUrl = startParam ? `${appUrl}?claim=${startParam.replace(/^claim_/, '')}` : appUrl;
+          
+          await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              chat_id: chatId,
+              text: '🎉 *Добро пожаловать в GiftX!*\n\nНажмите кнопку ниже, чтобы открыть приложение, получать подарки от партнеров и смотреть карту заведений!',
+              parse_mode: 'Markdown',
+              reply_markup: {
+                inline_keyboard: [
+                  [
+                    {
+                      text: '🎁 Открыть GiftX App',
+                      web_app: { url: targetUrl }
+                    }
+                  ]
+                ]
+              }
+            })
+          });
+        }
+      }
+    }
+
+    return res.json({ ok: true });
+  } catch (error: any) {
+    console.error('Telegram webhook error:', error);
+    return res.json({ ok: true });
+  }
+});
+
+
