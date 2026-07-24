@@ -300,7 +300,7 @@ guestRouter.post('/telegram-webhook', async (req: Request, res: Response) => {
       const text = message.text;
 
       if (text.startsWith('/start')) {
-        const botToken = process.env.TELEGRAM_BOT_TOKEN;
+        const botToken = process.env.TELEGRAM_BOT_TOKEN || '8958055788:AAF3QTtP5l2_CUfbjRFkz0N5brYkWoeE3Xs';
         const appUrl = process.env.CLIENT_URL || 'https://gift-x.vercel.app';
         const startParam = text.split(' ')[1] || '';
 
