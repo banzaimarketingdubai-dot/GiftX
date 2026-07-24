@@ -99,21 +99,21 @@ export const PartnerMapScreen: React.FC = () => {
     }
   };
 
-  const [mapStyle, setMapStyle] = useState<'GOOGLE_ROADMAP' | 'GOOGLE_SATELLITE' | 'DARK'>('GOOGLE_ROADMAP');
-  const activeTileLayerRef = useRef<L.TileLayer | null>(null);
+  const [googlePlaces, setGooglePlaces] = useState<any[]>([]);
 
-  const getTileUrl = (style: string) => {
-    switch (style) {
-      case 'GOOGLE_SATELLITE':
-        return 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}';
-      case 'DARK':
-        return 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
-      default:
-        return 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}';
-    }
-  };
+  // Загрузка близлежащих Google-мест (серые маркеры)
+  useEffect(() => {
+    fetch('/api/guest/google-places-nearby')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.places) {
+          setGooglePlaces(data.places);
+        }
+      })
+      .catch((e) => console.error('Google places fetch error', e));
+  }, []);
 
-  // Инициализация интерактивной карты Leaflet
+  // Инициализация интерактивной 3-цветной минималистичной карты Leaflet
   useEffect(() => {
     if (!mapContainerRef.current || leafletMapRef.current) return;
 
@@ -122,11 +122,12 @@ export const PartnerMapScreen: React.FC = () => {
       attributionControl: false,
     }).setView([10.15, 103.98], 11);
 
-    const initialTileLayer = L.tileLayer(getTileUrl(mapStyle), {
+    // Ультра-чистая 3-цветная карта (CartoDB Dark Matter)
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
       maxZoom: 20,
+      subdomains: 'abcd',
     }).addTo(map);
 
-    activeTileLayerRef.current = initialTileLayer;
     markersGroupRef.current = L.layerGroup().addTo(map);
     leafletMapRef.current = map;
 
@@ -139,19 +140,7 @@ export const PartnerMapScreen: React.FC = () => {
     };
   }, []);
 
-  // Переключение слоя карты
-  useEffect(() => {
-    if (!leafletMapRef.current) return;
-
-    if (activeTileLayerRef.current) {
-      leafletMapRef.current.removeLayer(activeTileLayerRef.current);
-    }
-
-    const newLayer = L.tileLayer(getTileUrl(mapStyle), { maxZoom: 20 }).addTo(leafletMapRef.current);
-    activeTileLayerRef.current = newLayer;
-  }, [mapStyle]);
-
-  // Обновление меток партнеров на карте при фильтрации
+  // Обновление меток партнеров и серых меток Google на карте
   useEffect(() => {
     if (!leafletMapRef.current || !markersGroupRef.current) return;
 
@@ -165,29 +154,91 @@ export const PartnerMapScreen: React.FC = () => {
       return matchCat && matchSearch;
     });
 
-    if (filteredPartners.length === 0) return;
-
     const bounds = L.latLngBounds([]);
 
+    // 1. Отображение обычных бизнесов из Google Maps СЕРЫМИ МАРКЕРАМИ
+    googlePlaces.forEach((place) => {
+      const gLat = place.lat;
+      const gLng = place.lng;
+
+      const grayIconHtml = `
+        <div style="
+          width: 30px;
+          height: 30px;
+          background: #1e293b;
+          border: 1.5px solid #475569;
+          border-radius: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 13px;
+          color: #94a3b8;
+          box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+          cursor: pointer;
+          opacity: 0.85;
+        ">
+          📍
+        </div>
+      `;
+
+      const grayIcon = L.divIcon({
+        className: 'custom-google-gray-marker',
+        html: grayIconHtml,
+        iconSize: [30, 30],
+        iconAnchor: [15, 15],
+      });
+
+      const gMarker = L.marker([gLat, gLng], { icon: grayIcon });
+
+      gMarker.on('click', () => {
+        triggerHaptic('light');
+        setSelectedPartner({
+          id: place.id,
+          name: place.name,
+          category: 'SERVICES',
+          address: place.address,
+          logoUrl: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=150',
+          lat: place.lat,
+          lng: place.lng,
+          googleRating: place.googleRating,
+          googleReviewsCount: place.googleReviewsCount,
+          googleMapsUrl: `https://www.google.com/maps/search/?api=1&query=${place.lat},${place.lng}`
+        } as Partner);
+        leafletMapRef.current?.flyTo([gLat, gLng], 15, { duration: 0.8 });
+      });
+
+      markersGroupRef.current?.addLayer(gMarker);
+    });
+
+    // 2. Отображение заведений-партнеров GiftX ЯРКИМИ ЦВЕТНЫМИ МАРКЕРАМИ
     filteredPartners.forEach((partner) => {
       const partnerLat = partner.lat || 10.1982;
       const partnerLng = partner.lng || 103.9634;
 
       bounds.extend([partnerLat, partnerLng]);
 
-      // Наличие активных ваучеров у пользователя в этом заведении
       const hasUserVouchers = userWallet.some(
         (v) => v.status === 'ACTIVE' && v.voucherOffer?.partnerId === partner.id
       );
 
-      // Иконка в зависимости от категории
+      // Яркие уникальные градиенты по категориям
+      const getCategoryGradient = (cat: string) => {
+        switch (cat) {
+          case 'HORECA': return 'linear-gradient(135deg, #f59e0b, #d97706)';
+          case 'BEAUTY_SPA': return 'linear-gradient(135deg, #ec4899, #be185d)';
+          case 'AUTO_MOTO': return 'linear-gradient(135deg, #3b82f6, #1d4ed8)';
+          case 'ENTERTAINMENT': return 'linear-gradient(135deg, #8b5cf6, #6d28d9)';
+          default: return 'linear-gradient(135deg, #f59e0b, #d97706)';
+        }
+      };
+
       const getCategoryBadge = (cat: string) => {
         switch (cat) {
           case 'HORECA': return '🍸';
           case 'BEAUTY_SPA': return '💆';
           case 'AUTO_MOTO': return '🛵';
           case 'ENTERTAINMENT': return '🛥️';
-          default: return '📍';
+          default: return '🎁';
         }
       };
 
@@ -195,16 +246,17 @@ export const PartnerMapScreen: React.FC = () => {
         <div style="
           width: 44px;
           height: 44px;
-          background: ${hasUserVouchers ? 'linear-gradient(135deg, #f59e0b, #d97706)' : '#1e293b'};
-          border: 2px solid ${hasUserVouchers ? '#fbbf24' : '#334155'};
+          background: ${getCategoryGradient(partner.category)};
+          border: 2px solid ${hasUserVouchers ? '#34d399' : '#ffffff'};
           border-radius: 16px;
           display: flex;
           align-items: center;
           justify-content: center;
           font-size: 20px;
-          box-shadow: 0 8px 20px ${hasUserVouchers ? 'rgba(245, 158, 11, 0.4)' : 'rgba(0,0,0,0.5)'};
+          box-shadow: 0 8px 25px ${hasUserVouchers ? 'rgba(52, 211, 153, 0.6)' : 'rgba(245, 158, 11, 0.4)'};
           position: relative;
           cursor: pointer;
+          transform: scale(1.05);
         ">
           ${getCategoryBadge(partner.category)}
           ${
@@ -225,7 +277,7 @@ export const PartnerMapScreen: React.FC = () => {
       `;
 
       const customIcon = L.divIcon({
-        className: 'custom-partner-marker',
+        className: 'custom-partner-vibrant-marker',
         html: iconHtml,
         iconSize: [44, 44],
         iconAnchor: [22, 22],
@@ -236,7 +288,7 @@ export const PartnerMapScreen: React.FC = () => {
       marker.on('click', () => {
         triggerHaptic('medium');
         setSelectedPartner(partner);
-        leafletMapRef.current?.flyTo([partnerLat, partnerLng], 14, { duration: 0.8 });
+        leafletMapRef.current?.flyTo([partnerLat, partnerLng], 15, { duration: 0.8 });
       });
 
       markersGroupRef.current?.addLayer(marker);
@@ -245,7 +297,7 @@ export const PartnerMapScreen: React.FC = () => {
     if (filteredPartners.length > 0 && !selectedPartner) {
       leafletMapRef.current.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 });
     }
-  }, [partners, selectedCategory, searchQuery, userWallet]);
+  }, [partners, googlePlaces, selectedCategory, searchQuery, userWallet]);
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-slate-950 text-slate-100 pb-20">
@@ -327,31 +379,6 @@ export const PartnerMapScreen: React.FC = () => {
               <span>{cat.label}</span>
             </button>
           ))}
-        </div>
-
-        {/* Переключатель стилей Google Maps */}
-        <div className="flex items-center justify-between pt-0.5">
-          <span className="text-[10px] uppercase font-bold text-slate-400">Карта:</span>
-          <div className="flex space-x-1 bg-slate-900/90 p-0.5 rounded-xl border border-slate-800">
-            <button
-              onClick={() => { triggerHaptic('light'); setMapStyle('GOOGLE_ROADMAP'); }}
-              className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all ${mapStyle === 'GOOGLE_ROADMAP' ? 'bg-amber-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-slate-200'}`}
-            >
-              🗺️ Google
-            </button>
-            <button
-              onClick={() => { triggerHaptic('light'); setMapStyle('GOOGLE_SATELLITE'); }}
-              className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all ${mapStyle === 'GOOGLE_SATELLITE' ? 'bg-amber-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-slate-200'}`}
-            >
-              🛰️ Спутник
-            </button>
-            <button
-              onClick={() => { triggerHaptic('light'); setMapStyle('DARK'); }}
-              className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all ${mapStyle === 'DARK' ? 'bg-amber-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-slate-200'}`}
-            >
-              🌙 Ночь
-            </button>
-          </div>
         </div>
       </div>
 
