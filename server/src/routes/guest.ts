@@ -259,3 +259,33 @@ guestRouter.post('/redeem-voucher', async (req: Request, res: Response) => {
     return res.status(500).json({ success: false, error: error.message });
   }
 });
+
+// 5. Получить партнеров для интерактивной карты
+guestRouter.get('/map-partners', async (_req: Request, res: Response) => {
+  try {
+    const partners = await prisma.partner.findMany({
+      where: { activeStatus: true },
+      include: {
+        voucherOffers: {
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            category: true,
+            discountValue: true,
+            imageUrl: true,
+            validityHours: true
+          }
+        }
+      }
+    });
+
+    return res.json({
+      success: true,
+      partners
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+

@@ -57,8 +57,12 @@ model Partner {
   category       PartnerCategory
   logoUrl        String
   address        String
-  lat            Float?
-  lng            Float?
+  lat                Float?
+  lng                Float?
+  googlePlaceId      String?
+  googleRating       Float?
+  googleReviewsCount Int?            @default(0)
+  googleMapsUrl      String?
   activeStatus   Boolean         @default(true)
   basicThreshold Float           @default(0)
   silverThreshold Float          @default(300000)

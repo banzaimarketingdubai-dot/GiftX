@@ -29,7 +29,7 @@ export const WalletScreen: React.FC = () => {
     fetchWallet();
   }, []);
 
-  const formatRemainingTime = (expiresAtStr: string) => {
+  const formatRemainingTime = (expiresAtStr: string | Date) => {
     const diffMs = new Date(expiresAtStr).getTime() - new Date().getTime();
     if (diffMs <= 0) return 'Сгорел';
 
@@ -121,10 +121,17 @@ export const WalletScreen: React.FC = () => {
                     
                     <div className="mt-2 flex items-center justify-between pt-1 border-t border-slate-800/60">
                       <span className="font-extrabold text-emerald-400 text-xs">{offer?.discountValue}</span>
-                      <span className="text-[10px] text-slate-500 flex items-center space-x-0.5">
-                        <MapPin className="w-3 h-3" />
-                        <span className="truncate max-w-[120px]">{partner?.address}</span>
-                      </span>
+                      
+                      <a
+                        href={partner?.googleMapsUrl || `https://maps.google.com/?q=${encodeURIComponent((partner?.name || '') + ' ' + (partner?.address || ''))}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-[10px] text-amber-400 hover:text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-lg flex items-center space-x-1 transition-all"
+                      >
+                        <MapPin className="w-3 h-3 shrink-0 text-amber-400" />
+                        <span className="truncate max-w-[110px]">{partner?.address}</span>
+                      </a>
                     </div>
                   </div>
                 </div>

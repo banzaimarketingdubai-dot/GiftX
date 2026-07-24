@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import { Gift, Sparkles, AlertTriangle, ShieldCheck, ArrowRight } from 'lucide-react';
+import { Gift, Sparkles, AlertTriangle, ShieldCheck, ArrowRight, MapPin } from 'lucide-react';
 import { triggerHaptic, triggerNotificationHaptic, getTelegramUserData } from '../telegram';
 import { ClaimedVoucher } from '../types';
 import { useAppStore } from '../store/useAppStore';
@@ -267,8 +267,11 @@ export const GuestUnpackScreen: React.FC<GuestUnpackScreenProps> = ({ claimToken
                   </div>
 
                   <div className="mt-4 pt-2 border-t border-white/10 flex justify-between items-center text-[10px] text-neutral-400">
-                    <span>⏳ Срок: {offer?.validityHours}ч</span>
-                    <span className="text-amber-400 font-semibold underline">Подробнее &rarr;</span>
+                    <span className="flex items-center space-x-1 text-amber-400 truncate max-w-[140px]">
+                      <MapPin className="w-3 h-3 shrink-0" />
+                      <span className="truncate">{offer?.partner?.address}</span>
+                    </span>
+                    <span>⏳ {offer?.validityHours}ч</span>
                   </div>
                 </motion.div>
               );

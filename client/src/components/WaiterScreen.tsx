@@ -93,7 +93,10 @@ export const WaiterScreen: React.FC = () => {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const botUsername = (import.meta as any).env?.VITE_TELEGRAM_BOT_USERNAME || 'GiftXAppBot';
+  const telegramAppUrl = `https://t.me/${botUsername}/app?startapp=claim_${activeQrToken}`;
   const appUrl = `${window.location.origin}/?claim=${activeQrToken}`;
+  const qrCodeValue = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? appUrl : telegramAppUrl;
 
   // Выбор персонала, если не выбран
   if (!selectedStaff) {
@@ -210,12 +213,23 @@ export const WaiterScreen: React.FC = () => {
 
               {/* QR Code */}
               <div className="p-4 bg-white rounded-2xl inline-block shadow-inner mb-4">
-                <QRCodeSVG value={appUrl} size={210} level="H" includeMargin={false} />
+                <QRCodeSVG value={qrCodeValue} size={210} level="H" includeMargin={false} />
               </div>
 
               <p className="text-slate-300 text-xs font-medium">
                 Попросите гостя навести камеру смартфона или отсканировать в Telegram
               </p>
+
+              {/* Быстрая кнопка симуляции сканирования для тестирования */}
+              <a
+                href={appUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 inline-flex items-center space-x-1.5 py-2 px-3 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-400 text-xs font-bold hover:bg-amber-500/30 transition-all"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Открыть как гость (Симуляция сканирования QR)</span>
+              </a>
 
               <button
                 onClick={() => setActiveQrToken(null, null, null)}

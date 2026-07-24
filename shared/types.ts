@@ -31,6 +31,12 @@ export interface Partner {
   category: PartnerCategory;
   logoUrl: string;
   address: string;
+  lat?: number;
+  lng?: number;
+  googlePlaceId?: string;
+  googleRating?: number;
+  googleReviewsCount?: number;
+  googleMapsUrl?: string;
   geoCoordinates?: { lat: number; lng: number };
   activeStatus: boolean;
   boxThresholds: {

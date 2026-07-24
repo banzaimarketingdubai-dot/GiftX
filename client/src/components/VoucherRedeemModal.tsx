@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { X, CheckCircle2, AlertCircle, Lock, Building2 } from 'lucide-react';
+import { X, CheckCircle2, AlertCircle, Lock, Building2, MapPin } from 'lucide-react';
 import { ClaimedVoucher } from '../types';
 import { triggerHaptic, triggerNotificationHaptic } from '../telegram';
 
@@ -93,6 +93,17 @@ export const VoucherRedeemModal: React.FC<VoucherRedeemModalProps> = ({
               <Building2 className="w-4 h-4" />
               <span>{partner?.name}</span>
             </div>
+
+            {/* Локация заведения на Google Maps */}
+            <a
+              href={partner?.googleMapsUrl || `https://maps.google.com/?q=${encodeURIComponent(partner?.name + ' ' + partner?.address)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center space-x-1.5 text-xs text-amber-400 font-semibold bg-amber-500/10 border border-amber-500/20 py-1.5 px-3 rounded-xl hover:bg-amber-500/20 transition-all truncate max-w-full"
+            >
+              <MapPin className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">{partner?.address}</span>
+            </a>
 
             <img
               src={offer?.imageUrl}
