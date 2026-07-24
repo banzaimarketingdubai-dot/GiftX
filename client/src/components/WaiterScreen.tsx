@@ -93,7 +93,7 @@ export const WaiterScreen: React.FC = () => {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const botUsername = (import.meta as any).env?.VITE_TELEGRAM_BOT_USERNAME || 'GiftXAppBot';
+  const botUsername = (import.meta as any).env?.VITE_TELEGRAM_BOT_USERNAME || 'giftx2025_bot';
   const telegramAppUrl = `https://t.me/${botUsername}/app?startapp=claim_${activeQrToken}`;
   const appUrl = `${window.location.origin}/?claim=${activeQrToken}`;
   const qrCodeValue = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? appUrl : telegramAppUrl;
