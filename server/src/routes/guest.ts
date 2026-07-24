@@ -226,7 +226,7 @@ guestRouter.post('/redeem-voucher', async (req: Request, res: Response) => {
 
     const voucher = await prisma.claimedVoucher.findUnique({
       where: { qrCodeSecret },
-      include: { voucherOffer: { include: { partner: true } } }
+      include: { voucherOffer: { include: { partner: true } }, user: true }
     });
 
     if (!voucher) {
@@ -247,8 +247,33 @@ guestRouter.post('/redeem-voucher', async (req: Request, res: Response) => {
         status: 'REDEEMED',
         redeemedAt: new Date()
       },
-      include: { voucherOffer: { include: { partner: true } } }
+      include: { voucherOffer: { include: { partner: true } }, user: true }
     });
+
+    // Отправка уведомления пользователю в Telegram при гашении
+    const botToken = process.env.TELEGRAM_BOT_TOKEN || '8958055788:AAF3QTtP5l2_CUfbjRFkz0N5brYkWoeE3Xs';
+    if (botToken && updatedVoucher.user?.telegramId) {
+      const partnerName = updatedVoucher.voucherOffer?.partner?.name || 'Партнер';
+      const offerTitle = updatedVoucher.voucherOffer?.title || 'Ваучер';
+      const mapsUrl = updatedVoucher.voucherOffer?.partner?.googleMapsUrl || 'https://maps.google.com';
+
+      fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: updatedVoucher.user.telegramId.toString(),
+          text: `🎉 *Ваучер успешно погашен!*\n\nВы только что использоваили подарок *${offerTitle}* в заведении *${partnerName}*!\n\n⭐️ Понравился сервис? Пожалуйста, оставьте отзыв заведению на Google Maps:`,
+          parse_mode: 'Markdown',
+          reply_markup: {
+            inline_keyboard: [
+              [
+                { text: '⭐ Оставить отзыв на Google Maps', url: mapsUrl }
+              ]
+            ]
+          }
+        })
+      }).catch(err => console.error('Failed to send Telegram notification:', err));
+    }
 
     return res.json({
       success: true,
@@ -260,23 +285,12 @@ guestRouter.post('/redeem-voucher', async (req: Request, res: Response) => {
   }
 });
 
-// 5. Получить партнеров для интерактивной карты
+// 5. Все партнеры на карте
 guestRouter.get('/map-partners', async (_req: Request, res: Response) => {
   try {
     const partners = await prisma.partner.findMany({
-      where: { activeStatus: true },
       include: {
-        voucherOffers: {
-          select: {
-            id: true,
-            title: true,
-            description: true,
-            category: true,
-            discountValue: true,
-            imageUrl: true,
-            validityHours: true
-          }
-        }
+        voucherOffers: true
       }
     });
 
@@ -289,7 +303,7 @@ guestRouter.get('/map-partners', async (_req: Request, res: Response) => {
   }
 });
 
-// 6. Telegram Bot Webhook (Ответ на команду /start в чате)
+// 6. Telegram Bot Webhook (Интерактивные диалоги и команды бота)
 guestRouter.post('/telegram-webhook', async (req: Request, res: Response) => {
   try {
     const update = req.body;
@@ -297,36 +311,97 @@ guestRouter.post('/telegram-webhook', async (req: Request, res: Response) => {
 
     if (message && message.text) {
       const chatId = message.chat.id;
-      const text = message.text;
+      const text = message.text.trim();
+      const botToken = process.env.TELEGRAM_BOT_TOKEN || '8958055788:AAF3QTtP5l2_CUfbjRFkz0N5brYkWoeE3Xs';
+      const appUrl = process.env.CLIENT_URL || 'https://gift-x.vercel.app';
 
+      const sendMessage = async (replyText: string, keyboardButtons?: any[]) => {
+        if (!botToken) return;
+        await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text: replyText,
+            parse_mode: 'Markdown',
+            reply_markup: keyboardButtons ? { inline_keyboard: keyboardButtons } : undefined
+          })
+        });
+      };
+
+      // 1. Команда /start
       if (text.startsWith('/start')) {
-        const botToken = process.env.TELEGRAM_BOT_TOKEN || '8958055788:AAF3QTtP5l2_CUfbjRFkz0N5brYkWoeE3Xs';
-        const appUrl = process.env.CLIENT_URL || 'https://gift-x.vercel.app';
         const startParam = text.split(' ')[1] || '';
+        const targetUrl = startParam ? `${appUrl}?claim=${startParam.replace(/^claim_/, '')}` : appUrl;
 
-        if (botToken) {
-          const targetUrl = startParam ? `${appUrl}?claim=${startParam.replace(/^claim_/, '')}` : appUrl;
-          
-          await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              chat_id: chatId,
-              text: '🎉 *Добро пожаловать в GiftX!*\n\nНажмите кнопку ниже, чтобы открыть приложение, получать подарки от партнеров и смотреть карту заведений!',
-              parse_mode: 'Markdown',
-              reply_markup: {
-                inline_keyboard: [
-                  [
-                    {
-                      text: '🎁 Открыть GiftX App',
-                      web_app: { url: targetUrl }
-                    }
-                  ]
-                ]
-              }
-            })
+        await sendMessage(
+          `🎉 *Добро пожаловать в GiftX!*\n\nCross-Marketing сеть подарочных сертификатов.\n\nПолучайте эксклюзивные подарки, бесплатные напитки и скидки в лучших заведениях города!`,
+          [
+            [{ text: '🎁 Открыть GiftX App', web_app: { url: targetUrl } }],
+            [
+              { text: '👛 Мои Ваучеры', web_app: { url: `${appUrl}?role=WALLET` } },
+              { text: '📍 Карта Заведений', web_app: { url: `${appUrl}?role=MAP` } }
+            ],
+            [{ text: '⚙️ Панель Управляющего', web_app: { url: `${appUrl}?role=ADMIN` } }]
+          ]
+        );
+      }
+
+      // 2. Команда /wallet (Мои подарки прямо в чате бота)
+      else if (text.startsWith('/wallet')) {
+        const userWallet = await prisma.claimedVoucher.findMany({
+          where: {
+            user: { telegramId: BigInt(chatId) },
+            status: 'ACTIVE'
+          },
+          include: { voucherOffer: { include: { partner: true } } },
+          take: 5
+        });
+
+        if (userWallet.length === 0) {
+          await sendMessage(
+            `👛 *Ваш кошелек подарков пуст*\n\nПосещайте заведения-партнеры и сканируйте QR-коды у официантов, чтобы получать подарки!`,
+            [[{ text: '📍 Посмотреть карту заведений', web_app: { url: appUrl } }]]
+          );
+        } else {
+          let walletText = `🎁 *Ваши активные ваучеры (${userWallet.length}):*\n\n`;
+          userWallet.forEach((v, index) => {
+            walletText += `${index + 1}. *${v.voucherOffer.title}*\n`;
+            walletText += `   🏢 Заведение: ${v.voucherOffer.partner.name}\n`;
+            walletText += `   📍 Адрес: ${v.voucherOffer.partner.address}\n\n`;
           });
+
+          await sendMessage(walletText, [
+            [{ text: '📱 Показать QR для официанта в App', web_app: { url: appUrl } }]
+          ]);
         }
+      }
+
+      // 3. Команда /map (Список заведений на карте)
+      else if (text.startsWith('/map')) {
+        const partners = await prisma.partner.findMany({ take: 5 });
+        let mapText = `📍 *Лучшие заведения-партнеры GiftX:*\n\n`;
+        partners.forEach((p, i) => {
+          mapText += `${i + 1}. *${p.name}* (⭐️ ${(p.googleRating || 4.8).toFixed(1)})\n   📍 ${p.address}\n\n`;
+        });
+
+        await sendMessage(mapText, [
+          [{ text: '🗺️ Открыть интерактивную карту', web_app: { url: `${appUrl}?role=MAP` } }]
+        ]);
+      }
+
+      // 4. Команда /help (Инструкции)
+      else if (text.startsWith('/help')) {
+        await sendMessage(
+          `ℹ️ *Инструкция GiftX*\n\n` +
+          `**Для Гостей:**\n` +
+          `1️⃣ Совершайте покупки в заведениях-партнерах.\n` +
+          `2️⃣ Сканируйте QR-код официанта в чеке.\n` +
+          `3️⃣ Открывайте подарочный HappyBox и получайте сертификат в другое заведение!\n\n` +
+          `**Для Официантов & Персонала:**\n` +
+          `Нажмите кнопку «Официант» в Mini App, чтобы генерировать QR-коды для гостей или гасить их ваучеры!`,
+          [[{ text: '🚀 Запустить GiftX App', web_app: { url: appUrl } }]]
+        );
       }
     }
 
