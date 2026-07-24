@@ -52,6 +52,53 @@ export const PartnerMapScreen: React.FC = () => {
     fetchData();
   }, []);
 
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const userMarkerRef = useRef<L.Marker | null>(null);
+
+  const requestUserLocation = (flyTo = true) => {
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const userLat = pos.coords.latitude;
+          const userLng = pos.coords.longitude;
+          setUserLocation({ lat: userLat, lng: userLng });
+
+          if (leafletMapRef.current) {
+            if (flyTo) {
+              leafletMapRef.current.flyTo([userLat, userLng], 14, { duration: 1.2 });
+            }
+
+            if (userMarkerRef.current) {
+              userMarkerRef.current.setLatLng([userLat, userLng]);
+            } else {
+              const userIcon = L.divIcon({
+                className: 'custom-user-marker',
+                html: `
+                  <div style="
+                    width: 22px;
+                    height: 22px;
+                    background: #3b82f6;
+                    border: 3px solid #ffffff;
+                    border-radius: 50%;
+                    box-shadow: 0 0 20px rgba(59, 130, 246, 0.9);
+                    animation: pulse 2s infinite;
+                  "></div>
+                `,
+                iconSize: [22, 22],
+                iconAnchor: [11, 11],
+              });
+              userMarkerRef.current = L.marker([userLat, userLng], { icon: userIcon }).addTo(leafletMapRef.current);
+            }
+          }
+        },
+        (err) => {
+          console.warn('Geolocation failed:', err.message);
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    }
+  };
+
   // Инициализация интерактивной карты Leaflet
   useEffect(() => {
     if (!mapContainerRef.current || leafletMapRef.current) return;
@@ -67,6 +114,9 @@ export const PartnerMapScreen: React.FC = () => {
 
     markersGroupRef.current = L.layerGroup().addTo(map);
     leafletMapRef.current = map;
+
+    // Запрос геопозиции пользователя при загрузке карты
+    requestUserLocation(true);
 
     return () => {
       map.remove();
@@ -188,16 +238,29 @@ export const PartnerMapScreen: React.FC = () => {
             </div>
           </div>
 
-          <button
-            onClick={() => {
-              triggerHaptic('light');
-              setShowRegistrationModal(true);
-            }}
-            className="py-1.5 px-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 font-bold text-xs flex items-center space-x-1 hover:bg-amber-500/20 transition-all"
-          >
-            <PlusCircle className="w-3.5 h-3.5" />
-            <span>+ Добавить место</span>
-          </button>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => {
+                triggerHaptic('medium');
+                requestUserLocation(true);
+              }}
+              title="Мое местоположение"
+              className="w-8 h-8 rounded-xl bg-blue-500/20 border border-blue-500/30 text-blue-400 font-bold flex items-center justify-center hover:bg-blue-500/30 transition-all shadow-md"
+            >
+              🎯
+            </button>
+
+            <button
+              onClick={() => {
+                triggerHaptic('light');
+                setShowRegistrationModal(true);
+              }}
+              className="py-1.5 px-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 font-bold text-xs flex items-center space-x-1 hover:bg-amber-500/20 transition-all"
+            >
+              <PlusCircle className="w-3.5 h-3.5" />
+              <span>+ Добавить место</span>
+            </button>
+          </div>
         </div>
 
         {/* Поисковая строка */}
