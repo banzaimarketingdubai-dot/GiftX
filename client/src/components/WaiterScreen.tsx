@@ -94,7 +94,10 @@ export const WaiterScreen: React.FC = () => {
   };
 
   const botUsername = (import.meta as any).env?.VITE_TELEGRAM_BOT_USERNAME || 'giftx2025_bot';
-  const telegramAppUrl = `https://t.me/${botUsername}/app?startapp=claim_${activeQrToken}`;
+  
+  // 100% надежный вариант запуска через чат бота (работает во всех сторонних сканерах и браузерах)
+  const telegramAppUrl = `https://t.me/${botUsername}?start=claim_${activeQrToken}`;
+  
   const appUrl = `${window.location.origin}/?claim=${activeQrToken}`;
   const qrCodeValue = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? appUrl : telegramAppUrl;
 
