@@ -99,6 +99,71 @@ export const WaiterScreen: React.FC = () => {
   const qrCodeValue = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? appUrl : telegramAppUrl;
 
   // Выбор персонала, если не выбран
+  const displayPartners = partners.length > 0 ? partners : [
+    {
+      id: 'demo-partner-1',
+      name: 'Sunset Beach Club',
+      category: 'HORECA',
+      logoUrl: 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=200&q=80',
+      address: 'Phu Quoc, Long Beach, St 4',
+      lat: 10.1982,
+      lng: 103.9634,
+      googleRating: 4.8,
+      googleReviewsCount: 342,
+      googleMapsUrl: 'https://maps.google.com/?q=Sunset+Beach+Club+Phu+Quoc',
+      activeStatus: true,
+      basicThreshold: 0,
+      silverThreshold: 300000,
+      goldThreshold: 600000,
+      platinumThreshold: 1200000,
+      staffMembers: [
+        {
+          id: 'demo-staff-1',
+          partnerId: 'demo-partner-1',
+          name: 'Алекс (Sunset Bar)',
+          role: 'WAITER',
+          activeShiftsCount: 5,
+          boxesIssuedCount: 14
+        },
+        {
+          id: 'demo-staff-2',
+          partnerId: 'demo-partner-1',
+          name: 'Анна (Менеджер)',
+          role: 'MANAGER',
+          activeShiftsCount: 12,
+          boxesIssuedCount: 42
+        }
+      ]
+    },
+    {
+      id: 'demo-partner-2',
+      name: 'Lotus Wellness & Spa',
+      category: 'BEAUTY_SPA',
+      logoUrl: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=200&q=80',
+      address: 'Phu Quoc, Duong Dong, Main Rd 12',
+      lat: 10.2175,
+      lng: 103.9592,
+      googleRating: 4.9,
+      googleReviewsCount: 215,
+      googleMapsUrl: 'https://maps.google.com/?q=Lotus+Wellness+Spa+Phu+Quoc',
+      activeStatus: true,
+      basicThreshold: 0,
+      silverThreshold: 300000,
+      goldThreshold: 600000,
+      platinumThreshold: 1000000,
+      staffMembers: [
+        {
+          id: 'demo-staff-3',
+          partnerId: 'demo-partner-2',
+          name: 'Мария (Spa)',
+          role: 'WAITER',
+          activeShiftsCount: 8,
+          boxesIssuedCount: 20
+        }
+      ]
+    }
+  ];
+
   if (!selectedStaff) {
     return (
       <div className="p-5 max-w-md mx-auto min-h-screen flex flex-col justify-center">
@@ -111,7 +176,7 @@ export const WaiterScreen: React.FC = () => {
         </div>
 
         <div className="space-y-3">
-          {partners.map((partner) => (
+          {displayPartners.map((partner) => (
             <div key={partner.id} className="glass-card rounded-2xl p-4 border border-slate-800">
               <div className="flex items-center space-x-3 mb-3">
                 <img src={partner.logoUrl} alt={partner.name} className="w-10 h-10 rounded-xl object-cover" />

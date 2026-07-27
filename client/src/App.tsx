@@ -6,11 +6,15 @@ import { GuestUnpackScreen } from './components/GuestUnpackScreen';
 import { WalletScreen } from './components/WalletScreen';
 import { PartnerMapScreen } from './components/PartnerMapScreen';
 import { AdminDashboardScreen } from './components/AdminDashboardScreen';
-import { QrCode, Wallet, MapPin, Sliders } from 'lucide-react';
+import { OnboardingModal } from './components/OnboardingModal';
+import { HelpGuideModal } from './components/HelpGuideModal';
+import { QrCode, Wallet, MapPin, Sliders, HelpCircle, Sparkles } from 'lucide-react';
 
 export const App: React.FC = () => {
   const { role, setRole, setPartners } = useAppStore();
   const [claimToken, setClaimToken] = useState<string | null>(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showHelpGuide, setShowHelpGuide] = useState(false);
 
   useEffect(() => {
     initTelegramApp();
@@ -48,10 +52,37 @@ export const App: React.FC = () => {
     } else {
       setRole('WALLET');
     }
+
+    // Проверка первого захода для вызова интерактивной обучалки
+    const onboarded = localStorage.getItem('giftx_onboarded');
+    if (!onboarded) {
+      setShowOnboarding(true);
+    }
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 relative">
+    <div className="min-h-screen bg-slate-950 text-slate-100 relative pb-16">
+      {/* Верхний брендовый хэдер с кнопкой Инструкции */}
+      <div className="sticky top-0 z-40 bg-slate-950/90 backdrop-blur-xl border-b border-slate-800/80 px-4 py-2.5 flex items-center justify-between max-w-md mx-auto">
+        <div className="flex items-center space-x-2">
+          <div className="w-7 h-7 rounded-lg bg-amber-500/20 border border-amber-500/40 flex items-center justify-center font-black text-amber-400 text-xs">
+            X
+          </div>
+          <span className="font-extrabold text-sm text-gradient-gold tracking-tight">GiftX Pass</span>
+        </div>
+
+        <button
+          onClick={() => {
+            triggerHaptic('light');
+            setShowHelpGuide(true);
+          }}
+          className="py-1 px-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 text-xs font-bold flex items-center space-x-1.5 transition-all shadow-sm shadow-amber-500/10"
+        >
+          <HelpCircle className="w-3.5 h-3.5" />
+          <span>Инструкция</span>
+        </button>
+      </div>
+
       {/* Главный экран в зависимости от роли или токена */}
       {claimToken ? (
         <GuestUnpackScreen
@@ -71,6 +102,17 @@ export const App: React.FC = () => {
         <AdminDashboardScreen />
       ) : (
         <WalletScreen />
+      )}
+
+      {/* Обучающий слайдер на первом входе */}
+      {showOnboarding && <OnboardingModal onClose={() => setShowOnboarding(false)} />}
+
+      {/* Справочник и Инструкции по ролям */}
+      {showHelpGuide && (
+        <HelpGuideModal
+          defaultRole={role === 'WAITER' ? 'WAITER' : role === 'ADMIN' ? 'ADMIN' : 'GUEST'}
+          onClose={() => setShowHelpGuide(false)}
+        />
       )}
 
       {/* Нижняя навигация */}
@@ -142,3 +184,4 @@ export const App: React.FC = () => {
     </div>
   );
 };
+
