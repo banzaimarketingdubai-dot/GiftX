@@ -7,15 +7,18 @@ import { WalletScreen } from './components/WalletScreen';
 import { PartnerMapScreen } from './components/PartnerMapScreen';
 import { AdminDashboardScreen } from './components/AdminDashboardScreen';
 import { ProfileScreen } from './components/ProfileScreen';
+import { GuestHomeScreen } from './components/GuestHomeScreen';
 import { OnboardingModal } from './components/OnboardingModal';
 import { HelpGuideModal } from './components/HelpGuideModal';
-import { Wallet, MapPin, User, HelpCircle, Building2 } from 'lucide-react';
+import { QrScannerModal } from './components/QrScannerModal';
+import { Home, Wallet, MapPin, User, HelpCircle, Building2 } from 'lucide-react';
 
 export const App: React.FC = () => {
   const { role, setRole, setPartners } = useAppStore();
   const [claimToken, setClaimToken] = useState<string | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showHelpGuide, setShowHelpGuide] = useState(false);
+  const [showScannerModal, setShowScannerModal] = useState(false);
   const [isBusinessUser, setIsBusinessUser] = useState(false);
   const [staffInfo, setStaffInfo] = useState<any | null>(null);
 
@@ -73,6 +76,8 @@ export const App: React.FC = () => {
       setRole('GUEST');
     } else if (roleParam && ['ADMIN', 'MAP', 'WALLET', 'WAITER', 'PROFILE'].includes(roleParam)) {
       setRole(roleParam as any);
+    } else if (!role || role === 'GUEST') {
+      setRole('WALLET');
     }
 
     // Проверка первого захода для вызова интерактивной обучалки
@@ -140,8 +145,28 @@ export const App: React.FC = () => {
         <AdminDashboardScreen />
       ) : role === 'PROFILE' ? (
         <ProfileScreen onSwitchToClientMode={() => setRole('WALLET')} />
+      ) : role === 'WALLET' ? (
+        <GuestHomeScreen
+          onOpenScanner={() => setShowScannerModal(true)}
+          onOpenWallet={() => setRole('PROFILE')}
+          onOpenMap={() => setRole('MAP')}
+          onScanTokenSuccess={(token) => {
+            setClaimToken(token);
+          }}
+        />
       ) : (
         <WalletScreen />
+      )}
+
+      {/* Модалка Сканера QR */}
+      {showScannerModal && (
+        <QrScannerModal
+          onClose={() => setShowScannerModal(false)}
+          onScanSuccess={(token) => {
+            setShowScannerModal(false);
+            setClaimToken(token);
+          }}
+        />
       )}
 
       {/* Обучающий слайдер на первом входе */}
@@ -155,15 +180,31 @@ export const App: React.FC = () => {
         />
       )}
 
-      {/* Нижняя навигация (3 Каноничные Кнопки) */}
+      {/* Нижняя навигация (Каноничные Кнопки) */}
       <div className="fixed bottom-0 left-0 right-0 z-40 p-2 bg-slate-950/90 backdrop-blur-xl border-t border-slate-800 flex justify-center space-x-1.5 max-w-md mx-auto">
+        <button
+          onClick={() => {
+            triggerHaptic('light');
+            setClaimToken(null);
+            setRole('WALLET');
+          }}
+          className={`flex-1 py-2 px-2 rounded-2xl flex items-center justify-center space-x-1 text-xs font-extrabold transition-all ${
+            (role === 'WALLET' || role === 'GUEST') && !claimToken
+              ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20'
+              : 'bg-slate-900 text-slate-400 border border-slate-800'
+          }`}
+        >
+          <Home className="w-4 h-4" />
+          <span>Главная</span>
+        </button>
+
         <button
           onClick={() => {
             triggerHaptic('light');
             setClaimToken(null);
             setRole('MAP');
           }}
-          className={`flex-1 py-2 px-2 rounded-2xl flex items-center justify-center space-x-1.5 text-xs font-extrabold transition-all ${
+          className={`flex-1 py-2 px-2 rounded-2xl flex items-center justify-center space-x-1 text-xs font-extrabold transition-all ${
             role === 'MAP' && !claimToken
               ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20'
               : 'bg-slate-900 text-slate-400 border border-slate-800'
@@ -177,25 +218,9 @@ export const App: React.FC = () => {
           onClick={() => {
             triggerHaptic('light');
             setClaimToken(null);
-            setRole('WALLET');
-          }}
-          className={`flex-1 py-2 px-2 rounded-2xl flex items-center justify-center space-x-1.5 text-xs font-extrabold transition-all ${
-            (role === 'WALLET' || role === 'GUEST') && !claimToken
-              ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20'
-              : 'bg-slate-900 text-slate-400 border border-slate-800'
-          }`}
-        >
-          <Wallet className="w-4 h-4" />
-          <span>Подарки</span>
-        </button>
-
-        <button
-          onClick={() => {
-            triggerHaptic('light');
-            setClaimToken(null);
             setRole('PROFILE');
           }}
-          className={`flex-1 py-2 px-2 rounded-2xl flex items-center justify-center space-x-1.5 text-xs font-extrabold transition-all ${
+          className={`flex-1 py-2 px-2 rounded-2xl flex items-center justify-center space-x-1 text-xs font-extrabold transition-all ${
             (role === 'PROFILE' || role === 'ADMIN' || role === 'WAITER') && !claimToken
               ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20'
               : 'bg-slate-900 text-slate-400 border border-slate-800'
@@ -208,5 +233,6 @@ export const App: React.FC = () => {
     </div>
   );
 };
+
 
 
