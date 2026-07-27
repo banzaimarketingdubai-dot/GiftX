@@ -184,6 +184,44 @@ function parseGoogleMapsUrl(url: string): { lat?: number; lng?: number } {
   return {};
 }
 
+// Проверить, является ли пользователь сотрудником/владельцем заведения по Telegram ID
+staffRouter.get('/check-member/:telegramId', async (req: Request, res: Response) => {
+  try {
+    const { telegramId } = req.params;
+    if (!telegramId) {
+      return res.json({ success: true, isStaff: false });
+    }
+
+    try {
+      const staff = await prisma.staffMember.findFirst({
+        where: { telegramId: BigInt(telegramId) },
+        include: { partner: true }
+      });
+
+      if (staff) {
+        return res.json({
+          success: true,
+          isStaff: true,
+          staff: {
+            id: staff.id,
+            partnerId: staff.partnerId,
+            name: staff.name,
+            role: staff.role,
+            boxesIssuedCount: staff.boxesIssuedCount,
+            partner: staff.partner
+          }
+        });
+      }
+
+      return res.json({ success: true, isStaff: false });
+    } catch (dbErr: any) {
+      return res.json({ success: true, isStaff: false });
+    }
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Добавить или обновить локацию заведения с поддержкой выбора на карте и парсинга ссылок Google Maps
 staffRouter.post('/partner/location', async (req: Request, res: Response) => {
   try {
@@ -197,7 +235,8 @@ staffRouter.post('/partner/location', async (req: Request, res: Response) => {
       lng,
       googleMapsUrl,
       googleRating,
-      googleReviewsCount
+      googleReviewsCount,
+      telegramId
     } = req.body;
 
     let finalLat = lat ? parseFloat(lat) : undefined;
@@ -249,6 +288,19 @@ staffRouter.post('/partner/location', async (req: Request, res: Response) => {
           activeStatus: true
         }
       });
+
+      // Если передали telegramId — создаем запись StaffMember со статусом OWNER
+      if (telegramId) {
+        await prisma.staffMember.create({
+          data: {
+            partnerId: created.id,
+            name: name + ' (Владелец)',
+            role: 'OWNER',
+            telegramId: BigInt(telegramId)
+          }
+        }).catch((err) => console.error('Auto create staff member error:', err));
+      }
+
       return res.json({ success: true, partner: created, message: 'Заведение успешно зарегистрировано!' });
     }
   } catch (error: any) {

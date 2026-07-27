@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { MapPin, X, Link as LinkIcon, Star, Check, Globe, Navigation, Building2 } from 'lucide-react';
 import L from 'leaflet';
 import { PartnerCategory } from '../types';
-import { triggerHaptic, triggerNotificationHaptic } from '../telegram';
+import { triggerHaptic, triggerNotificationHaptic, getTelegramUserData } from '../telegram';
 
 interface PartnerRegistrationModalProps {
   onClose: () => void;
@@ -191,6 +191,7 @@ export const PartnerRegistrationModal: React.FC<PartnerRegistrationModalProps> =
     setLoading(true);
 
     try {
+      const tgUser = getTelegramUserData();
       const res = await fetch('/api/staff/partner/location', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -205,6 +206,7 @@ export const PartnerRegistrationModal: React.FC<PartnerRegistrationModalProps> =
           googleMapsUrl,
           googleRating,
           googleReviewsCount,
+          telegramId: tgUser?.id
         }),
       });
 
