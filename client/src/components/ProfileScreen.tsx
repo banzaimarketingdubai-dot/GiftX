@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { getTelegramUserData, triggerHaptic, triggerNotificationHaptic } from '../telegram';
 import { PartnerRegistrationModal } from './PartnerRegistrationModal';
+import { ManageUserRoleModal } from './ManageUserRoleModal';
 import { AdminDashboardScreen } from './AdminDashboardScreen';
 import { WaiterScreen } from './WaiterScreen';
 import { useAppStore } from '../store/useAppStore';
@@ -70,6 +71,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
   const [isStaff, setIsStaff] = useState(false);
   const [staffInfo, setStaffInfo] = useState<any | null>(null);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [showManageRoleModal, setShowManageRoleModal] = useState(false);
   const [viewMode, setViewMode] = useState<'PROFILE' | 'ADMIN' | 'WAITER'>('PROFILE');
 
   // Состояние заявок для заведения владельца/управляющего
@@ -292,36 +294,58 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
 
   return (
     <div className="p-4 max-w-md mx-auto min-h-screen pb-24 text-slate-100 space-y-5">
-      {/* Шапка карточки профиля пользователя */}
-      <div className="glass-card p-5 rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-950 shadow-2xl relative overflow-hidden">
+      {/* Шапка карточки профиля пользователя (Кликабельный блок данных для смены ролей) */}
+      <div 
+        onClick={() => {
+          triggerHaptic('medium');
+          setShowManageRoleModal(true);
+        }}
+        className="glass-card p-5 rounded-3xl border border-slate-800 hover:border-amber-500/50 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-950 shadow-2xl relative overflow-hidden cursor-pointer transition-all active:scale-[0.99] group"
+      >
         <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 blur-3xl rounded-full pointer-events-none" />
 
-        <div className="flex items-center space-x-4">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-600 p-0.5 shadow-lg shadow-amber-500/20 shrink-0">
-            <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center font-black text-2xl text-amber-400">
-              {tgUser?.first_name ? tgUser.first_name[0].toUpperCase() : '👤'}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            {/* Фото из Telegram или аватар */}
+            {tgUser?.photo_url ? (
+              <img
+                src={tgUser.photo_url}
+                alt={tgUser.first_name}
+                className="w-16 h-16 rounded-2xl object-cover border-2 border-amber-500/40 shadow-lg shadow-amber-500/20 shrink-0 group-hover:scale-105 transition-transform"
+              />
+            ) : (
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-600 p-0.5 shadow-lg shadow-amber-500/20 shrink-0 group-hover:scale-105 transition-transform">
+                <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center font-black text-2xl text-amber-400">
+                  {tgUser?.first_name ? tgUser.first_name[0].toUpperCase() : '👤'}
+                </div>
+              </div>
+            )}
+
+            <div>
+              <div className="flex items-center space-x-2">
+                <h1 className="text-lg font-black text-slate-100 group-hover:text-amber-400 transition-colors">
+                  {tgUser?.first_name || 'Пользователь'} {tgUser?.last_name || ''}
+                </h1>
+                {isStaff && (
+                  <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[9px] font-black uppercase">
+                    {staffInfo?.role || 'БИЗНЕС'}
+                  </span>
+                )}
+              </div>
+
+              {tgUser?.username && (
+                <p className="text-xs text-amber-400 font-medium">@{tgUser.username}</p>
+              )}
+
+              <p className="text-[10px] text-slate-500 font-mono mt-0.5">
+                ID: {tgUser?.id || 'Demo-Guest-101'}
+              </p>
             </div>
           </div>
 
-          <div>
-            <div className="flex items-center space-x-2">
-              <h1 className="text-lg font-black text-slate-100">
-                {tgUser?.first_name || 'Пользователь'} {tgUser?.last_name || ''}
-              </h1>
-              {isStaff && (
-                <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[9px] font-black uppercase">
-                  {staffInfo?.role || 'БИЗНЕС'}
-                </span>
-              )}
-            </div>
-
-            {tgUser?.username && (
-              <p className="text-xs text-amber-400 font-medium">@{tgUser.username}</p>
-            )}
-
-            <p className="text-[10px] text-slate-500 font-mono mt-0.5">
-              ID: {tgUser?.id || 'Demo-Guest-101'}
-            </p>
+          <div className="py-1 px-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] font-bold flex items-center space-x-1 shadow-sm shrink-0">
+            <Sliders className="w-3.5 h-3.5" />
+            <span>⚙️ Смена роли</span>
           </div>
         </div>
       </div>
@@ -696,6 +720,42 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
           onClose={() => setShowRegisterModal(false)}
           onSuccess={() => {
             checkStaffRole();
+          }}
+        />
+      )}
+
+      {/* Модалка управления ролями при клике по блоку с именем и фото */}
+      {showManageRoleModal && (
+        <ManageUserRoleModal
+          onClose={() => setShowManageRoleModal(false)}
+          currentStaff={staffInfo}
+          isStaff={isStaff}
+          onRoleChanged={(newRole, newStaff) => {
+            if (newStaff) {
+              setIsStaff(true);
+              setStaffInfo(newStaff);
+              if (newRole === 'WAITER') setViewMode('WAITER');
+              else if (['ADMIN', 'MANAGER', 'OWNER'].includes(newRole)) setViewMode('ADMIN');
+              else setViewMode('PROFILE');
+            } else {
+              setIsStaff(false);
+              setStaffInfo(null);
+              setViewMode('PROFILE');
+              setRole('PROFILE');
+            }
+          }}
+          onOpenVenueSearch={() => {
+            setViewMode('WAITER');
+          }}
+          onOpenPartnerRegister={() => {
+            setShowRegisterModal(true);
+          }}
+          onClearStaffRole={() => {
+            localStorage.removeItem('giftx_demo_staff');
+            setIsStaff(false);
+            setStaffInfo(null);
+            setViewMode('PROFILE');
+            setRole('PROFILE');
           }}
         />
       )}

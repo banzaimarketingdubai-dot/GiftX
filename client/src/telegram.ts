@@ -46,13 +46,19 @@ export function triggerNotificationHaptic(type: 'error' | 'success' | 'warning' 
 
 export function getTelegramUserData() {
   if (tg?.initDataUnsafe?.user) {
-    return tg.initDataUnsafe.user;
+    return {
+      id: tg.initDataUnsafe.user.id,
+      first_name: tg.initDataUnsafe.user.first_name,
+      last_name: tg.initDataUnsafe.user.last_name || '',
+      username: tg.initDataUnsafe.user.username || '',
+      photo_url: tg.initDataUnsafe.user.photo_url || null,
+    };
   }
-  // Mock data for local browser testing
   return {
-    id: 999888777,
-    first_name: 'Алексей',
-    last_name: 'Гость',
-    username: 'alex_guest'
+    id: 1001,
+    first_name: 'Гость',
+    last_name: '',
+    username: '',
+    photo_url: null,
   };
 }

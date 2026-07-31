@@ -324,3 +324,14 @@ adminRouter.post('/applications/:id/reject', async (req: Request, res: Response)
   }
 });
 
+// 8. Удаление партнера (заведения)
+adminRouter.delete('/partner/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    await prisma.partner.delete({ where: { id } });
+    return res.json({ success: true, message: 'Заведение и его данные успешно удалены' });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+

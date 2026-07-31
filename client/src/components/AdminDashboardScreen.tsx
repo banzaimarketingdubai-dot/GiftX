@@ -155,6 +155,23 @@ export const AdminDashboardScreen: React.FC = () => {
     }
   };
 
+  // Удаление заведения
+  const handleDeletePartner = async (partnerId: string, partnerName: string) => {
+    if (!confirm(`Вы уверены, что хотите полностью удалить заведение «${partnerName}» и всех привязанных сотрудников?`)) return;
+    try {
+      const res = await fetch(`/api/admin/partner/${partnerId}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        triggerNotificationHaptic('success');
+        fetchOverview();
+      } else {
+        alert('Ошибка: ' + data.error);
+      }
+    } catch (e: any) {
+      console.error('Delete partner error', e);
+    }
+  };
+
   // Удаление сотрудника
   const handleDeleteStaff = async (staffId: string) => {
     if (!confirm('Удалить данного сотрудника?')) return;
@@ -334,16 +351,26 @@ export const AdminDashboardScreen: React.FC = () => {
                     </div>
                   </div>
 
-                  <button
-                    onClick={() => {
-                      triggerHaptic('light');
-                      setEditingPartner(partner);
-                      setShowPartnerModal(true);
-                    }}
-                    className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700"
-                  >
-                    <Edit className="w-4 h-4" />
-                  </button>
+                  <div className="flex items-center space-x-1">
+                    <button
+                      onClick={() => {
+                        triggerHaptic('light');
+                        setEditingPartner(partner);
+                        setShowPartnerModal(true);
+                      }}
+                      title="Редактировать заведение и пороги чеков"
+                      className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDeletePartner(partner.id, partner.name)}
+                      title="Удалить заведение"
+                      className="p-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Пороги выработки чеков */}
