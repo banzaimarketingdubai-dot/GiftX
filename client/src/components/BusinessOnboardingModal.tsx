@@ -1,42 +1,55 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Gift, QrCode, MapPin, Sparkles, ChevronRight, ChevronLeft, X, CheckCircle2 } from 'lucide-react';
+import { Building2, Gift, Users, TrendingUp, ChevronRight, ChevronLeft, X, CheckCircle2, Sparkles, ArrowRight } from 'lucide-react';
 import { triggerHaptic } from '../telegram';
 
-interface OnboardingModalProps {
+interface BusinessOnboardingModalProps {
   onClose: () => void;
+  onProceedToRegistration: () => void;
 }
 
-export const OnboardingModal: React.FC<OnboardingModalProps> = ({ onClose }) => {
+export const BusinessOnboardingModal: React.FC<BusinessOnboardingModalProps> = ({
+  onClose,
+  onProceedToRegistration,
+}) => {
   const [currentStep, setCurrentStep] = useState(0);
 
   const steps = [
     {
-      icon: Gift,
+      icon: Building2,
       color: 'from-amber-500 to-amber-600',
-      badge: 'ШАГ 1 ИЗ 3: О СЕРВИСЕ',
-      title: 'Что такое GiftX VIP Pass?',
-      subtitle: 'Инновационная система привилегий и подарков',
-      description: 'Каждый раз, когда вы отдыхаете в ресторанах, СПА и барах сети GiftX, вам вручают подарочные боксы с бесплатными сертификатами в лучшие заведения города!',
-      illustration: '🍷 🍸 💆‍♀️ 🎟️'
+      badge: 'ШАГ 1 ИЗ 4: ЗАВЕДЕНИЕ',
+      title: 'Создание профиля заведения',
+      subtitle: 'Укажите координаты Google Maps, категорию и адрес',
+      description: 'Заполните профиль ресторана, СПА или сервиса. Установите пороги чеков (Silver/Gold Thresholds), при достижении которых официанты будут выдавать клиентам подарки.',
+      illustration: '🏬 📍 🎯'
     },
     {
-      icon: QrCode,
-      color: 'from-purple-500 to-indigo-600',
-      badge: 'ШАГ 2 ИЗ 3: КАК ОТКРЫТЬ',
-      title: 'Сканируйте QR и тапайте!',
-      subtitle: 'Интерактивная кликер-механика распаковки',
-      description: 'Попросите у официанта QR-код GiftX при оплате чека. Затем быстро тапайте по коробке, чтобы заполнить шкалу «ТАП ЧТОБЫ ОТКРЫТЬ» и разблокировать веер подарков!',
-      illustration: '📲 ⚡️ 💥 🎁'
-    },
-    {
-      icon: Sparkles,
+      icon: Gift,
       color: 'from-emerald-500 to-teal-600',
-      badge: 'ШАГ 3 ИЗ 3: КОШЕЛЕК И СТАТУС',
-      title: 'Гашение ваучеров и VIP-Уровни',
-      subtitle: 'Сохраняйте сертификаты и растите от Бронзы до Платины',
-      description: 'Добавляйте ваучеры в кошелек «Мои Подарки», предъявляйте их при визитах и повышайте ваш персональный статус лояльности от BASIC до PLATINUM ELITE!',
-      illustration: '💎 🥂 🏆 👑'
+      badge: 'ШАГ 2 ИЗ 4: ПОДАРКИ',
+      title: 'Добавление подарков и ваучеров',
+      subtitle: 'Настройте кросс-маркетинговые акции сети',
+      description: 'Создавайте бесплатные тизерные напитки/десерты (TRAFFIC_MAGNET) или скидки 15-30% (LIFESTYLE). Гости других ресторанов города получат ваши ваучеры и придут к вам!',
+      illustration: '🎁 🍸 💆‍♂️ 🎟️'
+    },
+    {
+      icon: Users,
+      color: 'from-purple-500 to-indigo-600',
+      badge: 'ШАГ 3 ИЗ 4: ПЕРСОНАЛ',
+      title: 'Привязка персонала и официантов',
+      subtitle: 'Геймификация и вызов боксов через Telegram',
+      description: 'Назначайте роли: WAITER (выдача боксов), MANAGER (управление) или OWNER. Персонал сканирует QR-код привязки в боте и участвует в авто-турнире заведения.',
+      illustration: '👥 📱 🏆 ⚡'
+    },
+    {
+      icon: TrendingUp,
+      color: 'from-amber-400 to-orange-500',
+      badge: 'ШАГ 4 ИЗ 4: АНАЛИТИКА',
+      title: 'Статистика и авто-отчеты',
+      subtitle: 'Контролируйте выручку и гашения ваучеров',
+      description: 'Следите за конверсией возврата клиентов (Redemption Rate) и приростом среднего чека. Ежедневные отчеты отправляются Владельцу прямо в Telegram Бот!',
+      illustration: '📊 📈 🤖 💰'
     }
   ];
 
@@ -45,9 +58,8 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ onClose }) => 
     if (currentStep < steps.length - 1) {
       setCurrentStep((prev) => prev + 1);
     } else {
-      localStorage.setItem('giftx_first_visit_completed', 'true');
-      localStorage.setItem('giftx_onboarded', 'true');
-      onClose();
+      triggerHaptic('heavy');
+      onProceedToRegistration();
     }
   };
 
@@ -61,13 +73,15 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ onClose }) => 
   const StepIcon = steps[currentStep].icon;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-xl">
-      <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl relative overflow-hidden flex flex-col justify-between min-h-[500px]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-xl animate-fadeIn">
+      <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl relative overflow-hidden flex flex-col justify-between min-h-[520px]">
+        {/* Фоновый свечение */}
+        <div className="absolute top-0 right-0 w-48 h-48 bg-amber-500/10 blur-3xl rounded-full pointer-events-none" />
+
         {/* Кнопка закрытия */}
         <button
           onClick={() => {
             triggerHaptic('light');
-            localStorage.setItem('giftx_onboarded', 'true');
             onClose();
           }}
           className="absolute top-4 right-4 p-2 rounded-full bg-slate-800/80 text-slate-400 hover:text-white transition-all z-10"
@@ -75,10 +89,10 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ onClose }) => 
           <X className="w-4 h-4" />
         </button>
 
-        {/* Заголовок слайда */}
+        {/* Шапка слайда */}
         <div className="space-y-4 pt-2 z-10">
           <div className="flex items-center space-x-2">
-            <span className="text-[10px] font-extrabold tracking-widest px-3 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-400 rounded-full uppercase">
+            <span className="text-[10px] font-black tracking-widest px-3 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-400 rounded-full uppercase">
               {steps[currentStep].badge}
             </span>
           </div>
@@ -86,16 +100,16 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ onClose }) => 
           <AnimatePresence mode="wait">
             <motion.div
               key={currentStep}
-              initial={{ opacity: 0, x: 20 }}
+              initial={{ opacity: 0, x: 25 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.25 }}
+              exit={{ opacity: 0, x: -25 }}
+              transition={{ duration: 0.22 }}
               className="space-y-4"
             >
               {/* Иконка с градиентом */}
               <div className={`w-20 h-20 mx-auto rounded-3xl bg-gradient-to-tr ${steps[currentStep].color} p-0.5 shadow-xl flex items-center justify-center my-2`}>
                 <div className="w-full h-full bg-slate-950/40 rounded-[22px] flex items-center justify-center backdrop-blur-md">
-                  <StepIcon className="w-10 h-10 text-white drop-shadow-md animate-pulse-slow" />
+                  <StepIcon className="w-10 h-10 text-white drop-shadow-md" />
                 </div>
               </div>
 
@@ -145,15 +159,15 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ onClose }) => 
               onClick={handleNext}
               className={`flex-1 py-3.5 px-6 rounded-2xl font-extrabold text-sm flex items-center justify-center space-x-2 transition-all shadow-lg ${
                 currentStep === steps.length - 1
-                  ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-amber-500/25'
+                  ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-amber-500/25 hover:brightness-110'
                   : 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/20'
               }`}
             >
-              <span>{currentStep === steps.length - 1 ? 'Начать использовать GiftX 🚀' : 'Далее'}</span>
+              <span>{currentStep === steps.length - 1 ? 'Зарегистрировать заведение 🚀' : 'Далее'}</span>
               {currentStep < steps.length - 1 ? (
                 <ChevronRight className="w-4 h-4" />
               ) : (
-                <CheckCircle2 className="w-4 h-4" />
+                <ArrowRight className="w-4 h-4 text-slate-950" />
               )}
             </button>
           </div>

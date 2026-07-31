@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { Partner, StaffMember, VoucherOffer, PartnerCategory, VoucherCategory } from '../types';
 import { PartnerRegistrationModal } from './PartnerRegistrationModal';
+import { BusinessOnboardingModal } from './BusinessOnboardingModal';
 import { triggerHaptic, triggerNotificationHaptic } from '../telegram';
 
 import { DemoBoxOpeningModal } from './DemoBoxOpeningModal';
@@ -50,6 +51,7 @@ export const AdminDashboardScreen: React.FC = () => {
 
   // Состояние модалок
   const [showPartnerModal, setShowPartnerModal] = useState(false);
+  const [showBusinessOnboardingModal, setShowBusinessOnboardingModal] = useState(false);
   const [editingPartner, setEditingPartner] = useState<any | null>(null);
 
   const [showStaffModal, setShowStaffModal] = useState(false);
@@ -323,7 +325,7 @@ export const AdminDashboardScreen: React.FC = () => {
               onClick={() => {
                 triggerHaptic('light');
                 setEditingPartner(null);
-                setShowPartnerModal(true);
+                setShowBusinessOnboardingModal(true);
               }}
               className="py-1.5 px-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 font-bold text-xs flex items-center space-x-1 hover:bg-amber-500/20 transition-all"
             >
@@ -753,6 +755,17 @@ export const AdminDashboardScreen: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Модалка обучения перед созданием заведения */}
+      {showBusinessOnboardingModal && (
+        <BusinessOnboardingModal
+          onClose={() => setShowBusinessOnboardingModal(false)}
+          onProceedToRegistration={() => {
+            setShowBusinessOnboardingModal(false);
+            setShowPartnerModal(true);
+          }}
+        />
       )}
 
       {/* Модалка редактирования партнера */}

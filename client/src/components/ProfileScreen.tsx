@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { getTelegramUserData, triggerHaptic, triggerNotificationHaptic } from '../telegram';
 import { PartnerRegistrationModal } from './PartnerRegistrationModal';
+import { BusinessOnboardingModal } from './BusinessOnboardingModal';
 import { ManageUserRoleModal } from './ManageUserRoleModal';
 import { AdminDashboardScreen } from './AdminDashboardScreen';
 import { WaiterScreen } from './WaiterScreen';
@@ -71,6 +72,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
   const [isStaff, setIsStaff] = useState(false);
   const [staffInfo, setStaffInfo] = useState<any | null>(null);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [showBusinessOnboardingModal, setShowBusinessOnboardingModal] = useState(false);
   const [showManageRoleModal, setShowManageRoleModal] = useState(false);
   const [viewMode, setViewMode] = useState<'PROFILE' | 'ADMIN' | 'WAITER'>('PROFILE');
 
@@ -653,7 +655,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
             <button
               onClick={() => {
                 triggerHaptic('heavy');
-                setShowRegisterModal(true);
+                setShowBusinessOnboardingModal(true);
               }}
               className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black text-xs flex items-center justify-center space-x-2 shadow-xl shadow-amber-500/25 hover:from-amber-400 hover:to-amber-500 transition-all active:scale-[0.99]"
             >
@@ -713,6 +715,17 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
           <span>Обновить статус роли</span>
         </button>
       </div>
+
+      {/* Модалка обучения перед регистрацией заведения */}
+      {showBusinessOnboardingModal && (
+        <BusinessOnboardingModal
+          onClose={() => setShowBusinessOnboardingModal(false)}
+          onProceedToRegistration={() => {
+            setShowBusinessOnboardingModal(false);
+            setShowRegisterModal(true);
+          }}
+        />
+      )}
 
       {/* Модалка регистрации заведения */}
       {showRegisterModal && (

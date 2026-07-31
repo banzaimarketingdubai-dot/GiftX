@@ -9,6 +9,7 @@ import { AdminDashboardScreen } from './components/AdminDashboardScreen';
 import { ProfileScreen } from './components/ProfileScreen';
 import { GuestHomeScreen } from './components/GuestHomeScreen';
 import { OnboardingModal } from './components/OnboardingModal';
+import { BusinessOnboardingModal } from './components/BusinessOnboardingModal';
 import { HelpGuideModal } from './components/HelpGuideModal';
 import { QrScannerModal } from './components/QrScannerModal';
 import { GuestLandingPage } from './components/GuestLandingPage';
@@ -20,6 +21,7 @@ export const App: React.FC = () => {
   const { role, setRole, setPartners } = useAppStore();
   const [claimToken, setClaimToken] = useState<string | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showBusinessOnboardingModal, setShowBusinessOnboardingModal] = useState(false);
   const [showHelpGuide, setShowHelpGuide] = useState(false);
   const [showScannerModal, setShowScannerModal] = useState(false);
   const [showPartnerRegisterModal, setShowPartnerRegisterModal] = useState(false);
@@ -184,7 +186,7 @@ export const App: React.FC = () => {
         />
       ) : activeLanding === 'BUSINESS' ? (
         <BusinessLandingPage
-          onRegisterPartner={() => setShowPartnerRegisterModal(true)}
+          onRegisterPartner={() => setShowBusinessOnboardingModal(true)}
           onSwitchToGuestLanding={() => setActiveLanding('GUEST')}
           onOpenAdminDemo={() => {
             setActiveLanding(null);
@@ -234,6 +236,17 @@ export const App: React.FC = () => {
 
       {/* Обучающий слайдер на первом входе */}
       {showOnboarding && <OnboardingModal onClose={() => setShowOnboarding(false)} />}
+
+      {/* Обучалка для сценария создания заведения */}
+      {showBusinessOnboardingModal && (
+        <BusinessOnboardingModal
+          onClose={() => setShowBusinessOnboardingModal(false)}
+          onProceedToRegistration={() => {
+            setShowBusinessOnboardingModal(false);
+            setShowPartnerRegisterModal(true);
+          }}
+        />
+      )}
 
       {/* Справочник и Инструкции по ролям */}
       {showHelpGuide && (
