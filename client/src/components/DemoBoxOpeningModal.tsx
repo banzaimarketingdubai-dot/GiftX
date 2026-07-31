@@ -20,24 +20,38 @@ export const DemoBoxOpeningModal: React.FC<DemoBoxOpeningModalProps> = ({ onClos
   if (isPlayingDemo) {
     return (
       <div className="fixed inset-0 z-50 bg-slate-950 flex flex-col justify-between animate-fadeIn">
-        {/* Верхняя панель Демо-режима */}
-        <div className="bg-slate-900 border-b border-slate-800 p-3 max-w-md mx-auto w-full flex items-center justify-between z-50">
+        {/* Верхняя панель Демо-режима с кнопкой ЗАКРЫТЬ */}
+        <div className="bg-slate-900/90 border-b border-slate-800 p-3 max-w-md mx-auto w-full flex items-center justify-between z-50 backdrop-blur-md">
           <div className="flex items-center space-x-2">
             <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping"></span>
             <span className="text-xs font-black text-amber-400 uppercase tracking-widest">
-              ✨ ДЕМО-ОТКРЫТИЕ: GIFTX {boxLevel}
+              ✨ GIFTX {boxLevel}
             </span>
           </div>
-          <button
-            onClick={() => {
-              triggerHaptic('light');
-              setIsPlayingDemo(false);
-            }}
-            className="px-3 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold flex items-center space-x-1"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-            <span>Выбрать другой бокс</span>
-          </button>
+
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => {
+                triggerHaptic('light');
+                setIsPlayingDemo(false);
+              }}
+              className="px-2.5 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold flex items-center space-x-1"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Боксы</span>
+            </button>
+
+            <button
+              onClick={() => {
+                triggerHaptic('medium');
+                onClose();
+              }}
+              className="px-3 py-1 rounded-xl bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 text-red-300 text-xs font-black flex items-center space-x-1 shadow-md transition-all active:scale-95"
+            >
+              <X className="w-4 h-4" />
+              <span>Закрыть</span>
+            </button>
+          </div>
         </div>
 
         {/* Экран интерактивной распаковки бокса */}

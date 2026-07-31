@@ -131,11 +131,48 @@ const PlayingCardsDeck: React.FC<PlayingCardsDeckProps> = ({ vouchers: initialVo
 
   return (
     <div className="w-full flex flex-col items-center justify-center space-y-3 my-2 relative">
-      {/* Подсказка свайпа над картой */}
-      <div className="flex items-center space-x-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-900/60 px-3 py-1 rounded-full border border-slate-800">
-        <span className="text-red-400">⬆️ Вверх = Скинуть</span>
-        <span>•</span>
-        <span className="text-emerald-400">⬇️ Вниз = В кошелек</span>
+      {/* Панель информации о всех выпавших карточках и их номиналах */}
+      <div className="w-full space-y-2 text-center z-20">
+        <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/40 text-amber-300 text-xs font-black shadow-md">
+          <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+          <span>🎉 Из бокса выпало карточек: {deck.length} шт.</span>
+        </div>
+
+        {/* Интерактивные мини-бейджи с номиналами каждой выпавшей карточки */}
+        <div className="flex items-center justify-center space-x-1.5 overflow-x-auto py-1 px-2">
+          {deck.map((v, i) => {
+            const offer = v.voucherOffer;
+            const isSelected = i === activeIndex;
+            const categoryLabel = offer?.discountValue || (offer?.category === 'TRAFFIC_MAGNET' ? 'FREE' : 'GIFT');
+            
+            return (
+              <button
+                key={v.id}
+                onClick={() => {
+                  triggerHaptic('light');
+                  setActiveIndex(i);
+                }}
+                className={`py-1 px-2.5 rounded-xl text-[10px] font-extrabold flex items-center space-x-1 transition-all border shrink-0 ${
+                  isSelected
+                    ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-md shadow-amber-500/30 scale-105'
+                    : 'bg-slate-900/90 text-slate-300 border-slate-800 hover:border-slate-700'
+                }`}
+              >
+                <span className="opacity-80">Карточка #{i + 1}:</span>
+                <span className={isSelected ? 'text-slate-950 font-black' : 'text-emerald-400 font-black'}>
+                  {categoryLabel}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Подсказка свайпа */}
+        <div className="flex items-center justify-center space-x-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-900/60 px-3 py-0.5 rounded-full border border-slate-800 max-w-xs mx-auto">
+          <span className="text-red-400">⬆️ Вверх = Скинуть</span>
+          <span>•</span>
+          <span className="text-emerald-400">⬇️ Вниз = В кошелек</span>
+        </div>
       </div>
 
       {/* 3D Контейнер стопки игральных карт */}
@@ -202,9 +239,9 @@ const PlayingCardsDeck: React.FC<PlayingCardsDeckProps> = ({ vouchers: initialVo
                   backfaceVisibility: 'hidden',
                   WebkitBackfaceVisibility: 'hidden',
                 }}
-                className={`w-full h-full rounded-3xl p-4 bg-gradient-to-br from-slate-900 via-slate-950 to-black border-2 ${
+                className={`absolute inset-0 w-full h-full rounded-3xl p-4 bg-gradient-to-br from-slate-900 via-slate-950 to-black border-2 ${
                   isSelected ? 'border-amber-400 shadow-[0_0_35px_rgba(245,158,11,0.45)]' : 'border-amber-500/30'
-                } flex flex-col justify-between relative overflow-hidden`}
+                } flex flex-col justify-between overflow-hidden`}
               >
                 {/* Золотой неоновый акцент */}
                 <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-amber-500 via-amber-300 to-amber-600" />
@@ -263,7 +300,7 @@ const PlayingCardsDeck: React.FC<PlayingCardsDeckProps> = ({ vouchers: initialVo
                   WebkitBackfaceVisibility: 'hidden',
                   transform: 'rotateY(180deg)',
                 }}
-                className="absolute inset-0 w-full h-full rounded-3xl p-5 bg-gradient-to-br from-amber-950 via-slate-950 to-slate-950 border-2 border-amber-400/80 shadow-[0_0_35px_rgba(245,158,11,0.5)] flex flex-col justify-between items-center text-center overflow-hidden"
+                className="absolute inset-0 w-full h-full rounded-3xl p-4 bg-gradient-to-br from-amber-950 via-slate-950 to-slate-950 border-2 border-amber-400/80 shadow-[0_0_35px_rgba(245,158,11,0.5)] flex flex-col justify-between items-center text-center overflow-hidden"
               >
                 {/* Геометрический паттерн рубашки игральной карты */}
                 <div className="absolute inset-2 border border-amber-500/30 rounded-2xl pointer-events-none flex items-center justify-center bg-[radial-gradient(#f59e0b_1px,transparent_1px)] [background-size:12px_12px] opacity-20" />
