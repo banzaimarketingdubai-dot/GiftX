@@ -12,9 +12,14 @@ import {
   Gift,
   MapPin,
   CheckCircle2,
-  Award
+  Award,
+  LogOut,
+  Search,
+  Check,
+  XCircle,
+  FileText
 } from 'lucide-react';
-import { getTelegramUserData, triggerHaptic } from '../telegram';
+import { getTelegramUserData, triggerHaptic, triggerNotificationHaptic } from '../telegram';
 import { PartnerRegistrationModal } from './PartnerRegistrationModal';
 import { AdminDashboardScreen } from './AdminDashboardScreen';
 import { WaiterScreen } from './WaiterScreen';
@@ -23,6 +28,36 @@ import { useAppStore } from '../store/useAppStore';
 interface ProfileScreenProps {
   onSwitchToClientMode: () => void;
 }
+
+const DEMO_MANAGER_STAFF = {
+  id: 'demo-staff-2',
+  partnerId: 'demo-partner-1',
+  name: 'Анна (Менеджер)',
+  role: 'MANAGER',
+  boxesIssuedCount: 42,
+  partner: {
+    id: 'demo-partner-1',
+    name: 'Sunset Beach Club',
+    category: 'HORECA',
+    logoUrl: 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=200&q=80',
+    address: 'Phu Quoc, Long Beach, St 4',
+  }
+};
+
+const DEMO_WAITER_STAFF = {
+  id: 'demo-staff-1',
+  partnerId: 'demo-partner-1',
+  name: 'Алекс (Sunset Bar)',
+  role: 'WAITER',
+  boxesIssuedCount: 14,
+  partner: {
+    id: 'demo-partner-1',
+    name: 'Sunset Beach Club',
+    category: 'HORECA',
+    logoUrl: 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=200&q=80',
+    address: 'Phu Quoc, Long Beach, St 4',
+  }
+};
 
 export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMode }) => {
   const { role, setRole } = useAppStore();
@@ -34,6 +69,10 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [viewMode, setViewMode] = useState<'PROFILE' | 'ADMIN' | 'WAITER'>('PROFILE');
 
+  // Состояние заявок для заведения владельца/управляющего
+  const [partnerApps, setPartnerApps] = useState<any[]>([]);
+  const [partnerAppSearch, setPartnerAppSearch] = useState('');
+
   const checkStaffRole = async () => {
     try {
       setLoading(true);
@@ -43,21 +82,105 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
         if (data.success && data.isStaff) {
           setIsStaff(true);
           setStaffInfo(data.staff);
-        } else {
-          setIsStaff(false);
-          setStaffInfo(null);
+          return;
         }
+      }
+
+      // Проверяем сохраненный демо-профиль в localStorage
+      const savedDemoStaff = localStorage.getItem('giftx_demo_staff');
+      if (savedDemoStaff) {
+        const parsed = JSON.parse(savedDemoStaff);
+        setIsStaff(true);
+        setStaffInfo(parsed);
+      } else {
+        setIsStaff(false);
+        setStaffInfo(null);
       }
     } catch (e) {
       console.error('Check staff role error', e);
+      setIsStaff(false);
+      setStaffInfo(null);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPartnerApps = async () => {
+    if (!staffInfo?.partner?.id) return;
+    try {
+      const q = partnerAppSearch ? `&search=${encodeURIComponent(partnerAppSearch)}` : '';
+      const res = await fetch(`/api/admin/applications?partnerId=${staffInfo.partner.id}${q}`);
+      const data = await res.json();
+      if (data.success) {
+        setPartnerApps(data.applications);
+      }
+    } catch (e) {
+      console.error('Fetch partner apps error', e);
     }
   };
 
   useEffect(() => {
     checkStaffRole();
   }, []);
+
+  useEffect(() => {
+    if (isStaff && staffInfo?.partner?.id) {
+      fetchPartnerApps();
+    }
+  }, [isStaff, staffInfo?.partner?.id, partnerAppSearch]);
+
+  const handleApprovePartnerApp = async (id: string) => {
+    try {
+      triggerNotificationHaptic('success');
+      const res = await fetch(`/api/admin/applications/${id}/approve`, { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        fetchPartnerApps();
+      }
+    } catch (e) {
+      console.error('Approve partner app error', e);
+    }
+  };
+
+  const handleRejectPartnerApp = async (id: string) => {
+    try {
+      triggerNotificationHaptic('warning');
+      const res = await fetch(`/api/admin/applications/${id}/reject`, { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        fetchPartnerApps();
+      }
+    } catch (e) {
+      console.error('Reject partner app error', e);
+    }
+  };
+
+  const handleActivateDemoManager = () => {
+    triggerHaptic('medium');
+    localStorage.setItem('giftx_demo_staff', JSON.stringify(DEMO_MANAGER_STAFF));
+    setIsStaff(true);
+    setStaffInfo(DEMO_MANAGER_STAFF);
+    setViewMode('ADMIN');
+    setRole('ADMIN');
+  };
+
+  const handleActivateDemoWaiter = () => {
+    triggerHaptic('medium');
+    localStorage.setItem('giftx_demo_staff', JSON.stringify(DEMO_WAITER_STAFF));
+    setIsStaff(true);
+    setStaffInfo(DEMO_WAITER_STAFF);
+    setViewMode('WAITER');
+    setRole('WAITER');
+  };
+
+  const handleClearDemoStaff = () => {
+    triggerHaptic('light');
+    localStorage.removeItem('giftx_demo_staff');
+    setIsStaff(false);
+    setStaffInfo(null);
+    setViewMode('PROFILE');
+    setRole('PROFILE');
+  };
 
   // Если пользователь внутри профиля переключил вид на встроенный Admin или Waiter экран
   if (viewMode === 'ADMIN') {
@@ -68,13 +191,14 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
             onClick={() => {
               triggerHaptic('light');
               setViewMode('PROFILE');
+              setRole('PROFILE');
             }}
             className="text-xs font-bold text-amber-400 flex items-center space-x-1 hover:underline"
           >
             <span>← Назад в Мой Профиль</span>
           </button>
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2 py-0.5 rounded bg-slate-950 border border-slate-800">
-            Режим Владельца
+            Режим Управляющего
           </span>
         </div>
         <AdminDashboardScreen />
@@ -90,6 +214,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
             onClick={() => {
               triggerHaptic('light');
               setViewMode('PROFILE');
+              setRole('PROFILE');
             }}
             className="text-xs font-bold text-amber-400 flex items-center space-x-1 hover:underline"
           >
@@ -120,7 +245,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
           <div>
             <div className="flex items-center space-x-2">
               <h1 className="text-lg font-black text-slate-100">
-                {tgUser?.first_name} {tgUser?.last_name || ''}
+                {tgUser?.first_name || 'Пользователь'} {tgUser?.last_name || ''}
               </h1>
               {isStaff && (
                 <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[9px] font-black uppercase">
@@ -133,14 +258,16 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
               <p className="text-xs text-amber-400 font-medium">@{tgUser.username}</p>
             )}
 
-            <p className="text-[10px] text-slate-500 font-mono mt-0.5">ID: {tgUser?.id}</p>
+            <p className="text-[10px] text-slate-500 font-mono mt-0.5">
+              ID: {tgUser?.id || 'Demo-Guest-101'}
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Блок привязанного бизнеса (если пользователь является сотрудником/владельцем) */}
+      {/* Блок привязанного бизнеса (если пользователь является сотрудником/владельцем/менеджером) */}
       {isStaff && staffInfo?.partner && (
-        <div className="glass-card p-5 rounded-3xl border border-amber-500/30 bg-amber-950/20 space-y-4">
+        <div className="glass-card p-5 rounded-3xl border border-amber-500/30 bg-amber-950/20 space-y-4 shadow-xl">
           <div className="flex items-center justify-between border-b border-amber-500/20 pb-3">
             <div className="flex items-center space-x-3">
               <img
@@ -165,7 +292,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
           {/* Панель переключения рабочих режимов для владельца/персонала */}
           <div className="space-y-2 pt-1">
             <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-              Переключение рабочих режимов:
+              Рабочие панели заведения:
             </p>
 
             {(staffInfo.role === 'OWNER' || staffInfo.role === 'MANAGER') && (
@@ -173,12 +300,17 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
                 onClick={() => {
                   triggerHaptic('medium');
                   setViewMode('ADMIN');
+                  setRole('ADMIN');
                 }}
-                className="w-full p-3.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs flex items-center justify-between transition-all shadow-lg shadow-amber-500/20"
+                className="w-full p-3.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs flex items-center justify-between transition-all shadow-lg shadow-amber-500/20 active:scale-[0.99]"
               >
                 <div className="flex items-center space-x-2.5">
                   <Sliders className="w-4 h-4" />
-                  <span>Управление заведением (Панель Владельца)</span>
+                  <span>
+                    {staffInfo.role === 'MANAGER'
+                      ? 'Открыть Панель Управляющего'
+                      : 'Открыть Панель Владельца'}
+                  </span>
                 </div>
                 <ChevronRight className="w-4 h-4" />
               </button>
@@ -188,8 +320,9 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
               onClick={() => {
                 triggerHaptic('medium');
                 setViewMode('WAITER');
+                setRole('WAITER');
               }}
-              className="w-full p-3.5 rounded-2xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-100 font-extrabold text-xs flex items-center justify-between transition-all"
+              className="w-full p-3.5 rounded-2xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-100 font-extrabold text-xs flex items-center justify-between transition-all active:scale-[0.99]"
             >
               <div className="flex items-center space-x-2.5">
                 <QrCode className="w-4 h-4 text-amber-400" />
@@ -197,11 +330,111 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
               </div>
               <ChevronRight className="w-4 h-4 text-slate-500" />
             </button>
+
+            {staffInfo?.id?.startsWith('demo-') && (
+              <button
+                onClick={handleClearDemoStaff}
+                className="w-full mt-2 py-2 px-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-bold flex items-center justify-center space-x-1.5 transition-all"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Выйти из демо-режима персонала</span>
+              </button>
+            )}
           </div>
+
+          {/* Блок заявок персонала в данное заведение (для Владельца и Управляющего) */}
+          {(staffInfo.role === 'OWNER' || staffInfo.role === 'MANAGER') && (
+            <div className="pt-3 border-t border-amber-500/20 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] uppercase font-extrabold tracking-wider text-amber-400 flex items-center space-x-1">
+                  <FileText className="w-3.5 h-3.5" />
+                  <span>Заявки персонала ({partnerApps.filter(a => a.status === 'PENDING').length} ож.)</span>
+                </span>
+                <span className="text-[10px] text-slate-400">Поиск & Управление</span>
+              </div>
+
+              {/* Поиск среди заявок заведения */}
+              <div className="relative">
+                <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-2.5" />
+                <input
+                  type="text"
+                  value={partnerAppSearch}
+                  onChange={(e) => setPartnerAppSearch(e.target.value)}
+                  placeholder="Поиск по имени соискателя..."
+                  className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-slate-950/80 border border-slate-800 text-slate-100 text-xs focus:border-amber-500 outline-none"
+                />
+              </div>
+
+              {/* Список заявок в заведение */}
+              <div className="space-y-2 max-h-48 overflow-y-auto no-scrollbar">
+                {partnerApps.length === 0 ? (
+                  <div className="p-3 text-center text-slate-500 text-[11px] bg-slate-950/40 rounded-xl border border-slate-800/60">
+                    Заявок в ваше заведение пока нет
+                  </div>
+                ) : (
+                  partnerApps.map((app) => (
+                    <div
+                      key={app.id}
+                      className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-2 text-xs"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="flex items-center space-x-1.5">
+                            <span className="font-extrabold text-slate-100">{app.applicantName}</span>
+                            <span
+                              className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase ${
+                                app.applicantRole === 'MANAGER'
+                                  ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+                                  : 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                              }`}
+                            >
+                              {app.applicantRole}
+                            </span>
+                          </div>
+                          {app.comment && (
+                            <span className="text-[10px] text-slate-400 block mt-0.5">💬 {app.comment}</span>
+                          )}
+                        </div>
+
+                        <span
+                          className={`px-2 py-0.5 rounded text-[9px] font-bold ${
+                            app.status === 'APPROVED'
+                              ? 'bg-emerald-500/10 text-emerald-400'
+                              : app.status === 'REJECTED'
+                              ? 'bg-red-500/10 text-red-400'
+                              : 'bg-amber-500/10 text-amber-400'
+                          }`}
+                        >
+                          {app.status === 'APPROVED' ? 'Одобрен' : app.status === 'REJECTED' ? 'Отклонен' : 'Ожидает'}
+                        </span>
+                      </div>
+
+                      {app.status === 'PENDING' && (
+                        <div className="flex space-x-2 pt-1 border-t border-slate-800/60">
+                          <button
+                            onClick={() => handleRejectPartnerApp(app.id)}
+                            className="flex-1 py-1 px-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-[10px] font-bold"
+                          >
+                            ❌ Отклонить
+                          </button>
+                          <button
+                            onClick={() => handleApprovePartnerApp(app.id)}
+                            className="flex-1 py-1 px-2 rounded-lg bg-emerald-500 text-slate-950 font-black text-[10px] shadow-sm shadow-emerald-500/20 hover:bg-emerald-400"
+                          >
+                            ✅ Одобрить
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Баннер регистрации бизнеса (если пользователь ещё НЕ привязан к бизнесу) */}
+      {/* Баннер регистрации бизнеса и быстрый переход в Панель Управляющего (если пользователь еще не привязан к бизнесу) */}
       {!isStaff && (
         <div className="glass-card p-5 rounded-3xl border border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-slate-900 to-slate-950 space-y-4 shadow-xl">
           <div className="flex items-center space-x-3">
@@ -217,19 +450,39 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
           </div>
 
           <p className="text-xs text-slate-300 leading-relaxed">
-            Привлекайте новых гостей из других ресторанов, СПА и сервисов города совершенно бесплатно без бюджета на рекламу!
+            Привлекайте новых гостей из других ресторанов, СПА и сервисов города бесплатно без бюджета на рекламу!
           </p>
 
-          <button
-            onClick={() => {
-              triggerHaptic('heavy');
-              setShowRegisterModal(true);
-            }}
-            className="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black text-sm flex items-center justify-center space-x-2 shadow-xl shadow-amber-500/25 hover:from-amber-400 hover:to-amber-500 transition-all active:scale-[0.99]"
-          >
-            <PlusCircle className="w-5 h-5 text-slate-950" />
-            <span>Зарегистрировать заведение</span>
-          </button>
+          <div className="space-y-2 pt-1">
+            <button
+              onClick={() => {
+                triggerHaptic('heavy');
+                setShowRegisterModal(true);
+              }}
+              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black text-xs flex items-center justify-center space-x-2 shadow-xl shadow-amber-500/25 hover:from-amber-400 hover:to-amber-500 transition-all active:scale-[0.99]"
+            >
+              <PlusCircle className="w-4 h-4 text-slate-950" />
+              <span>Зарегистрировать заведение</span>
+            </button>
+
+            {/* Быстрая демо-кнопка входа в Панель Управляющего */}
+            <button
+              onClick={handleActivateDemoManager}
+              className="w-full py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 border border-amber-500/30 text-amber-400 font-extrabold text-xs flex items-center justify-center space-x-2 transition-all active:scale-[0.99]"
+            >
+              <Sliders className="w-4 h-4 text-amber-400" />
+              <span>Войти как Управляющий (Панель заведения)</span>
+            </button>
+
+            {/* Быстрая демо-кнопка входа в Экран Официанта */}
+            <button
+              onClick={handleActivateDemoWaiter}
+              className="w-full py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-100 font-extrabold text-xs flex items-center justify-center space-x-2 transition-all active:scale-[0.99]"
+            >
+              <QrCode className="w-4 h-4 text-amber-400" />
+              <span>Войти как Официант (Выдача QR-боксов)</span>
+            </button>
+          </div>
         </div>
       )}
 

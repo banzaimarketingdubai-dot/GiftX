@@ -13,14 +13,19 @@ import {
   Star,
   Plus,
   Sliders,
-  ChevronRight
+  ChevronRight,
+  Search,
+  FileText,
+  Check,
+  XCircle,
+  UserCheck
 } from 'lucide-react';
 import { Partner, StaffMember, VoucherOffer, PartnerCategory, VoucherCategory } from '../types';
 import { PartnerRegistrationModal } from './PartnerRegistrationModal';
 import { triggerHaptic, triggerNotificationHaptic } from '../telegram';
 
 export const AdminDashboardScreen: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'VENUES' | 'STAFF' | 'OFFERS' | 'ANALYTICS'>('VENUES');
+  const [activeTab, setActiveTab] = useState<'VENUES' | 'STAFF' | 'APPLICATIONS' | 'OFFERS' | 'ANALYTICS'>('VENUES');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,6 +39,11 @@ export const AdminDashboardScreen: React.FC = () => {
   });
 
   const [partners, setPartners] = useState<any[]>([]);
+
+  // Состояние заявок персонала
+  const [applications, setApplications] = useState<any[]>([]);
+  const [appSearch, setAppSearch] = useState('');
+  const [appStatusFilter, setAppStatusFilter] = useState<'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED'>('ALL');
 
   // Состояние модалок
   const [showPartnerModal, setShowPartnerModal] = useState(false);
@@ -72,9 +82,56 @@ export const AdminDashboardScreen: React.FC = () => {
     }
   };
 
+  const fetchApplications = async () => {
+    try {
+      const query = new URLSearchParams();
+      if (appSearch) query.set('search', appSearch);
+      if (appStatusFilter !== 'ALL') query.set('status', appStatusFilter);
+
+      const res = await fetch(`/api/admin/applications?${query.toString()}`);
+      const data = await res.json();
+      if (data.success) {
+        setApplications(data.applications);
+      }
+    } catch (e) {
+      console.error('Fetch applications error', e);
+    }
+  };
+
   useEffect(() => {
     fetchOverview();
   }, []);
+
+  useEffect(() => {
+    fetchApplications();
+  }, [appSearch, appStatusFilter, activeTab]);
+
+  const handleApproveApplication = async (id: string) => {
+    try {
+      triggerNotificationHaptic('success');
+      const res = await fetch(`/api/admin/applications/${id}/approve`, { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        fetchApplications();
+        fetchOverview();
+      }
+    } catch (e) {
+      console.error('Approve app error', e);
+    }
+  };
+
+  const handleRejectApplication = async (id: string) => {
+    try {
+      triggerNotificationHaptic('warning');
+      const res = await fetch(`/api/admin/applications/${id}/reject`, { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        fetchApplications();
+      }
+    } catch (e) {
+      console.error('Reject app error', e);
+    }
+  };
 
   // Добавление / Обновление сотрудника
   const handleSaveStaff = async (e: React.FormEvent) => {
@@ -206,6 +263,7 @@ export const AdminDashboardScreen: React.FC = () => {
         {[
           { id: 'VENUES', label: '🏢 Заведения' },
           { id: 'STAFF', label: '👥 Персонал' },
+          { id: 'APPLICATIONS', label: `📥 Заявки (${applications.filter((a) => a.status === 'PENDING').length})` },
           { id: 'OFFERS', label: '🎁 Ваучеры' },
           { id: 'ANALYTICS', label: '📊 Аналитика' },
         ].map((tab) => (
@@ -393,6 +451,128 @@ export const AdminDashboardScreen: React.FC = () => {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* ВКЛАДКА: ЗАЯВКИ ПЕРСОНАЛА И ПОИСК */}
+      {activeTab === 'APPLICATIONS' && (
+        <div className="space-y-4">
+          {/* Панель поиска и фильтрации заявок */}
+          <div className="glass-card p-3 rounded-2xl border border-slate-800 space-y-3">
+            <div className="relative">
+              <Search className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
+              <input
+                type="text"
+                value={appSearch}
+                onChange={(e) => setAppSearch(e.target.value)}
+                placeholder="Поиск по имени сотрудника или заведению..."
+                className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-100 text-xs focus:border-amber-500 outline-none"
+              />
+            </div>
+
+            <div className="flex space-x-1">
+              {[
+                { id: 'ALL', label: 'Все' },
+                { id: 'PENDING', label: '⏳ Ожидают' },
+                { id: 'APPROVED', label: '✅ Одобрены' },
+                { id: 'REJECTED', label: '❌ Отклонены' },
+              ].map((f) => (
+                <button
+                  key={f.id}
+                  onClick={() => setAppStatusFilter(f.id as any)}
+                  className={`flex-1 py-1.5 px-2 rounded-xl text-[10px] font-extrabold transition-all ${
+                    appStatusFilter === f.id
+                      ? 'bg-amber-500 text-slate-950'
+                      : 'bg-slate-950 text-slate-400 border border-slate-800'
+                  }`}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Список заявок */}
+          <div className="space-y-3">
+            {applications.length === 0 ? (
+              <div className="glass-card p-8 rounded-2xl border border-slate-800 text-center text-slate-500 text-xs">
+                Заявок по заданным критериям не найдено
+              </div>
+            ) : (
+              applications.map((app) => (
+                <div
+                  key={app.id}
+                  className="glass-card p-4 rounded-2xl border border-slate-800 space-y-3 shadow-md"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center space-x-3">
+                      <img
+                        src={app.partnerLogo}
+                        alt={app.partnerName}
+                        className="w-11 h-11 rounded-xl object-cover border border-slate-700 shrink-0"
+                      />
+                      <div>
+                        <div className="flex items-center space-x-2">
+                          <span className="font-extrabold text-slate-100 text-sm">{app.applicantName}</span>
+                          <span
+                            className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${
+                              app.applicantRole === 'MANAGER'
+                                ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+                                : 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                            }`}
+                          >
+                            {app.applicantRole}
+                          </span>
+                        </div>
+                        <span className="text-xs text-amber-400 font-semibold block mt-0.5">
+                          🏬 {app.partnerName}
+                        </span>
+                      </div>
+                    </div>
+
+                    <span
+                      className={`px-2.5 py-1 rounded-xl text-[10px] font-black uppercase border ${
+                        app.status === 'APPROVED'
+                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                          : app.status === 'REJECTED'
+                          ? 'bg-red-500/10 text-red-400 border-red-500/30'
+                          : 'bg-amber-500/10 text-amber-400 border-amber-500/30 animate-pulse'
+                      }`}
+                    >
+                      {app.status === 'APPROVED'
+                        ? 'Одобрено'
+                        : app.status === 'REJECTED'
+                        ? 'Отклонено'
+                        : 'В ожидании'}
+                    </span>
+                  </div>
+
+                  {app.comment && (
+                    <p className="text-xs text-slate-300 bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/80">
+                      💬 «{app.comment}»
+                    </p>
+                  )}
+
+                  {app.status === 'PENDING' && (
+                    <div className="flex space-x-2 pt-1 border-t border-slate-800/60">
+                      <button
+                        onClick={() => handleRejectApplication(app.id)}
+                        className="flex-1 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 text-xs font-bold transition-all"
+                      >
+                        ❌ Отклонить
+                      </button>
+                      <button
+                        onClick={() => handleApproveApplication(app.id)}
+                        className="flex-1 py-2 rounded-xl bg-emerald-500 text-slate-950 font-extrabold text-xs shadow-md shadow-emerald-500/20 hover:bg-emerald-400 transition-all"
+                      >
+                        ✅ Одобрить и привязать
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
           </div>
         </div>
       )}

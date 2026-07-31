@@ -4,7 +4,28 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  html, body {
+    overscroll-behavior: none;
+    overscroll-behavior-y: none;
+    touch-action: manipulation;
+  }
+
+  html {
+    font-size: 18px;
+  }
+
+  body {
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+}
+
 @layer utilities {
+  .text-\[9px\] { font-size: 11px !important; }
+  .text-\[10px\] { font-size: 12px !important; }
+  .text-\[11px\] { font-size: 13px !important; }
+
   .glass-card {
     background: rgba(15, 23, 42, 0.75);
     backdrop-filter: blur(16px);

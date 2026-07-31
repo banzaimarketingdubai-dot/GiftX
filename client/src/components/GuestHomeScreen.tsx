@@ -17,7 +17,6 @@ import {
 } from 'lucide-react';
 import L from 'leaflet';
 import { getTelegramUserData, triggerHaptic } from '../telegram';
-import { QrScannerModal } from './QrScannerModal';
 import { ClaimedVoucher, Partner } from '../types';
 
 interface GuestHomeScreenProps {
@@ -34,7 +33,6 @@ export const GuestHomeScreen: React.FC<GuestHomeScreenProps> = ({
   onScanTokenSuccess,
 }) => {
   const tgUser = getTelegramUserData();
-  const [showScannerModal, setShowScannerModal] = useState(false);
   const [activeVouchersCount, setActiveVouchersCount] = useState<number>(0);
   const [partners, setPartners] = useState<Partner[]>([]);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number }>({
@@ -189,7 +187,7 @@ export const GuestHomeScreen: React.FC<GuestHomeScreenProps> = ({
         whileTap={{ scale: 0.98 }}
         onClick={() => {
           triggerHaptic('heavy');
-          setShowScannerModal(true);
+          onOpenScanner();
         }}
         className="cursor-pointer glass-card p-6 rounded-3xl border-2 border-amber-400/80 bg-gradient-to-br from-amber-500/20 via-amber-950/40 to-slate-950 shadow-[0_0_35px_rgba(245,158,11,0.35)] relative overflow-hidden group transition-all"
       >
@@ -336,17 +334,6 @@ export const GuestHomeScreen: React.FC<GuestHomeScreenProps> = ({
           </div>
         </div>
       </div>
-
-      {/* Модальное окно сканера */}
-      {showScannerModal && (
-        <QrScannerModal
-          onClose={() => setShowScannerModal(false)}
-          onScanSuccess={(token) => {
-            setShowScannerModal(false);
-            onScanTokenSuccess(token);
-          }}
-        />
-      )}
     </div>
   );
 };

@@ -52,10 +52,15 @@ export const QrScannerModal: React.FC<QrScannerModalProps> = ({ onClose, onScanS
           (text: string) => {
             if (text) {
               handleScanResult(text);
-              tg.closeScanQrPopup();
+              try { tg.closeScanQrPopup(); } catch {}
+              onClose();
+              return true;
+            } else {
+              // Пользователь закрыл или свернул нативный видоискатель
+              try { tg.closeScanQrPopup(); } catch {}
+              onClose();
               return true;
             }
-            return false;
           }
         );
       } catch (e) {
@@ -78,19 +83,33 @@ export const QrScannerModal: React.FC<QrScannerModalProps> = ({ onClose, onScanS
     }
   };
 
+  const handleClose = () => {
+    triggerHaptic('light');
+    try {
+      if (tg?.closeScanQrPopup) {
+        tg.closeScanQrPopup();
+      }
+    } catch (err) {
+      console.warn('Error closing native QR popup:', err);
+    }
+    onClose();
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-2xl animate-fadeIn">
-      <div className="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-2xl relative overflow-hidden flex flex-col justify-between min-h-[460px]">
+    <div 
+      onClick={handleClose}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-2xl animate-fadeIn cursor-pointer"
+    >
+      <div 
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-2xl relative overflow-hidden flex flex-col justify-between min-h-[480px] cursor-default"
+      >
         {/* Кнопка закрытия */}
         <button
-          onClick={() => {
-            triggerHaptic('light');
-            if (tg?.closeScanQrPopup) tg.closeScanQrPopup();
-            onClose();
-          }}
-          className="absolute top-4 right-4 p-2 rounded-full bg-slate-800/80 text-slate-400 hover:text-white transition-all z-10"
+          onClick={handleClose}
+          className="absolute top-4 right-4 p-2 rounded-full bg-slate-800/80 text-slate-400 hover:text-white transition-all z-10 hover:bg-slate-700"
         >
-          <X className="w-4 h-4" />
+          <X className="w-5 h-5" />
         </button>
 
         {/* Шапка сканера */}
@@ -103,8 +122,8 @@ export const QrScannerModal: React.FC<QrScannerModalProps> = ({ onClose, onScanS
         </div>
 
         {/* Анимированная рамка видоискателя сканера */}
-        <div className="my-auto relative flex items-center justify-center py-6">
-          <div className="w-56 h-56 rounded-3xl border-2 border-dashed border-amber-500/60 relative overflow-hidden flex items-center justify-center bg-slate-950/60 shadow-inner">
+        <div className="my-auto relative flex items-center justify-center py-4">
+          <div className="w-52 h-52 rounded-3xl border-2 border-dashed border-amber-500/60 relative overflow-hidden flex items-center justify-center bg-slate-950/60 shadow-inner">
             {/* Анимированный лазерный луч сканирования */}
             <div className="absolute inset-x-0 h-1 bg-gradient-to-r from-transparent via-amber-400 to-transparent shadow-[0_0_15px_#f59e0b] animate-scan-line" />
 
@@ -159,6 +178,14 @@ export const QrScannerModal: React.FC<QrScannerModalProps> = ({ onClose, onScanS
           >
             <Sparkles className="w-3.5 h-3.5" />
             <span>Симуляция сканирования QR (Тестовый бокс)</span>
+          </button>
+
+          {/* Явная кнопка закрытия модалки */}
+          <button
+            onClick={handleClose}
+            className="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-all border border-slate-700"
+          >
+            Закрыть сканер
           </button>
         </div>
       </div>

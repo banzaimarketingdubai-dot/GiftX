@@ -13,10 +13,16 @@ export function initTelegramApp() {
     tg.ready();
     tg.expand();
     try {
+      if (tg.disableVerticalSwipes) {
+        tg.disableVerticalSwipes();
+      }
+      if (tg.enableClosingConfirmation) {
+        tg.enableClosingConfirmation();
+      }
       tg.setHeaderColor?.('#0f172a');
       tg.setBackgroundColor?.('#0f172a');
     } catch (e) {
-      console.warn('Telegram SDK header color set failed', e);
+      console.warn('Telegram SDK header color/swipe set failed', e);
     }
   }
 }

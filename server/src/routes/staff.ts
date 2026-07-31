@@ -308,3 +308,87 @@ staffRouter.post('/partner/location', async (req: Request, res: Response) => {
   }
 });
 
+export const DEMO_APPLICATIONS: Array<{
+  id: string;
+  partnerId: string;
+  partnerName: string;
+  partnerLogo: string;
+  applicantName: string;
+  applicantRole: string;
+  telegramId?: string;
+  comment?: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  createdAt: string;
+}> = [
+  {
+    id: 'app-demo-1',
+    partnerId: 'demo-partner-1',
+    partnerName: 'Sunset Beach Club',
+    partnerLogo: 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=200&q=80',
+    applicantName: 'Дмитрий (Официант)',
+    applicantRole: 'WAITER',
+    telegramId: '999111222',
+    comment: 'Опыт работы 2 года в сфере HoReCa',
+    status: 'PENDING',
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: 'app-demo-2',
+    partnerId: 'demo-partner-2',
+    partnerName: 'Lotus Wellness & Spa',
+    partnerLogo: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=200&q=80',
+    applicantName: 'Елена (Управляющая)',
+    applicantRole: 'MANAGER',
+    telegramId: '999333444',
+    comment: 'Желаю управлять сменой и отчетами',
+    status: 'PENDING',
+    createdAt: new Date().toISOString()
+  }
+];
+
+// Подать заявку на вступление персонала в заведение
+staffRouter.post('/apply', async (req: Request, res: Response) => {
+  try {
+    const { partnerId, partnerName, partnerLogo, applicantName, applicantRole, telegramId, comment } = req.body;
+
+    if (!partnerId || !applicantName) {
+      return res.status(400).json({ success: false, error: 'Укажите partnerId и имя соискателя' });
+    }
+
+    const newApplication = {
+      id: `app_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      partnerId,
+      partnerName: partnerName || 'Заведение',
+      partnerLogo: partnerLogo || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=200&q=80',
+      applicantName,
+      applicantRole: applicantRole || 'WAITER',
+      telegramId: telegramId ? String(telegramId) : undefined,
+      comment: comment || '',
+      status: 'PENDING' as const,
+      createdAt: new Date().toISOString()
+    };
+
+    DEMO_APPLICATIONS.unshift(newApplication);
+
+    return res.json({
+      success: true,
+      application: newApplication,
+      message: 'Заявка на вступление успешно отправлена!'
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Получить заявки соискателя по Telegram ID
+staffRouter.get('/my-applications/:telegramId', async (req: Request, res: Response) => {
+  try {
+    const { telegramId } = req.params;
+    const apps = DEMO_APPLICATIONS.filter((a) => a.telegramId === String(telegramId));
+    return res.json({ success: true, applications: apps });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+

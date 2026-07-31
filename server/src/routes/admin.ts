@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { prisma } from '../db.js';
+import { DEMO_APPLICATIONS } from './staff.js';
 
 export const adminRouter = Router();
 
@@ -232,3 +233,94 @@ adminRouter.delete('/offer/:id', async (req: Request, res: Response) => {
     return res.status(500).json({ success: false, error: error.message });
   }
 });
+
+// 5. Получить список заявок персонала (с фильтрацией по partnerId, status и поиску)
+adminRouter.get('/applications', async (req: Request, res: Response) => {
+  try {
+    const { partnerId, status, search } = req.query;
+
+    let apps = [...DEMO_APPLICATIONS];
+
+    if (partnerId) {
+      apps = apps.filter((a) => a.partnerId === String(partnerId));
+    }
+
+    if (status && status !== 'ALL') {
+      apps = apps.filter((a) => a.status === String(status));
+    }
+
+    if (search) {
+      const q = String(search).toLowerCase().trim();
+      apps = apps.filter(
+        (a) =>
+          a.applicantName.toLowerCase().includes(q) ||
+          a.partnerName.toLowerCase().includes(q) ||
+          (a.comment && a.comment.toLowerCase().includes(q))
+      );
+    }
+
+    return res.json({ success: true, applications: apps });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 6. Одобрить заявку соискателя и добавить его в персонал заведения
+adminRouter.post('/applications/:id/approve', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const appIndex = DEMO_APPLICATIONS.findIndex((a) => a.id === id);
+
+    if (appIndex === -1) {
+      return res.status(404).json({ success: false, error: 'Заявка не найдена' });
+    }
+
+    const app = DEMO_APPLICATIONS[appIndex];
+    app.status = 'APPROVED';
+
+    // Создаем запись StaffMember в БД если доступна
+    try {
+      await prisma.staffMember.create({
+        data: {
+          partnerId: app.partnerId,
+          name: app.applicantName,
+          role: (app.applicantRole as any) || 'WAITER',
+          ...(app.telegramId && { telegramId: BigInt(app.telegramId) })
+        }
+      });
+    } catch (dbErr: any) {
+      console.log('Approve application DB insert fallback:', dbErr.message);
+    }
+
+    return res.json({
+      success: true,
+      application: app,
+      message: `Заявка ${app.applicantName} успешно одобрена! Сотрудник добавлен в заведение.`
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 7. Отклонить заявку соискателя
+adminRouter.post('/applications/:id/reject', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const appIndex = DEMO_APPLICATIONS.findIndex((a) => a.id === id);
+
+    if (appIndex === -1) {
+      return res.status(404).json({ success: false, error: 'Заявка не найдена' });
+    }
+
+    DEMO_APPLICATIONS[appIndex].status = 'REJECTED';
+
+    return res.json({
+      success: true,
+      application: DEMO_APPLICATIONS[appIndex],
+      message: `Заявка ${DEMO_APPLICATIONS[appIndex].applicantName} отклонена.`
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
