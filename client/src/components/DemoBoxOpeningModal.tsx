@@ -19,7 +19,7 @@ export const DemoBoxOpeningModal: React.FC<DemoBoxOpeningModalProps> = ({ onClos
 
   if (isPlayingDemo) {
     return (
-      <div className="fixed inset-0 z-50 bg-slate-950 flex flex-col justify-between animate-fadeIn">
+      <div className="fixed inset-0 z-50 bg-slate-950 flex flex-col justify-between animate-fadeIn overflow-hidden touch-none select-none">
         {/* Верхняя панель Демо-режима с кнопкой ЗАКРЫТЬ */}
         <div className="bg-slate-900/90 border-b border-slate-800 p-3 max-w-md mx-auto w-full flex items-center justify-between z-50 backdrop-blur-md">
           <div className="flex items-center space-x-2">

@@ -230,8 +230,11 @@ const PlayingCardsDeck: React.FC<PlayingCardsDeckProps> = ({ vouchers: initialVo
               style={{
                 perspective: 1200,
                 transformStyle: 'preserve-3d',
+                touchAction: 'none',
+                WebkitUserSelect: 'none',
+                userSelect: 'none',
               }}
-              className="absolute w-80 h-48 rounded-3xl cursor-pointer select-none shadow-2xl"
+              className="absolute w-80 h-48 rounded-3xl cursor-pointer select-none shadow-2xl touch-none"
             >
               {/* ЛИЦЕВАЯ СТОРОНА КАРТОЧКИ */}
               <div
@@ -544,7 +547,7 @@ export const GuestUnpackScreen: React.FC<GuestUnpackScreenProps> = ({ claimToken
   }
 
   return (
-    <div className="min-h-screen flex flex-col justify-between p-5 max-w-md mx-auto relative overflow-hidden">
+    <div className="h-screen max-h-screen flex flex-col justify-between p-5 max-w-md mx-auto relative overflow-hidden touch-none select-none">
       {/* Шапка источника */}
       <div className="text-center pt-4 z-10">
         <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-slate-900/80 border border-slate-800 text-xs text-amber-400 mb-2">
