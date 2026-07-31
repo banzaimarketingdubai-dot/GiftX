@@ -273,8 +273,8 @@ export const GuestLandingPage: React.FC<GuestLandingPageProps> = ({
                 </p>
               </div>
               <img
-                src="https://images.unsplash.com/photo-1544717305-2782549b5136?w=600&q=80"
-                alt="Delicious cocktails and rewards"
+                src="https://images.unsplash.com/photo-1513201099705-a9746e1e201f?w=600&q=80"
+                alt="Unboxing luxury gifts and rewards"
                 className="w-full h-36 rounded-2xl object-cover border border-slate-800 mt-2"
               />
             </div>
