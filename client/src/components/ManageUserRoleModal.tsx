@@ -13,10 +13,12 @@ import {
   Sliders, 
   Sparkles,
   Edit3,
-  LogOut
+  LogOut,
+  Gift
 } from 'lucide-react';
 import { getTelegramUserData, triggerHaptic, triggerNotificationHaptic } from '../telegram';
 import { useAppStore } from '../store/useAppStore';
+import { DemoBoxOpeningModal } from './DemoBoxOpeningModal';
 
 interface ManageUserRoleModalProps {
   onClose: () => void;
@@ -46,6 +48,7 @@ export const ManageUserRoleModal: React.FC<ManageUserRoleModalProps> = ({
   const [selectedRole, setSelectedRole] = useState<string>(currentStaff?.role || role || 'GUEST');
   const [loading, setLoading] = useState(false);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
+  const [showDemoBoxModal, setShowDemoBoxModal] = useState(false);
 
   // Смена роли в один клик
   const handleSelectRole = (newRole: string) => {
@@ -267,6 +270,18 @@ export const ManageUserRoleModal: React.FC<ManageUserRoleModalProps> = ({
                 <span className="text-[9px] opacity-80 block mt-1">Все заведения сети</span>
               </button>
             </div>
+
+            {/* Кнопка демонстрации анимации открытия бокса */}
+            <button
+              onClick={() => {
+                triggerHaptic('medium');
+                setShowDemoBoxModal(true);
+              }}
+              className="w-full py-2.5 px-3 rounded-2xl bg-gradient-to-r from-amber-500/20 via-amber-500/10 to-slate-950 hover:bg-amber-500/25 border border-amber-500/40 text-amber-400 font-bold text-xs flex items-center justify-center space-x-2 transition-all mt-2 shadow-md active:scale-95"
+            >
+              <Gift className="w-4 h-4 text-amber-400 animate-bounce" />
+              <span>🎁 Демонстрация открытия бокса для партнеров</span>
+            </button>
           </div>
 
           {/* 2. РЕГИСТРАЦИЯ В НОВОЕ ЗАВЕДЕНИЕ / ПОДАЧА ЗАЯВКИ */}
@@ -367,6 +382,11 @@ export const ManageUserRoleModal: React.FC<ManageUserRoleModalProps> = ({
 
         </div>
       </div>
+
+      {/* Модалка Демо-открытия бокса */}
+      {showDemoBoxModal && (
+        <DemoBoxOpeningModal onClose={() => setShowDemoBoxModal(false)} />
+      )}
     </div>
   );
 };

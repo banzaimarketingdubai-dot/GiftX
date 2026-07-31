@@ -15,9 +15,13 @@ import {
   PlusCircle,
   Calculator,
   Gift,
-  Award
+  Award,
+  Printer,
+  FileText,
+  Download
 } from 'lucide-react';
 import { triggerHaptic } from '../telegram';
+import { B2BPromoFlyerModal } from './B2BPromoFlyerModal';
 
 interface BusinessLandingPageProps {
   onRegisterPartner: () => void;
@@ -30,16 +34,14 @@ export const BusinessLandingPage: React.FC<BusinessLandingPageProps> = ({
   onSwitchToGuestLanding,
   onOpenAdminDemo,
 }) => {
-  // Состояние Калькулятора ROI
-  const [avgCheck, setAvgCheck] = useState<number>(300000);
-  const [targetCheck, setTargetCheck] = useState<number>(600000);
-  const [dailyChecks, setDailyChecks] = useState<number>(30);
+  const [showFlyerModal, setShowFlyerModal] = useState(false);
 
-  // Расчет результатов
-  const checkIncrease = Math.max(0, targetCheck - avgCheck);
-  const conversionRate = 0.4; // 40% гостей поднимают чек ради бокса
-  const monthlyRevenueGain = checkIncrease * dailyChecks * conversionRate * 30;
-  const monthlyNewGuests = Math.round(dailyChecks * 0.3 * 30);
+  // Расчёт примерных параметров прибыльности
+  const exampleAvgCheck = 300000;
+  const exampleTargetCheck = 600000;
+  const exampleDailyChecks = 30;
+  const exampleMonthlyGain = (exampleTargetCheck - exampleAvgCheck) * exampleDailyChecks * 0.4 * 30;
+  const exampleNewGuests = Math.round(exampleDailyChecks * 0.3 * 30);
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 relative overflow-hidden pb-16">
@@ -292,109 +294,99 @@ export const BusinessLandingPage: React.FC<BusinessLandingPageProps> = ({
         </div>
 
         {/* ========================================== */}
-        {/* 4. ROI CALCULATOR (КОМПАКТНЫЙ КАЛЬКУЛЯТОР ВЫГОДЫ ДЛЯ МОБИЛЬНЫХ) */}
+        {/* 4. PROFITABILITY EXAMPLE BREAKDOWN (ПРИМЕР РАСЧЁТА ПРИБЫЛЬНОСТИ) */}
         {/* ========================================== */}
-        <div className="glass-card p-4 sm:p-6 rounded-3xl border border-amber-500/30 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-950 space-y-4 shadow-2xl max-w-4xl mx-auto">
-          <div className="flex items-center justify-between gap-2 border-b border-slate-800/80 pb-2.5">
-            <div className="flex items-center space-x-2">
-              <Calculator className="w-5 h-5 text-amber-400 shrink-0" />
+        <div className="glass-card p-5 sm:p-7 rounded-3xl border border-amber-500/30 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-950 space-y-5 shadow-2xl max-w-4xl mx-auto">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-b border-slate-800 pb-3">
+            <div className="flex items-center space-x-3 text-center sm:text-left">
+              <span className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 font-black text-xl shrink-0">
+                📊
+              </span>
               <div>
-                <h3 className="font-black text-slate-100 text-sm sm:text-base">Калькулятор выручки заведения</h3>
-                <p className="text-[10px] text-slate-400">Посчитайте прирост прибыли от GiftX</p>
+                <h3 className="font-black text-slate-100 text-base sm:text-lg">Пример расчёта прибыльности заведения</h3>
+                <p className="text-xs text-slate-400">Наглядная математика роста выручки за 30 дней работы с GiftX</p>
               </div>
             </div>
-            <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20 shrink-0">
-              Бесплатно 0$
-            </span>
+            <button
+              onClick={() => {
+                triggerHaptic('medium');
+                setShowFlyerModal(true);
+              }}
+              className="px-4 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 text-xs font-black flex items-center space-x-1.5 transition-all shrink-0 active:scale-95"
+            >
+              <Printer className="w-4 h-4" />
+              <span>📄 B2B Листовка (PDF / JPEG)</span>
+            </button>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 items-center">
-            {/* Ползунки */}
-            <div className="lg:col-span-7 space-y-3">
-              {/* Поле 1: Текущий средний чек */}
-              <div className="space-y-1">
-                <div className="flex justify-between font-extrabold text-[11px] sm:text-xs text-slate-200">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+            {/* Карточка 1: Исходные параметры */}
+            <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-2.5 shadow-md">
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">
+                ☕ Исходные параметры ресторана / кафе:
+              </span>
+              <div className="space-y-1.5 text-slate-300">
+                <div className="flex justify-between">
                   <span>Текущий средний чек:</span>
-                  <span className="text-amber-400 font-black">{avgCheck.toLocaleString()} VND</span>
+                  <span className="font-extrabold text-amber-400">300,000 VND</span>
                 </div>
-                <input
-                  type="range"
-                  min="100000"
-                  max="1000000"
-                  step="50000"
-                  value={avgCheck}
-                  onChange={(e) => setAvgCheck(Number(e.target.value))}
-                  className="w-full accent-amber-500 bg-slate-800 rounded-lg cursor-pointer h-1.5"
-                />
-              </div>
-
-              {/* Поле 2: Целевой порог чека для GiftX */}
-              <div className="space-y-1">
-                <div className="flex justify-between font-extrabold text-[11px] sm:text-xs text-slate-200">
-                  <span>Целевой порог чека для GiftX:</span>
-                  <span className="text-emerald-400 font-black">{targetCheck.toLocaleString()} VND</span>
+                <div className="flex justify-between">
+                  <span>Порог чека для GiftX бокса:</span>
+                  <span className="font-extrabold text-emerald-400">600,000 VND (+100%)</span>
                 </div>
-                <input
-                  type="range"
-                  min="200000"
-                  max="2000000"
-                  step="50000"
-                  value={targetCheck}
-                  onChange={(e) => setTargetCheck(Number(e.target.value))}
-                  className="w-full accent-emerald-500 bg-slate-800 rounded-lg cursor-pointer h-1.5"
-                />
-              </div>
-
-              {/* Поле 3: Чеков в день */}
-              <div className="space-y-1">
-                <div className="flex justify-between font-extrabold text-[11px] sm:text-xs text-slate-200">
-                  <span>Чеков в день:</span>
-                  <span className="text-slate-100 font-black">{dailyChecks} чеков</span>
+                <div className="flex justify-between">
+                  <span>Обслуживаемых столов в день:</span>
+                  <span className="font-extrabold text-slate-100">30 чеков</span>
                 </div>
-                <input
-                  type="range"
-                  min="10"
-                  max="200"
-                  step="5"
-                  value={dailyChecks}
-                  onChange={(e) => setDailyChecks(Number(e.target.value))}
-                  className="w-full accent-amber-500 bg-slate-800 rounded-lg cursor-pointer h-1.5"
-                />
               </div>
             </div>
 
-            {/* Карточка результатов */}
-            <div className="lg:col-span-5 p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-2.5 shadow-xl">
-              <div className="space-y-0.5">
-                <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block">
-                  Расчётная выгода в месяц:
+            {/* Карточка 2: Итоговая выгода */}
+            <div className="p-4 rounded-2xl bg-slate-950 border border-emerald-500/30 space-y-2.5 shadow-md flex flex-col justify-between">
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-wider text-emerald-400 block">
+                  📈 Итоговый результат за 30 дней:
                 </span>
-                <h4 className="text-xl sm:text-2xl font-black text-emerald-400 leading-none">
-                  +{monthlyRevenueGain.toLocaleString()} VND
+                <h4 className="text-2xl font-black text-emerald-400 mt-1">
+                  +36,000,000 VND / мес
                 </h4>
               </div>
 
-              <div className="space-y-1 pt-1.5 border-t border-slate-900 text-[11px]">
+              <div className="space-y-1 pt-2 border-t border-slate-900 text-slate-300">
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-400">👥 Приток гостей/мес:</span>
-                  <span className="text-amber-400 font-black text-xs">+{monthlyNewGuests} клиентов</span>
+                  <span>👥 Приток новых гостей из сети:</span>
+                  <span className="text-amber-400 font-extrabold">+120 клиентов / мес</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-400">💰 Затраты на маркетинг:</span>
-                  <span className="text-emerald-400 font-bold">0$ (Бесплатно)</span>
+                  <span>💰 Стоимость привлечения (CAC):</span>
+                  <span className="text-emerald-400 font-bold">0$ (Кросс-маркетинг)</span>
                 </div>
               </div>
-
-              <button
-                onClick={() => {
-                  triggerHaptic('heavy');
-                  onRegisterPartner();
-                }}
-                className="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl shadow-md shadow-amber-500/20 active:scale-95 transition-all mt-1"
-              >
-                Подключить заведение с этими параметрами
-              </button>
             </div>
+          </div>
+
+          <div className="pt-2 flex flex-col sm:flex-row justify-center items-center gap-3">
+            <button
+              onClick={() => {
+                triggerHaptic('heavy');
+                onRegisterPartner();
+              }}
+              className="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-amber-500 to-amber-600 font-black text-slate-950 text-xs sm:text-sm rounded-2xl shadow-xl shadow-amber-500/20 active:scale-95 transition-all hover:brightness-110 flex items-center justify-center space-x-2"
+            >
+              <span>Подключить заведение бесплатно</span>
+              <ArrowRight className="w-4 h-4 text-slate-950" />
+            </button>
+
+            <button
+              onClick={() => {
+                triggerHaptic('light');
+                setShowFlyerModal(true);
+              }}
+              className="w-full sm:w-auto px-6 py-3.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 font-bold text-slate-200 text-xs rounded-2xl flex items-center justify-center space-x-2 transition-all"
+            >
+              <Download className="w-4 h-4 text-amber-400" />
+              <span>Скачать рекламную листовку B2B</span>
+            </button>
           </div>
         </div>
 
@@ -465,10 +457,29 @@ export const BusinessLandingPage: React.FC<BusinessLandingPageProps> = ({
               <span>Зарегистрировать заведение бесплатно</span>
               <ArrowRight className="w-5 h-5 text-slate-950" />
             </button>
+
+            <button
+              onClick={() => {
+                triggerHaptic('medium');
+                setShowFlyerModal(true);
+              }}
+              className="w-full sm:w-auto px-6 py-4 bg-slate-900 hover:bg-slate-800 border border-slate-800 font-bold text-slate-200 rounded-2xl flex items-center justify-center space-x-2 text-sm transition-all"
+            >
+              <Printer className="w-4 h-4 text-amber-400" />
+              <span>📄 Листовка B2B (PDF / JPEG)</span>
+            </button>
           </div>
         </div>
 
       </div>
+
+      {/* Модалка Рекламной Листовки B2B */}
+      {showFlyerModal && (
+        <B2BPromoFlyerModal
+          onClose={() => setShowFlyerModal(false)}
+          onRegisterClick={onRegisterPartner}
+        />
+      )}
     </div>
   );
 };

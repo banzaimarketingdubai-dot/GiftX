@@ -24,10 +24,13 @@ import { Partner, StaffMember, VoucherOffer, PartnerCategory, VoucherCategory } 
 import { PartnerRegistrationModal } from './PartnerRegistrationModal';
 import { triggerHaptic, triggerNotificationHaptic } from '../telegram';
 
+import { DemoBoxOpeningModal } from './DemoBoxOpeningModal';
+
 export const AdminDashboardScreen: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'VENUES' | 'STAFF' | 'APPLICATIONS' | 'OFFERS' | 'ANALYTICS'>('VENUES');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showDemoBoxModal, setShowDemoBoxModal] = useState(false);
 
   const [stats, setStats] = useState({
     totalPartners: 0,
@@ -227,7 +230,7 @@ export const AdminDashboardScreen: React.FC = () => {
   return (
     <div className="p-4 max-w-md mx-auto min-h-screen pb-24 text-slate-100 space-y-5">
       {/* Шапка админ-панели */}
-      <div className="glass-card p-5 rounded-3xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-slate-900 to-slate-900 flex items-center justify-between">
+      <div className="glass-card p-5 rounded-3xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-slate-900 to-slate-900 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
           <div className="flex items-center space-x-2 text-xs font-bold text-amber-400 uppercase tracking-wider mb-1">
             <ShieldAlert className="w-4 h-4" />
@@ -235,9 +238,17 @@ export const AdminDashboardScreen: React.FC = () => {
           </div>
           <h1 className="text-xl font-black text-slate-100">GiftX Admin Center</h1>
         </div>
-        <div className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center font-bold text-amber-400 text-sm">
-          ⚙️
-        </div>
+        
+        <button
+          onClick={() => {
+            triggerHaptic('medium');
+            setShowDemoBoxModal(true);
+          }}
+          className="w-full sm:w-auto px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shadow-md shadow-amber-500/20 flex items-center justify-center space-x-1.5 active:scale-95 transition-all"
+        >
+          <Gift className="w-4 h-4 text-slate-950" />
+          <span>🎁 Демо-открытие бокса</span>
+        </button>
       </div>
 
       {/* Метрики KPI */}
@@ -946,6 +957,11 @@ export const AdminDashboardScreen: React.FC = () => {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Модалка Демо-открытия бокса */}
+      {showDemoBoxModal && (
+        <DemoBoxOpeningModal onClose={() => setShowDemoBoxModal(false)} />
       )}
     </div>
   );
