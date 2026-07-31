@@ -509,7 +509,7 @@ export const AdminDashboardScreen: React.FC = () => {
               />
             </div>
 
-            <div className="flex space-x-1">
+            <div className="flex space-x-1 overflow-x-auto no-scrollbar py-0.5">
               {[
                 { id: 'ALL', label: 'Все' },
                 { id: 'PENDING', label: '⏳ Ожидают' },
@@ -519,9 +519,9 @@ export const AdminDashboardScreen: React.FC = () => {
                 <button
                   key={f.id}
                   onClick={() => setAppStatusFilter(f.id as any)}
-                  className={`flex-1 py-1.5 px-2 rounded-xl text-[10px] font-extrabold transition-all ${
+                  className={`flex-1 py-1.5 px-2 rounded-xl text-[10px] font-extrabold whitespace-nowrap shrink-0 transition-all ${
                     appStatusFilter === f.id
-                      ? 'bg-amber-500 text-slate-950'
+                      ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
                       : 'bg-slate-950 text-slate-400 border border-slate-800'
                   }`}
                 >
@@ -543,18 +543,18 @@ export const AdminDashboardScreen: React.FC = () => {
                   key={app.id}
                   className="glass-card p-4 rounded-2xl border border-slate-800 space-y-3 shadow-md"
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center space-x-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center space-x-3 min-w-0">
                       <img
                         src={app.partnerLogo}
                         alt={app.partnerName}
                         className="w-11 h-11 rounded-xl object-cover border border-slate-700 shrink-0"
                       />
-                      <div>
-                        <div className="flex items-center space-x-2">
-                          <span className="font-extrabold text-slate-100 text-sm">{app.applicantName}</span>
+                      <div className="min-w-0">
+                        <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+                          <span className="font-extrabold text-slate-100 text-sm truncate">{app.applicantName}</span>
                           <span
-                            className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${
+                            className={`px-2 py-0.5 rounded text-[9px] font-black uppercase whitespace-nowrap shrink-0 ${
                               app.applicantRole === 'MANAGER'
                                 ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
                                 : 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
@@ -563,14 +563,14 @@ export const AdminDashboardScreen: React.FC = () => {
                             {app.applicantRole}
                           </span>
                         </div>
-                        <span className="text-xs text-amber-400 font-semibold block mt-0.5">
+                        <span className="text-xs text-amber-400 font-semibold block mt-0.5 truncate">
                           🏬 {app.partnerName}
                         </span>
                       </div>
                     </div>
 
                     <span
-                      className={`px-2.5 py-1 rounded-xl text-[10px] font-black uppercase border ${
+                      className={`px-2.5 py-1 rounded-xl text-[10px] font-black uppercase border whitespace-nowrap shrink-0 ${
                         app.status === 'APPROVED'
                           ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
                           : app.status === 'REJECTED'
@@ -596,13 +596,13 @@ export const AdminDashboardScreen: React.FC = () => {
                     <div className="flex space-x-2 pt-1 border-t border-slate-800/60">
                       <button
                         onClick={() => handleRejectApplication(app.id)}
-                        className="flex-1 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 text-xs font-bold transition-all"
+                        className="flex-1 py-2.5 px-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 text-xs font-extrabold whitespace-nowrap flex items-center justify-center transition-all"
                       >
                         ❌ Отклонить
                       </button>
                       <button
                         onClick={() => handleApproveApplication(app.id)}
-                        className="flex-1 py-2 rounded-xl bg-emerald-500 text-slate-950 font-extrabold text-xs shadow-md shadow-emerald-500/20 hover:bg-emerald-400 transition-all"
+                        className="flex-1 py-2.5 px-2 rounded-xl bg-emerald-500 text-slate-950 font-black text-xs shadow-md shadow-emerald-500/20 hover:bg-emerald-400 whitespace-nowrap flex items-center justify-center transition-all"
                       >
                         ✅ Одобрить и привязать
                       </button>

@@ -125,8 +125,8 @@ export const GuestLandingPage: React.FC<GuestLandingPageProps> = ({
           <div className="lg:col-span-5 relative">
             <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-amber-500/30 group">
               <img
-                src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&q=80"
-                alt="Friends enjoying restaurant gifts"
+                src="/images/lively_terrace.png"
+                alt="Friends enjoying restaurant gifts in lively venue"
                 className="w-full h-80 sm:h-96 lg:h-[420px] object-cover group-hover:scale-105 transition-transform duration-700"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
@@ -235,8 +235,8 @@ export const GuestLandingPage: React.FC<GuestLandingPageProps> = ({
                 </p>
               </div>
               <img
-                src="https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=600&q=80"
-                alt="Dining out"
+                src="/images/lively_restaurant.png"
+                alt="Dining out in busy lively restaurant"
                 className="w-full h-36 rounded-2xl object-cover border border-slate-800 mt-2"
               />
             </div>
@@ -254,8 +254,8 @@ export const GuestLandingPage: React.FC<GuestLandingPageProps> = ({
                 </p>
               </div>
               <img
-                src="https://images.unsplash.com/photo-1559339352-11d035aa65de?w=600&q=80"
-                alt="Waiter showing QR"
+                src="/images/waiter_guest_dialogue.png"
+                alt="Friendly interaction between waiter and guest scanning QR"
                 className="w-full h-36 rounded-2xl object-cover border border-slate-800 mt-2"
               />
             </div>

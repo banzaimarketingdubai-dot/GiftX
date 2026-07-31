@@ -24,6 +24,7 @@ const PlayingCardsDeck: React.FC<PlayingCardsDeckProps> = ({ vouchers: initialVo
   const [flippedCards, setFlippedCards] = useState<Record<string, boolean>>({});
   const [confirmDiscardVoucher, setConfirmDiscardVoucher] = useState<ClaimedVoucher | null>(null);
   const [actionFeedback, setActionFeedback] = useState<{ id: string; type: 'SAVED' | 'DISCARDED' } | null>(null);
+  const [savedToast, setSavedToast] = useState<{ title: string; partnerName: string; discount?: string } | null>(null);
 
   useEffect(() => {
     setDeck(initialVouchers);
@@ -54,6 +55,17 @@ const PlayingCardsDeck: React.FC<PlayingCardsDeckProps> = ({ vouchers: initialVo
     triggerNotificationHaptic('success');
     setActionFeedback({ id: voucher.id, type: 'SAVED' });
     setSavedCount((prev) => prev + 1);
+
+    // Подтверждающее всплывающее уведомление на экран
+    setSavedToast({
+      title: voucher.voucherOffer?.title || 'Подарочный ваучер',
+      partnerName: voucher.voucherOffer?.partner?.name || 'Заведение сети',
+      discount: voucher.voucherOffer?.discountValue || '100% FREE',
+    });
+
+    setTimeout(() => {
+      setSavedToast(null);
+    }, 3200);
 
     // Уведомление на сервер и заведению о добавлении в кошелек
     const tgUser = getTelegramUserData();
@@ -191,12 +203,7 @@ const PlayingCardsDeck: React.FC<PlayingCardsDeckProps> = ({ vouchers: initialVo
           })}
         </div>
 
-        {/* Подсказка свайпа */}
-        <div className="flex items-center justify-center space-x-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-900/60 px-3 py-0.5 rounded-full border border-slate-800 max-w-xs mx-auto">
-          <span className="text-red-400">⬆️ Вверх = Скинуть</span>
-          <span>•</span>
-          <span className="text-emerald-400">⬇️ Вниз = В кошелек</span>
-        </div>
+
       </div>
 
       {/* 3D Контейнер стопки игральных карт */}
@@ -443,13 +450,45 @@ const PlayingCardsDeck: React.FC<PlayingCardsDeckProps> = ({ vouchers: initialVo
           </div>
         </div>
       )}
+
+      {/* Подтверждающее уведомление на экран о добавлении карточки в кошелек */}
+      {savedToast && (
+        <motion.div
+          initial={{ opacity: 0, y: -50, scale: 0.9 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -20, scale: 0.95 }}
+          onClick={() => setSavedToast(null)}
+          className="fixed top-6 left-4 right-4 z-50 max-w-sm mx-auto p-4 rounded-2xl bg-slate-900/95 border-2 border-emerald-500/80 text-slate-100 shadow-[0_10px_35px_rgba(16,185,129,0.35)] backdrop-blur-xl flex items-center space-x-3.5 cursor-pointer animate-scaleUp"
+        >
+          <div className="w-11 h-11 rounded-2xl bg-emerald-500/20 border border-emerald-400 text-emerald-400 flex items-center justify-center text-2xl shrink-0 shadow-inner">
+            🎁
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-black uppercase text-emerald-400 tracking-wider">
+                ✓ Сохранено в Кошелек!
+              </span>
+              <span className="text-[10px] font-mono font-black text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                {savedToast.discount}
+              </span>
+            </div>
+            <h4 className="text-xs font-black text-slate-100 truncate mt-0.5">
+              {savedToast.title}
+            </h4>
+            <p className="text-[10px] text-slate-400 truncate mt-0.5">
+              {savedToast.partnerName} • Доступен в разделе «Мои Подарки»
+            </p>
+          </div>
+        </motion.div>
+      )}
     </div>
   );
 };
 
 export const GuestUnpackScreen: React.FC<GuestUnpackScreenProps> = ({ claimToken, onFinished }) => {
   const { setRole } = useAppStore();
-  const [tapCount, setTapCount] = useState(0);
+  const [powerLevel, setPowerLevel] = useState<number>(0);
+  const [isOpening, setIsOpening] = useState<boolean>(false);
   const [unpacked, setUnpacked] = useState(false);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -482,20 +521,36 @@ export const GuestUnpackScreen: React.FC<GuestUnpackScreenProps> = ({ claimToken
     validateToken();
   }, [claimToken]);
 
-  // 2. Обработка тапа по коробке
+  // 2. Механика таймера сгорания энергии (если не тапать быстро — энергия сгорает)
+  useEffect(() => {
+    if (unpacked || loading || isOpening) return;
+
+    const timer = setInterval(() => {
+      setPowerLevel((prev) => {
+        if (prev <= 0) return 0;
+        // Энергия постепенно падает на 2.5% каждые 100 мс
+        return Math.max(0, prev - 2.5);
+      });
+    }, 100);
+
+    return () => clearInterval(timer);
+  }, [unpacked, loading, isOpening]);
+
+  // 3. Быстрый тап по коробке (кликер-механика)
   const handleBoxTap = async () => {
-    if (unpacked || loading || errorMsg) return;
+    if (unpacked || loading || errorMsg || isOpening) return;
 
-    const newTap = tapCount + 1;
-    setTapCount(newTap);
+    triggerHaptic('light');
 
-    if (newTap < 3) {
-      triggerHaptic('light');
-    } else {
-      // 3-й тап — ВЗРЫВ и получение ваучеров
-      triggerHaptic('heavy');
-      await claimVouchers();
-    }
+    setPowerLevel((prev) => {
+      const next = Math.min(100, prev + 12); // Каждый тап добавляет +12% энергии
+      if (next >= 100 && !isOpening) {
+        setIsOpening(true);
+        triggerHaptic('heavy');
+        claimVouchers();
+      }
+      return next;
+    });
   };
 
   const claimVouchers = async () => {
@@ -536,10 +591,11 @@ export const GuestUnpackScreen: React.FC<GuestUnpackScreenProps> = ({ claimToken
       setErrorMsg('Ошибка получения подарка: ' + e.message);
     } finally {
       setLoading(false);
+      setIsOpening(false);
     }
   };
 
-  if (loading && !unpacked && tapCount < 3) {
+  if (loading && !unpacked && powerLevel < 100 && !isOpening) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center">
         <div className="w-16 h-16 border-4 border-amber-500/20 border-t-amber-500 rounded-full animate-spin mb-4"></div>
@@ -582,35 +638,71 @@ export const GuestUnpackScreen: React.FC<GuestUnpackScreenProps> = ({ claimToken
           {unpacked ? 'Ваши GiftX Pass разблокированы!' : 'Вам вручили GiftX Box!'}
         </h1>
         <p className="text-slate-400 text-xs mt-1">
-          {unpacked ? 'Свайпайте карточки ↔️ и тапайте для 3D поворота 🔄' : `Тапните по коробке 3 раза (${tapCount}/3)`}
+          {unpacked ? 'Свайпайте карточки ↔️ и тапайте для 3D поворота 🔄' : '⚡ Быстро тапайте по коробке, чтобы заполнить шкалу!'}
         </p>
       </div>
+
+      {/* Шкала энергии / Индикатор кликера */}
+      {!unpacked && !loading && (
+        <div className="w-full max-w-xs mx-auto space-y-1.5 z-20 my-1">
+          <div className="flex justify-between items-center text-[11px] font-black tracking-wider px-1">
+            <span className="text-amber-400 flex items-center space-x-1">
+              <span>⚡ ТАП ЧТОБЫ ОТКРЫТЬ</span>
+              {powerLevel >= 80 && <span className="animate-ping text-red-500 text-xs">🔥</span>}
+            </span>
+            <span className={powerLevel > 70 ? 'text-emerald-400 font-extrabold' : 'text-slate-300'}>
+              {Math.round(powerLevel)}%
+            </span>
+          </div>
+
+          <div className="w-full h-4 rounded-full bg-slate-900 border border-amber-500/40 p-0.5 relative overflow-hidden shadow-xl">
+            <div
+              className={`h-full rounded-full transition-all duration-100 ${
+                powerLevel >= 85
+                  ? 'bg-gradient-to-r from-amber-500 via-emerald-400 to-emerald-300 shadow-[0_0_15px_rgba(16,185,129,0.8)]'
+                  : powerLevel >= 40
+                  ? 'bg-gradient-to-r from-amber-600 via-amber-400 to-emerald-400'
+                  : 'bg-gradient-to-r from-amber-600 to-amber-500'
+              }`}
+              style={{ width: `${powerLevel}%` }}
+            />
+          </div>
+
+          <div className="text-center">
+            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">
+              {powerLevel === 0 && '👇 Тапайте очень часто для зарядки!'}
+              {powerLevel > 0 && powerLevel < 40 && '⚡ БЫСТРЕЕ! Энергия сгорает!'}
+              {powerLevel >= 40 && powerLevel < 80 && '🔥 ЖМИТЕ СИЛЬНЕЕ! Бокс нагревается!'}
+              {powerLevel >= 80 && '💥 ПОЧТИ ОТКРЫЛСЯ! НЕ ОСТАНАВЛИВАЙТЕСЬ!'}
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Анимационный контур распаковки */}
       <div className="my-auto flex flex-col items-center justify-center relative min-h-[340px] z-10">
         {!unpacked ? (
           <motion.div
             onClick={handleBoxTap}
-            animate={
-              tapCount === 1 
-                ? { scale: [1, 0.92, 1.05], rotate: [-2, 2, 0] } 
-                : tapCount === 2 
-                ? { scale: [1, 0.88, 1.1], rotate: [-4, 4, 0] } 
-                : { y: [0, -8, 0] }
-            }
-            transition={{ duration: 0.3, ease: 'easeInOut' }}
-            whileTap={{ scale: 0.92, rotate: [-2, 2, 0] }}
+            animate={{
+              scale: 1 + (powerLevel / 100) * 0.18,
+              rotate: powerLevel > 20 ? [-(powerLevel / 15), powerLevel / 15, 0] : 0,
+            }}
+            transition={{ duration: 0.1, ease: 'easeOut' }}
+            whileTap={{ scale: 0.94 }}
             className="cursor-pointer relative group flex items-center justify-center"
           >
             {/* Неоновое свечение GiftX */}
-            <div className={`absolute inset-0 blur-3xl rounded-full animate-pulse-slow ${
+            <div className={`absolute inset-0 blur-3xl rounded-full transition-all ${
+              powerLevel >= 80 ? 'bg-amber-400/60 scale-125' :
               boxLevel === 'PLATINUM' ? 'bg-purple-500/30' :
               boxLevel === 'GOLD' ? 'bg-amber-500/30' :
               boxLevel === 'SILVER' ? 'bg-cyan-500/30' : 'bg-purple-500/20'
             }`}></div>
 
             {/* 3D Коробка GiftX UI Asset */}
-            <div className={`w-56 h-56 rounded-3xl flex flex-col items-center justify-center border-2 shadow-2xl relative z-10 overflow-hidden transform group-active:scale-95 transition-transform ${
+            <div className={`w-56 h-56 rounded-3xl flex flex-col items-center justify-center border-2 shadow-2xl relative z-10 overflow-hidden transform transition-all ${
+              powerLevel >= 80 ? 'border-amber-300 shadow-[0_0_40px_rgba(245,158,11,0.7)]' :
               boxLevel === 'PLATINUM' ? 'glass-card border-purple-500/60 bg-gradient-to-br from-purple-950/80 to-slate-950' :
               boxLevel === 'GOLD' ? 'glass-gold border-amber-400/60' :
               boxLevel === 'SILVER' ? 'glass-silver border-cyan-400/50' : 'glass-basic border-purple-400/40'
@@ -618,7 +710,8 @@ export const GuestUnpackScreen: React.FC<GuestUnpackScreenProps> = ({ claimToken
               <div className="absolute -top-8 -right-8 w-24 h-24 bg-amber-400/20 blur-2xl rounded-full"></div>
               
               <div className="relative">
-                <Gift className={`w-28 h-28 drop-shadow-[0_10px_15px_rgba(245,158,11,0.5)] animate-float ${
+                <Gift className={`w-28 h-28 drop-shadow-[0_10px_15px_rgba(245,158,11,0.5)] ${
+                  powerLevel >= 80 ? 'text-amber-300 animate-bounce' :
                   boxLevel === 'PLATINUM' ? 'text-purple-400' :
                   boxLevel === 'GOLD' ? 'text-amber-400' :
                   boxLevel === 'SILVER' ? 'text-cyan-400' : 'text-purple-400'
@@ -633,20 +726,6 @@ export const GuestUnpackScreen: React.FC<GuestUnpackScreenProps> = ({ claimToken
                 <Sparkles className="w-3 h-3 text-amber-400" />
                 <span>GiftX {boxLevel}</span>
               </div>
-            </div>
-
-            {/* Индикатор 3 тапов */}
-            <div className="absolute -bottom-10 flex space-x-2">
-              {[1, 2, 3].map((step) => (
-                <div
-                  key={step}
-                  className={`w-3 h-3 rounded-full transition-all ${
-                    tapCount >= step 
-                      ? 'bg-amber-400 scale-125 shadow-lg shadow-amber-400/50' 
-                      : 'bg-slate-800'
-                  }`}
-                />
-              ))}
             </div>
           </motion.div>
         ) : (

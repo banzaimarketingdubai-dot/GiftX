@@ -467,7 +467,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
                           <div className="flex items-center space-x-1.5">
                             <span className="font-extrabold text-slate-100">{app.applicantName}</span>
                             <span
-                              className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase ${
+                              className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase whitespace-nowrap shrink-0 ${
                                 app.applicantRole === 'MANAGER'
                                   ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
                                   : 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
@@ -482,7 +482,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
                         </div>
 
                         <span
-                          className={`px-2 py-0.5 rounded text-[9px] font-bold ${
+                          className={`px-2 py-0.5 rounded text-[9px] font-bold whitespace-nowrap shrink-0 ${
                             app.status === 'APPROVED'
                               ? 'bg-emerald-500/10 text-emerald-400'
                               : app.status === 'REJECTED'
@@ -494,22 +494,22 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
                         </span>
                       </div>
 
-                      {app.status === 'PENDING' && (
-                        <div className="flex space-x-2 pt-1 border-t border-slate-800/60">
-                          <button
-                            onClick={() => handleRejectPartnerApp(app.id)}
-                            className="flex-1 py-1 px-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-[10px] font-bold"
-                          >
-                            ❌ Отклонить
-                          </button>
-                          <button
-                            onClick={() => handleApprovePartnerApp(app.id)}
-                            className="flex-1 py-1 px-2 rounded-lg bg-emerald-500 text-slate-950 font-black text-[10px] shadow-sm shadow-emerald-500/20 hover:bg-emerald-400"
-                          >
-                            ✅ Одобрить
-                          </button>
-                        </div>
-                      )}
+                        {app.status === 'PENDING' && (
+                          <div className="flex space-x-2 pt-1 border-t border-slate-800/60">
+                            <button
+                              onClick={() => handleRejectPartnerApp(app.id)}
+                              className="flex-1 py-1.5 px-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-[10px] font-bold whitespace-nowrap flex items-center justify-center"
+                            >
+                              ❌ Отклонить
+                            </button>
+                            <button
+                              onClick={() => handleApprovePartnerApp(app.id)}
+                              className="flex-1 py-1.5 px-2 rounded-lg bg-emerald-500 text-slate-950 font-black text-[10px] shadow-sm shadow-emerald-500/20 hover:bg-emerald-400 whitespace-nowrap flex items-center justify-center"
+                            >
+                              ✅ Одобрить
+                            </button>
+                          </div>
+                        )}
                     </div>
                   ))
                 )}

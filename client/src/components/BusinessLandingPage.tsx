@@ -137,8 +137,8 @@ export const BusinessLandingPage: React.FC<BusinessLandingPageProps> = ({
           <div className="lg:col-span-5 relative">
             <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-emerald-500/30 group">
               <img
-                src="https://images.unsplash.com/photo-1552566626-52f8b828add9?w=800&q=80"
-                alt="Successful restaurant venue"
+                src="/images/lively_terrace.png"
+                alt="Full lively restaurant venue with guests"
                 className="w-full h-80 sm:h-96 lg:h-[420px] object-cover group-hover:scale-105 transition-transform duration-700"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
@@ -247,8 +247,8 @@ export const BusinessLandingPage: React.FC<BusinessLandingPageProps> = ({
                 </p>
               </div>
               <img
-                src="https://images.unsplash.com/photo-1552566626-52f8b828add9?w=600&q=80"
-                alt="Venue onboarding"
+                src="/images/lively_restaurant.png"
+                alt="Venue onboarding with happy guests"
                 className="w-full h-36 rounded-2xl object-cover border border-slate-800 mt-2"
               />
             </div>
@@ -266,8 +266,8 @@ export const BusinessLandingPage: React.FC<BusinessLandingPageProps> = ({
                 </p>
               </div>
               <img
-                src="https://images.unsplash.com/photo-1559339352-11d035aa65de?w=600&q=80"
-                alt="Waiter presenting box"
+                src="/images/waiter_guest_dialogue.png"
+                alt="Friendly dialogue between waiter and guest"
                 className="w-full h-36 rounded-2xl object-cover border border-slate-800 mt-2"
               />
             </div>
@@ -285,8 +285,8 @@ export const BusinessLandingPage: React.FC<BusinessLandingPageProps> = ({
                 </p>
               </div>
               <img
-                src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&q=80"
-                alt="Happy customers in venue"
+                src="/images/lively_terrace.png"
+                alt="Happy customers in lively venue"
                 className="w-full h-36 rounded-2xl object-cover border border-slate-800 mt-2"
               />
             </div>
@@ -422,8 +422,8 @@ export const BusinessLandingPage: React.FC<BusinessLandingPageProps> = ({
 
           <div className="lg:col-span-6">
             <img
-              src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600&q=80"
-              alt="Waiters team and staff leaderboard"
+              src="/images/waiter_happy_guests.png"
+              alt="Waiters team and happy guests"
               className="w-full h-72 sm:h-80 rounded-3xl object-cover border border-slate-800 shadow-2xl"
             />
           </div>
