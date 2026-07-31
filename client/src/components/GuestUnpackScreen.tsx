@@ -55,6 +55,18 @@ const PlayingCardsDeck: React.FC<PlayingCardsDeckProps> = ({ vouchers: initialVo
     setActionFeedback({ id: voucher.id, type: 'SAVED' });
     setSavedCount((prev) => prev + 1);
 
+    // Уведомление на сервер и заведению о добавлении в кошелек
+    const tgUser = getTelegramUserData();
+    fetch('/api/guest/claim-voucher-action', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        voucherId: voucher.id,
+        action: 'SAVED',
+        telegramId: tgUser?.id
+      })
+    }).catch(e => console.warn('Notify save error:', e));
+
     setTimeout(() => {
       setDeck((prev) => prev.filter((item) => item.id !== voucher.id));
       setActionFeedback(null);
@@ -68,6 +80,18 @@ const PlayingCardsDeck: React.FC<PlayingCardsDeckProps> = ({ vouchers: initialVo
     triggerNotificationHaptic('warning');
     setActionFeedback({ id: voucher.id, type: 'DISCARDED' });
     setDiscardedCount((prev) => prev + 1);
+
+    // Уведомление на сервер и заведению об отказе от подарка
+    const tgUser = getTelegramUserData();
+    fetch('/api/guest/claim-voucher-action', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        voucherId: voucher.id,
+        action: 'DISCARDED',
+        telegramId: tgUser?.id
+      })
+    }).catch(e => console.warn('Notify discard error:', e));
 
     setTimeout(() => {
       setDeck((prev) => prev.filter((item) => item.id !== voucher.id));

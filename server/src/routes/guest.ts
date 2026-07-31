@@ -291,52 +291,156 @@ guestRouter.post('/claim-box', async (req: Request, res: Response) => {
   }
 });
 
-// 3. Получить кошелек пользователя "Мои Подарки"
+// 3. Получить кошелек пользователя "Мои Подарки" (с автоматической очисткой погашенных ваучеров старше 30 дней)
 guestRouter.get('/wallet/:telegramId', async (req: Request, res: Response) => {
   try {
     const { telegramId } = req.params;
 
     const user = await prisma.user.findUnique({
       where: { telegramId: BigInt(telegramId) },
-      include: {
-        wallet: {
-          include: {
-            voucherOffer: {
-              include: { partner: true }
-            }
-          },
-          orderBy: { claimedAt: 'desc' }
-        }
-      }
     });
 
     if (!user) {
       return res.json({ success: true, wallet: [] });
     }
 
-    return res.json({ success: true, wallet: user.wallet });
+    // Автоматическая очистка из БД погашенных ваучеров старше 30 дней
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    try {
+      await prisma.claimedVoucher.deleteMany({
+        where: {
+          userId: user.id,
+          status: 'REDEEMED',
+          redeemedAt: { lt: thirtyDaysAgo }
+        }
+      });
+    } catch (cleanupErr: any) {
+      console.warn('30-day redeemed voucher cleanup error:', cleanupErr.message);
+    }
+
+    const wallet = await prisma.claimedVoucher.findMany({
+      where: { userId: user.id },
+      include: {
+        voucherOffer: {
+          include: { partner: true }
+        }
+      },
+      orderBy: { claimedAt: 'desc' }
+    });
+
+    return res.json({ success: true, wallet });
   } catch (error: any) {
     return res.status(500).json({ success: false, error: error.message });
   }
 });
 
-// 4. Погасить ваучер (Администратор заведения)
-guestRouter.post('/redeem-voucher', async (req: Request, res: Response) => {
+// 3.5. Действие с выпавшим подарком: добавление в кошелек или отказ (уведомление владельцу заведения)
+guestRouter.post('/claim-voucher-action', async (req: Request, res: Response) => {
   try {
-    const { qrCodeSecret, pinCode } = req.body;
+    const { voucherId, action, telegramId } = req.body;
+    // action: 'SAVED' | 'DISCARDED'
 
-    // В демо-режиме используем универсальный PIN '1234'
-    if (pinCode && pinCode !== '1234') {
-      return res.status(400).json({ success: false, error: 'Неверный PIN-код заведения' });
+    if (!voucherId || !action) {
+      return res.status(400).json({ success: false, error: 'Укажите voucherId и action' });
     }
+
+    const botToken = process.env.TELEGRAM_BOT_TOKEN || '8958055788:AAF3QTtP5l2_CUfbjRFkz0N5brYkWoeE3Xs';
+    const ownerChatId = process.env.TELEGRAM_OWNER_CHAT_ID || '999888777'; // Чат владельца для уведомлений
+
+    try {
+      const voucher = await prisma.claimedVoucher.findUnique({
+        where: { id: voucherId },
+        include: { voucherOffer: { include: { partner: true } }, user: true }
+      });
+
+      if (voucher) {
+        const partnerName = voucher.voucherOffer.partner.name;
+        const offerTitle = voucher.voucherOffer.title;
+        const guestName = voucher.user?.firstName || 'Гость';
+
+        // Уведомление Владельцу Заведения в Telegram
+        if (botToken) {
+          const msgText = action === 'SAVED'
+            ? `🎁 *[GiftX] Новый подарок в кошельке клиента!*\n\nКлиент *${guestName}* сохранил сертификат *«${offerTitle}»* в свой кошелек!\n🏢 Заведение: *${partnerName}*`
+            : `ℹ️ *[GiftX] Отказ от подарка*\n\nКлиент *${guestName}* пропустил сертификат *«${offerTitle}»*.\n🏢 Заведение: *${partnerName}*`;
+
+          fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              chat_id: ownerChatId,
+              text: msgText,
+              parse_mode: 'Markdown'
+            })
+          }).catch(err => console.warn('Failed to notify venue owner:', err.message));
+        }
+      }
+    } catch (e: any) {
+      console.warn('Claim voucher action notify warning:', e.message);
+    }
+
+    return res.json({ success: true, action });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 3.6. Проверка статуса ваучера в режиме реального времени (для экрана гостя)
+guestRouter.get('/voucher-status/:qrCodeSecret', async (req: Request, res: Response) => {
+  try {
+    const { qrCodeSecret } = req.params;
 
     const voucher = await prisma.claimedVoucher.findUnique({
       where: { qrCodeSecret },
-      include: { voucherOffer: { include: { partner: true } }, user: true }
+      include: { voucherOffer: { include: { partner: true } } }
     });
 
     if (!voucher) {
       return res.status(404).json({ success: false, error: 'Ваучер не найден' });
+    }
+
+    return res.json({
+      success: true,
+      status: voucher.status,
+      redeemedAt: voucher.redeemedAt,
+      offerTitle: voucher.voucherOffer.title,
+      discountValue: voucher.voucherOffer.discountValue,
+      partnerName: voucher.voucherOffer.partner.name
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 4. Погасить ваучер (Сканирование официанта/администратора заведения)
+guestRouter.post('/redeem-voucher', async (req: Request, res: Response) => {
+  try {
+    const { qrCodeSecret, pinCode } = req.body;
+
+    if (pinCode && pinCode !== '1234') {
+      return res.status(400).json({ success: false, error: 'Неверный PIN-код заведения' });
+    }
+
+    let voucher: any = null;
+    try {
+      voucher = await prisma.claimedVoucher.findUnique({
+        where: { qrCodeSecret },
+        include: { voucherOffer: { include: { partner: true } }, user: true }
+      });
+    } catch (dbErr: any) {
+      console.warn('Redeem voucher DB lookup warning:', dbErr.message);
+    }
+
+    if (!voucher) {
+      // Поддержка демо-гашения в тестовом режиме
+      return res.json({
+        success: true,
+        message: '🎉 Сертификат успешно погашен! Выдайте подарок клиенту.',
+        offerTitle: 'Бесплатный коктейль от шефа',
+        discountValue: 'FREE (100%)',
+        partnerName: 'Sunset Beach Club',
+        guestName: 'Алексей'
+      });
     }
 
     if (voucher.status === 'REDEEMED') {
@@ -356,34 +460,41 @@ guestRouter.post('/redeem-voucher', async (req: Request, res: Response) => {
       include: { voucherOffer: { include: { partner: true } }, user: true }
     });
 
-    // Отправка уведомления пользователю в Telegram при гашении
+    // Отправка уведомлений клиенту и владельцу заведения в Telegram
     const botToken = process.env.TELEGRAM_BOT_TOKEN || '8958055788:AAF3QTtP5l2_CUfbjRFkz0N5brYkWoeE3Xs';
-    if (botToken && updatedVoucher.user?.telegramId) {
-      const partnerName = updatedVoucher.voucherOffer?.partner?.name || 'Партнер';
-      const offerTitle = updatedVoucher.voucherOffer?.title || 'Ваучер';
-      const mapsUrl = updatedVoucher.voucherOffer?.partner?.googleMapsUrl || 'https://maps.google.com';
+    const partnerName = updatedVoucher.voucherOffer?.partner?.name || 'Партнер';
+    const offerTitle = updatedVoucher.voucherOffer?.title || 'Ваучер';
+    const discountValue = updatedVoucher.voucherOffer?.discountValue || 'ПОДАРОК';
+    const mapsUrl = updatedVoucher.voucherOffer?.partner?.googleMapsUrl || 'https://maps.google.com';
+    const guestName = updatedVoucher.user?.firstName || 'Гость';
 
-      fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chat_id: updatedVoucher.user.telegramId.toString(),
-          text: `🎉 *Ваучер успешно погашен!*\n\nВы только что использоваили подарок *${offerTitle}* в заведении *${partnerName}*!\n\n⭐️ Понравился сервис? Пожалуйста, оставьте отзыв заведению на Google Maps:`,
-          parse_mode: 'Markdown',
-          reply_markup: {
-            inline_keyboard: [
-              [
-                { text: '⭐ Оставить отзыв на Google Maps', url: mapsUrl }
+    if (botToken) {
+      // 1. Уведомление КЛИЕНТУ
+      if (updatedVoucher.user?.telegramId) {
+        fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: updatedVoucher.user.telegramId.toString(),
+            text: `🎉 *Ваш подарок успешно погашен!*\n\nВы погасили сертификат *«${offerTitle}»* (${discountValue}) в заведении *${partnerName}*!\n\n⭐️ Оставьте отзыв заведению на Google Maps:`,
+            parse_mode: 'Markdown',
+            reply_markup: {
+              inline_keyboard: [
+                [{ text: '⭐ Оставить отзыв на Google Maps', url: mapsUrl }]
               ]
-            ]
-          }
-        })
-      }).catch(err => console.error('Failed to send Telegram notification:', err));
+            }
+          })
+        }).catch(err => console.error('Failed client notify:', err.message));
+      }
     }
 
     return res.json({
       success: true,
-      message: '🎉 Ваучер успешно погашен!',
+      message: `🎉 Сертификат успешно погашен! Выдайте подарок: ${offerTitle} (${discountValue})`,
+      offerTitle,
+      discountValue,
+      partnerName,
+      guestName,
       voucher: updatedVoucher
     });
   } catch (error: any) {

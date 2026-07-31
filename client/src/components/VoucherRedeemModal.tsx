@@ -23,6 +23,27 @@ export const VoucherRedeemModal: React.FC<VoucherRedeemModalProps> = ({
   const offer = voucher.voucherOffer;
   const partner = offer?.partner;
 
+  // Polling проверки статуса гашения в реальном времени (каждые 2 секунды)
+  React.useEffect(() => {
+    if (redeemed || !voucher.qrCodeSecret) return;
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/guest/voucher-status/${voucher.qrCodeSecret}`);
+        const data = await res.json();
+        if (data.success && data.status === 'REDEEMED') {
+          triggerNotificationHaptic('success');
+          setRedeemed(true);
+          onRedeemedSuccess();
+        }
+      } catch (e) {
+        console.warn('Voucher status poll error:', e);
+      }
+    }, 2000);
+
+    return () => clearInterval(pollInterval);
+  }, [voucher.qrCodeSecret, redeemed]);
+
   const handleRedeem = async () => {
     if (!pin || pin.length < 4) {
       setErrorMsg('Введите 4-значный PIN-код');
