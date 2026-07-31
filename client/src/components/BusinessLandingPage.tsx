@@ -292,28 +292,28 @@ export const BusinessLandingPage: React.FC<BusinessLandingPageProps> = ({
         </div>
 
         {/* ========================================== */}
-        {/* 4. ROI CALCULATOR (АДАПТИВНЫЙ КАЛЬКУЛЯТОР ВЫГОДЫ) */}
+        {/* 4. ROI CALCULATOR (КОМПАКТНЫЙ КАЛЬКУЛЯТОР ВЫГОДЫ ДЛЯ МОБИЛЬНЫХ) */}
         {/* ========================================== */}
-        <div className="glass-card p-6 sm:p-8 rounded-3xl border border-amber-500/30 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-950 space-y-6 shadow-2xl max-w-4xl mx-auto">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center space-x-3 text-center sm:text-left">
-              <Calculator className="w-8 h-8 text-amber-400 shrink-0" />
+        <div className="glass-card p-4 sm:p-6 rounded-3xl border border-amber-500/30 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-950 space-y-4 shadow-2xl max-w-4xl mx-auto">
+          <div className="flex items-center justify-between gap-2 border-b border-slate-800/80 pb-2.5">
+            <div className="flex items-center space-x-2">
+              <Calculator className="w-5 h-5 text-amber-400 shrink-0" />
               <div>
-                <h3 className="font-black text-slate-100 text-lg sm:text-xl">Калькулятор прироста выручки заведения</h3>
-                <p className="text-xs text-slate-400">Передвигайте ползунки и посчитайте дополнительную прибыль</p>
+                <h3 className="font-black text-slate-100 text-sm sm:text-base">Калькулятор выручки заведения</h3>
+                <p className="text-[10px] text-slate-400">Посчитайте прирост прибыли от GiftX</p>
               </div>
             </div>
-            <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-xl border border-emerald-500/20">
-              Бесплатная B2B модель
+            <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20 shrink-0">
+              Бесплатно 0$
             </span>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center pt-2">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 items-center">
             {/* Ползунки */}
-            <div className="lg:col-span-7 space-y-5">
+            <div className="lg:col-span-7 space-y-3">
               {/* Поле 1: Текущий средний чек */}
-              <div className="space-y-1.5">
-                <div className="flex justify-between font-extrabold text-xs sm:text-sm text-slate-200">
+              <div className="space-y-1">
+                <div className="flex justify-between font-extrabold text-[11px] sm:text-xs text-slate-200">
                   <span>Текущий средний чек:</span>
                   <span className="text-amber-400 font-black">{avgCheck.toLocaleString()} VND</span>
                 </div>
@@ -324,14 +324,14 @@ export const BusinessLandingPage: React.FC<BusinessLandingPageProps> = ({
                   step="50000"
                   value={avgCheck}
                   onChange={(e) => setAvgCheck(Number(e.target.value))}
-                  className="w-full accent-amber-500 bg-slate-800 rounded-lg cursor-pointer h-2"
+                  className="w-full accent-amber-500 bg-slate-800 rounded-lg cursor-pointer h-1.5"
                 />
               </div>
 
               {/* Поле 2: Целевой порог чека для GiftX */}
-              <div className="space-y-1.5">
-                <div className="flex justify-between font-extrabold text-xs sm:text-sm text-slate-200">
-                  <span>Целевой порог чека для GiftX бокса:</span>
+              <div className="space-y-1">
+                <div className="flex justify-between font-extrabold text-[11px] sm:text-xs text-slate-200">
+                  <span>Целевой порог чека для GiftX:</span>
                   <span className="text-emerald-400 font-black">{targetCheck.toLocaleString()} VND</span>
                 </div>
                 <input
@@ -341,14 +341,14 @@ export const BusinessLandingPage: React.FC<BusinessLandingPageProps> = ({
                   step="50000"
                   value={targetCheck}
                   onChange={(e) => setTargetCheck(Number(e.target.value))}
-                  className="w-full accent-emerald-500 bg-slate-800 rounded-lg cursor-pointer h-2"
+                  className="w-full accent-emerald-500 bg-slate-800 rounded-lg cursor-pointer h-1.5"
                 />
               </div>
 
               {/* Поле 3: Чеков в день */}
-              <div className="space-y-1.5">
-                <div className="flex justify-between font-extrabold text-xs sm:text-sm text-slate-200">
-                  <span>Обслуживаемых чеков в день:</span>
+              <div className="space-y-1">
+                <div className="flex justify-between font-extrabold text-[11px] sm:text-xs text-slate-200">
+                  <span>Чеков в день:</span>
                   <span className="text-slate-100 font-black">{dailyChecks} чеков</span>
                 </div>
                 <input
@@ -358,26 +358,26 @@ export const BusinessLandingPage: React.FC<BusinessLandingPageProps> = ({
                   step="5"
                   value={dailyChecks}
                   onChange={(e) => setDailyChecks(Number(e.target.value))}
-                  className="w-full accent-amber-500 bg-slate-800 rounded-lg cursor-pointer h-2"
+                  className="w-full accent-amber-500 bg-slate-800 rounded-lg cursor-pointer h-1.5"
                 />
               </div>
             </div>
 
-            {/* Карточка с подведенными итоговыми данными */}
-            <div className="lg:col-span-5 p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-4 shadow-xl">
-              <div className="space-y-1">
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">
+            {/* Карточка результатов */}
+            <div className="lg:col-span-5 p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-2.5 shadow-xl">
+              <div className="space-y-0.5">
+                <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block">
                   Расчётная выгода в месяц:
                 </span>
-                <h4 className="text-2xl sm:text-3xl font-black text-emerald-400">
+                <h4 className="text-xl sm:text-2xl font-black text-emerald-400 leading-none">
                   +{monthlyRevenueGain.toLocaleString()} VND
                 </h4>
               </div>
 
-              <div className="space-y-2 pt-2 border-t border-slate-900 text-xs">
+              <div className="space-y-1 pt-1.5 border-t border-slate-900 text-[11px]">
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-400">👥 Приток новых гостей/мес:</span>
-                  <span className="text-amber-400 font-black text-sm">+{monthlyNewGuests} клиентов</span>
+                  <span className="text-slate-400">👥 Приток гостей/мес:</span>
+                  <span className="text-amber-400 font-black text-xs">+{monthlyNewGuests} клиентов</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-slate-400">💰 Затраты на маркетинг:</span>
@@ -390,7 +390,7 @@ export const BusinessLandingPage: React.FC<BusinessLandingPageProps> = ({
                   triggerHaptic('heavy');
                   onRegisterPartner();
                 }}
-                className="w-full py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-amber-500/20 active:scale-95 transition-all"
+                className="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl shadow-md shadow-amber-500/20 active:scale-95 transition-all mt-1"
               >
                 Подключить заведение с этими параметрами
               </button>
