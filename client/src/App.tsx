@@ -188,11 +188,10 @@ export const App: React.FC = () => {
             setClaimToken(null);
             setRole('WALLET');
           }}
-          className={`flex-1 py-2 px-2 rounded-2xl flex items-center justify-center space-x-1 text-xs font-extrabold transition-all ${
-            (role === 'WALLET' || role === 'GUEST') && !claimToken
+          className={`flex-1 py-2 px-2 rounded-2xl flex items-center justify-center space-x-1 text-xs font-extrabold transition-all ${(role === 'WALLET' || role === 'GUEST') && !claimToken
               ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20'
               : 'bg-slate-900 text-slate-400 border border-slate-800'
-          }`}
+            }`}
         >
           <Home className="w-4 h-4" />
           <span>Главная</span>
@@ -204,11 +203,10 @@ export const App: React.FC = () => {
             setClaimToken(null);
             setRole('MAP');
           }}
-          className={`flex-1 py-2 px-2 rounded-2xl flex items-center justify-center space-x-1 text-xs font-extrabold transition-all ${
-            role === 'MAP' && !claimToken
+          className={`flex-1 py-2 px-2 rounded-2xl flex items-center justify-center space-x-1 text-xs font-extrabold transition-all ${role === 'MAP' && !claimToken
               ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20'
               : 'bg-slate-900 text-slate-400 border border-slate-800'
-          }`}
+            }`}
         >
           <MapPin className="w-4 h-4" />
           <span>Карта</span>
@@ -220,11 +218,10 @@ export const App: React.FC = () => {
             setClaimToken(null);
             setRole('PROFILE');
           }}
-          className={`flex-1 py-2 px-2 rounded-2xl flex items-center justify-center space-x-1 text-xs font-extrabold transition-all ${
-            (role === 'PROFILE' || role === 'ADMIN' || role === 'WAITER') && !claimToken
+          className={`flex-1 py-2 px-2 rounded-2xl flex items-center justify-center space-x-1 text-xs font-extrabold transition-all ${(role === 'PROFILE' || role === 'ADMIN' || role === 'WAITER') && !claimToken
               ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20'
               : 'bg-slate-900 text-slate-400 border border-slate-800'
-          }`}
+            }`}
         >
           <User className="w-4 h-4" />
           <span>Профиль</span>
