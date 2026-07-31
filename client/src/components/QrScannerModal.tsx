@@ -83,16 +83,23 @@ export const QrScannerModal: React.FC<QrScannerModalProps> = ({ onClose, onScanS
     }
   };
 
-  const handleClose = () => {
+  const handleClose = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     triggerHaptic('light');
     try {
       if (tg?.closeScanQrPopup) {
         tg.closeScanQrPopup();
+      } else if (typeof (window as any).Telegram?.WebApp?.closeScanQrPopup === 'function') {
+        (window as any).Telegram.WebApp.closeScanQrPopup();
       }
     } catch (err) {
       console.warn('Error closing native QR popup:', err);
+    } finally {
+      onClose();
     }
-    onClose();
   };
 
   return (
@@ -106,8 +113,9 @@ export const QrScannerModal: React.FC<QrScannerModalProps> = ({ onClose, onScanS
       >
         {/* Кнопка закрытия */}
         <button
+          type="button"
           onClick={handleClose}
-          className="absolute top-4 right-4 p-2 rounded-full bg-slate-800/80 text-slate-400 hover:text-white transition-all z-10 hover:bg-slate-700"
+          className="absolute top-4 right-4 p-2 rounded-full bg-slate-800/80 text-slate-400 hover:text-white transition-all z-10 hover:bg-slate-700 active:scale-95"
         >
           <X className="w-5 h-5" />
         </button>
@@ -162,7 +170,7 @@ export const QrScannerModal: React.FC<QrScannerModalProps> = ({ onClose, onScanS
             />
             <button
               type="submit"
-              className="py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 font-bold text-slate-950 text-xs shadow-md shadow-amber-500/20"
+              className="py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 font-bold text-slate-950 text-xs shadow-md shadow-amber-500/20 active:scale-95"
             >
               ОК
             </button>
@@ -170,11 +178,12 @@ export const QrScannerModal: React.FC<QrScannerModalProps> = ({ onClose, onScanS
 
           {/* Быстрая демо-симуляция */}
           <button
+            type="button"
             onClick={() => {
               triggerHaptic('heavy');
               onScanSuccess(`demo_${Date.now()}`);
             }}
-            className="w-full py-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 text-xs font-bold flex items-center justify-center space-x-1.5 transition-all"
+            className="w-full py-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 text-xs font-bold flex items-center justify-center space-x-1.5 transition-all active:scale-95"
           >
             <Sparkles className="w-3.5 h-3.5" />
             <span>Симуляция сканирования QR (Тестовый бокс)</span>
@@ -182,8 +191,9 @@ export const QrScannerModal: React.FC<QrScannerModalProps> = ({ onClose, onScanS
 
           {/* Явная кнопка закрытия модалки */}
           <button
+            type="button"
             onClick={handleClose}
-            className="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-all border border-slate-700"
+            className="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-all border border-slate-700 active:scale-95"
           >
             Закрыть сканер
           </button>
