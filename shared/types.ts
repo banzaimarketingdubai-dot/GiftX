@@ -55,6 +55,8 @@ export interface StaffMember {
   role: 'WAITER' | 'MANAGER' | 'OWNER';
   activeShiftsCount: number;
   boxesIssuedCount: number;
+  boxesIssuedToday?: number;
+  boxesIssuedWeek?: number;
   partner?: Partner;
 }
 

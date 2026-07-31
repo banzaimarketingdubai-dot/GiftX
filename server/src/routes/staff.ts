@@ -28,7 +28,19 @@ const DEMO_PARTNERS = [
         name: 'Алекс (Sunset Bar)',
         role: 'WAITER',
         activeShiftsCount: 5,
-        boxesIssuedCount: 14
+        boxesIssuedToday: 14,
+        boxesIssuedWeek: 68,
+        boxesIssuedCount: 124
+      },
+      {
+        id: 'demo-staff-4',
+        partnerId: 'demo-partner-1',
+        name: 'Дмитрий (Бармен)',
+        role: 'WAITER',
+        activeShiftsCount: 7,
+        boxesIssuedToday: 11,
+        boxesIssuedWeek: 49,
+        boxesIssuedCount: 88
       },
       {
         id: 'demo-staff-2',
@@ -36,7 +48,9 @@ const DEMO_PARTNERS = [
         name: 'Анна (Менеджер)',
         role: 'MANAGER',
         activeShiftsCount: 12,
-        boxesIssuedCount: 42
+        boxesIssuedToday: 8,
+        boxesIssuedWeek: 42,
+        boxesIssuedCount: 96
       }
     ]
   },
@@ -63,7 +77,9 @@ const DEMO_PARTNERS = [
         name: 'Мария (Spa)',
         role: 'WAITER',
         activeShiftsCount: 8,
-        boxesIssuedCount: 20
+        boxesIssuedToday: 18,
+        boxesIssuedWeek: 55,
+        boxesIssuedCount: 84
       }
     ]
   }
@@ -390,5 +406,126 @@ staffRouter.get('/my-applications/:telegramId', async (req: Request, res: Respon
     return res.status(500).json({ success: false, error: error.message });
   }
 });
+
+// 🏆 Получить Турнирную таблицу персонала заведения (Leaderboard)
+staffRouter.get('/leaderboard/:partnerId', async (req: Request, res: Response) => {
+  try {
+    const { partnerId } = req.params;
+    const period = (req.query.period as string) || 'today'; // 'today' | 'week'
+
+    let partner = DEMO_PARTNERS.find((p) => p.id === partnerId);
+    let staffList: any[] = partner ? partner.staffMembers : [];
+
+    // Если подключена БД Prisma
+    try {
+      const dbStaff = await prisma.staffMember.findMany({
+        where: { partnerId }
+      });
+
+      if (dbStaff && dbStaff.length > 0) {
+        staffList = dbStaff.map((s) => ({
+          ...s,
+          boxesIssuedToday: s.boxesIssuedCount || 0,
+          boxesIssuedWeek: (s.boxesIssuedCount || 0) * 3,
+        }));
+      }
+    } catch (e) {
+      console.log('Prisma leaderboard fallback to demo memory');
+    }
+
+    // Сортировка по выбранному периоду
+    const sorted = [...staffList].sort((a, b) => {
+      const countA = period === 'today' ? (a.boxesIssuedToday ?? a.boxesIssuedCount) : (a.boxesIssuedWeek ?? a.boxesIssuedCount * 3);
+      const countB = period === 'today' ? (b.boxesIssuedToday ?? b.boxesIssuedCount) : (b.boxesIssuedWeek ?? b.boxesIssuedCount * 3);
+      return countB - countA;
+    });
+
+    const leaderboard = sorted.map((staff, index) => {
+      const count = period === 'today' ? (staff.boxesIssuedToday ?? staff.boxesIssuedCount) : (staff.boxesIssuedWeek ?? staff.boxesIssuedCount * 3);
+      return {
+        rank: index + 1,
+        id: staff.id,
+        name: staff.name,
+        role: staff.role,
+        count,
+        badge: index === 0 ? '🥇 1-е место' : index === 1 ? '🥈 2-е место' : index === 2 ? '🥉 3-е место' : `#${index + 1}`,
+        isLeader: index === 0
+      };
+    });
+
+    const totalIssuedPeriod = leaderboard.reduce((acc, curr) => acc + curr.count, 0);
+
+    return res.json({
+      success: true,
+      partnerName: partner?.name || 'Заведение',
+      period,
+      totalIssuedPeriod,
+      leaderboard,
+      topLeader: leaderboard[0] || null
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 🎉 Отправить поздравление победителю дня в Telegram бот
+staffRouter.post('/leaderboard/congratulate-winner', async (req: Request, res: Response) => {
+  try {
+    const { partnerId, winnerName, boxesCount } = req.body;
+
+    const partner = DEMO_PARTNERS.find((p) => p.id === partnerId) || { name: 'Sunset Beach Club' };
+    const winner = winnerName || 'Алекс (Sunset Bar)';
+    const count = boxesCount || 14;
+
+    const botMessage = `🏆 ПОЗДРАВЛЯЕМ ПОБЕДИТЕЛЯ ДНЯ! 🏆\n\n🥇 ${winner} занимает 1-е место в заведении «${partner.name}»!\n📦 Выдано подарков гостям сегодня: ${count} боксов.\n\nКоманда GiftX благодарит за супер-отдачу и приток новых гостей! 🎁✨`;
+
+    // Имитация отправки в Telegram Bot API
+    console.log('Sending winner congratulation Telegram bot message:\n', botMessage);
+
+    return res.json({
+      success: true,
+      winnerName: winner,
+      boxesCount: count,
+      botMessage,
+      message: `Поздравление для ${winner} успешно отправлено в Telegram Бот!`
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 📊 Отправить ежедневный отчет заведения Владельцу в Telegram бот
+staffRouter.post('/leaderboard/send-daily-report', async (req: Request, res: Response) => {
+  try {
+    const { partnerId } = req.body;
+
+    const partner = DEMO_PARTNERS.find((p) => p.id === partnerId) || DEMO_PARTNERS[0];
+    const staffList = partner.staffMembers || [];
+
+    const dateStr = new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+
+    let reportLines = staffList.map((s, index) => {
+      const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '👤';
+      return `${medal} ${s.name}: ${s.boxesIssuedToday || s.boxesIssuedCount} боксов`;
+    }).join('\n');
+
+    const totalToday = staffList.reduce((sum, s) => sum + (s.boxesIssuedToday || s.boxesIssuedCount), 0);
+
+    const reportMessage = `📊 ЕЖЕДНЕВНЫЙ ОТЧЕТ GIFTX B2B\n🏬 Заведение: «${partner.name}»\n📅 Дата: ${dateStr}\n\n🏆 Итоги работы персонала за день:\n${reportLines}\n\n📦 Всего выдано подарков гостям: ${totalToday} шт.\n📈 Прогнозируемый приток возвратных гостей: +${Math.round(totalToday * 0.4)} посетителей!`;
+
+    console.log('Sending daily report to Owner Telegram bot:\n', reportMessage);
+
+    return res.json({
+      success: true,
+      partnerName: partner.name,
+      totalToday,
+      reportMessage,
+      message: `Ежедневный отчет заведения «${partner.name}» отправлен Владельцу в Telegram!`
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 
 

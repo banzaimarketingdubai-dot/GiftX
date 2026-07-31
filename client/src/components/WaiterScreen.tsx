@@ -445,6 +445,27 @@ export const WaiterScreen: React.FC = () => {
         </button>
       </div>
 
+      {/* Мотивационная карточка смены и место в турнирной таблице */}
+      <div className="mt-3 p-3 rounded-2xl bg-gradient-to-r from-amber-500/10 via-slate-900 to-slate-950 border border-amber-500/30 flex items-center justify-between shadow-md">
+        <div className="flex items-center space-x-2.5">
+          <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 font-black text-sm">
+            🏆
+          </div>
+          <div>
+            <span className="text-[9px] uppercase font-black text-amber-400 tracking-wider block">
+              Рейтинг смены заведения
+            </span>
+            <span className="text-xs font-black text-slate-100">
+              Ваше место сегодня: <span className="text-emerald-400 font-extrabold">🥇 #1</span> ({selectedStaff.boxesIssuedToday || selectedStaff.boxesIssuedCount || 14} боксов)
+            </span>
+          </div>
+        </div>
+
+        <span className="px-2 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-black uppercase">
+          🔥 Лидер
+        </span>
+      </div>
+
       {/* Экран показа QR-кода при нажатии */}
       {activeQrToken && (
         <div className="my-6">

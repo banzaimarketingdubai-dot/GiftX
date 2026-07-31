@@ -17,7 +17,10 @@ import {
   Search,
   Check,
   XCircle,
-  FileText
+  FileText,
+  Trophy,
+  Send,
+  Flame
 } from 'lucide-react';
 import { getTelegramUserData, triggerHaptic, triggerNotificationHaptic } from '../telegram';
 import { PartnerRegistrationModal } from './PartnerRegistrationModal';
@@ -73,6 +76,12 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
   const [partnerApps, setPartnerApps] = useState<any[]>([]);
   const [partnerAppSearch, setPartnerAppSearch] = useState('');
 
+  // Состояние Турнирной таблицы (Leaderboard)
+  const [leaderboardPeriod, setLeaderboardPeriod] = useState<'today' | 'week'>('today');
+  const [leaderboardData, setLeaderboardData] = useState<any[]>([]);
+  const [topLeader, setTopLeader] = useState<any | null>(null);
+  const [totalIssuedPeriod, setTotalIssuedPeriod] = useState(0);
+
   const checkStaffRole = async () => {
     try {
       setLoading(true);
@@ -119,6 +128,21 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
     }
   };
 
+  const fetchLeaderboard = async () => {
+    const partnerId = staffInfo?.partner?.id || 'demo-partner-1';
+    try {
+      const res = await fetch(`/api/staff/leaderboard/${partnerId}?period=${leaderboardPeriod}`);
+      const data = await res.json();
+      if (data.success) {
+        setLeaderboardData(data.leaderboard);
+        setTopLeader(data.topLeader);
+        setTotalIssuedPeriod(data.totalIssuedPeriod);
+      }
+    } catch (e) {
+      console.error('Fetch leaderboard error', e);
+    }
+  };
+
   useEffect(() => {
     checkStaffRole();
   }, []);
@@ -127,7 +151,44 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
     if (isStaff && staffInfo?.partner?.id) {
       fetchPartnerApps();
     }
-  }, [isStaff, staffInfo?.partner?.id, partnerAppSearch]);
+    fetchLeaderboard();
+  }, [isStaff, staffInfo?.partner?.id, partnerAppSearch, leaderboardPeriod]);
+
+  const handleCongratulateWinner = async (winnerName: string, boxesCount: number) => {
+    try {
+      triggerNotificationHaptic('success');
+      const partnerId = staffInfo?.partner?.id || 'demo-partner-1';
+      const res = await fetch('/api/staff/leaderboard/congratulate-winner', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ partnerId, winnerName, boxesCount })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert(`🎉 Поздравление победителю [${winnerName}] успешно отправлено в Telegram Бот!\n\nТекст сообщения:\n${data.botMessage}`);
+      }
+    } catch (e: any) {
+      alert('Ошибка отправки: ' + e.message);
+    }
+  };
+
+  const handleSendDailyReport = async () => {
+    try {
+      triggerNotificationHaptic('success');
+      const partnerId = staffInfo?.partner?.id || 'demo-partner-1';
+      const res = await fetch('/api/staff/leaderboard/send-daily-report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ partnerId })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert(`📊 Дневной отчет заведения «${data.partnerName}» отправлен Владельцу в Telegram Бот!\n\nТекст отчета:\n${data.reportMessage}`);
+      }
+    } catch (e: any) {
+      alert('Ошибка отправки отчета: ' + e.message);
+    }
+  };
 
   const handleApprovePartnerApp = async (id: string) => {
     try {
@@ -431,6 +492,117 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
               </div>
             </div>
           )}
+
+          {/* 🏆 Турнирная таблица персонала заведения (Leaderboard & Gamification) */}
+          <div className="pt-3 border-t border-amber-500/20 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 font-bold text-sm">
+                  🏆
+                </div>
+                <div>
+                  <h4 className="font-extrabold text-slate-100 text-xs uppercase tracking-wider">
+                    Турнирная таблица персонала
+                  </h4>
+                  <p className="text-[10px] text-slate-400">Рейтинг выдачи боксов заведением</p>
+                </div>
+              </div>
+
+              {/* Переключатель периода: Сегодня / За неделю */}
+              <div className="flex space-x-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
+                <button
+                  onClick={() => setLeaderboardPeriod('today')}
+                  className={`px-2 py-1 rounded-lg text-[10px] font-extrabold transition-all ${
+                    leaderboardPeriod === 'today'
+                      ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  📅 Сегодня
+                </button>
+                <button
+                  onClick={() => setLeaderboardPeriod('week')}
+                  className={`px-2 py-1 rounded-lg text-[10px] font-extrabold transition-all ${
+                    leaderboardPeriod === 'week'
+                      ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  📆 За неделю
+                </button>
+              </div>
+            </div>
+
+            {/* Карточка текущего лидера смены */}
+            {topLeader && (
+              <div className="p-3 rounded-2xl bg-gradient-to-br from-amber-500/20 via-slate-900 to-slate-950 border border-amber-400/40 flex items-center justify-between shadow-lg">
+                <div className="flex items-center space-x-2.5">
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/50 flex items-center justify-center text-xl shrink-0 shadow-md animate-pulse">
+                    🥇
+                  </div>
+                  <div>
+                    <span className="text-[9px] uppercase font-black text-amber-400 tracking-widest block">
+                      👑 Лидер {leaderboardPeriod === 'today' ? 'дня' : 'недели'}
+                    </span>
+                    <h5 className="font-extrabold text-slate-100 text-xs">{topLeader.name}</h5>
+                    <span className="text-[10px] font-bold text-emerald-400">
+                      +{topLeader.count} боксов выданных гостям
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => handleCongratulateWinner(topLeader.name, topLeader.count)}
+                  className="px-2.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-[10px] font-black shadow-md shadow-amber-500/20 active:scale-95 flex items-center space-x-1 shrink-0"
+                >
+                  <Trophy className="w-3 h-3 text-slate-950" />
+                  <span>Поздравить в Bot 🎉</span>
+                </button>
+              </div>
+            )}
+
+            {/* Рейтинг сотрудников */}
+            <div className="space-y-1.5">
+              {leaderboardData.map((staff) => (
+                <div
+                  key={staff.id}
+                  className={`p-2.5 rounded-xl border flex items-center justify-between text-xs transition-all ${
+                    staff.isLeader
+                      ? 'bg-amber-500/10 border-amber-500/40 text-slate-100'
+                      : 'bg-slate-950/70 border-slate-800 text-slate-300'
+                  }`}
+                >
+                  <div className="flex items-center space-x-2.5">
+                    <span className="font-black text-xs w-6 text-center text-amber-400">
+                      {staff.badge}
+                    </span>
+                    <div>
+                      <span className="font-bold block text-slate-100">{staff.name}</span>
+                      <span className="text-[9px] text-slate-400 uppercase font-semibold">{staff.role}</span>
+                    </div>
+                  </div>
+
+                  <div className="text-right">
+                    <span className="font-black text-amber-400 text-xs block">{staff.count} боксов</span>
+                    <span className="text-[9px] text-emerald-400 font-mono">
+                      ~{Math.round(staff.count * 0.4)} гостей вернутся
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Кнопка отправки отчета Владельцу в Telegram */}
+            {(staffInfo.role === 'OWNER' || staffInfo.role === 'MANAGER') && (
+              <button
+                onClick={handleSendDailyReport}
+                className="w-full py-3 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border border-slate-700 hover:border-amber-500/40 text-amber-400 font-extrabold text-xs flex items-center justify-center space-x-2 shadow-lg transition-all active:scale-[0.99] mt-2"
+              >
+                <Send className="w-4 h-4 text-amber-400" />
+                <span>📊 Отправить дневной отчет Владельцу в Telegram</span>
+              </button>
+            )}
+          </div>
         </div>
       )}
 
