@@ -129,6 +129,20 @@ export const QrScannerModal: React.FC<QrScannerModalProps> = ({ onClose, onScanS
           <p className="text-xs text-slate-400">Наведите камеру на QR-код с экрана официанта</p>
         </div>
 
+        {/* Инструкция для гостя — как попросить QR у официанта */}
+        <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs space-y-1 my-2 z-10 shadow-md text-left">
+          <div className="flex items-center space-x-1.5 font-extrabold text-[11px] uppercase tracking-wider text-amber-400">
+            <Sparkles className="w-3.5 h-3.5 shrink-0" />
+            <span>Как получить подарки:</span>
+          </div>
+          <p className="text-[11px] text-slate-200 leading-relaxed">
+            💡 Находясь в заведении, скажите официанту при оплате счета: <br/>
+            <span className="font-extrabold text-amber-300 bg-amber-500/15 px-1.5 py-0.5 rounded border border-amber-500/20 inline-block mt-1">
+              «Покажите QR-код GiftX для подарка»
+            </span>
+          </p>
+        </div>
+
         {/* Анимированная рамка видоискателя сканера */}
         <div className="my-auto relative flex items-center justify-center py-4">
           <div className="w-52 h-52 rounded-3xl border-2 border-dashed border-amber-500/60 relative overflow-hidden flex items-center justify-center bg-slate-950/60 shadow-inner">
