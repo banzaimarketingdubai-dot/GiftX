@@ -305,7 +305,7 @@ export const GuestLandingPage: React.FC<GuestLandingPageProps> = ({
                 <span className="w-8 h-8 rounded-xl bg-amber-700/20 border border-amber-600/40 text-amber-500 flex items-center justify-center text-sm font-black">
                   🥉
                 </span>
-                <span className="text-[10px] font-bold text-slate-400">Чек от любой суммы</span>
+                <span className="text-[10px] font-bold text-slate-400">Базовый чек заведения</span>
               </div>
               <div>
                 <h4 className="font-black text-slate-100 text-sm">BASIC Pass</h4>
@@ -319,7 +319,7 @@ export const GuestLandingPage: React.FC<GuestLandingPageProps> = ({
                 <span className="w-8 h-8 rounded-xl bg-slate-300/20 border border-slate-300/40 text-slate-200 flex items-center justify-center text-sm font-black">
                   🥈
                 </span>
-                <span className="text-[10px] font-bold text-slate-400">Чек от 300,000 VND</span>
+                <span className="text-[10px] font-bold text-slate-400">Средний чек заведения</span>
               </div>
               <div>
                 <h4 className="font-black text-slate-100 text-sm">SILVER VIP</h4>
@@ -333,7 +333,7 @@ export const GuestLandingPage: React.FC<GuestLandingPageProps> = ({
                 <span className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-400 text-amber-400 flex items-center justify-center text-sm font-black">
                   🥇
                 </span>
-                <span className="text-[10px] font-bold text-amber-400">Чек от 600,000 VND</span>
+                <span className="text-[10px] font-bold text-amber-400">Повышенный чек заведения</span>
               </div>
               <div>
                 <h4 className="font-black text-amber-400 text-sm">GOLD VIP</h4>
@@ -347,7 +347,7 @@ export const GuestLandingPage: React.FC<GuestLandingPageProps> = ({
                 <span className="w-8 h-8 rounded-xl bg-purple-500/20 border border-purple-400 text-purple-300 flex items-center justify-center text-sm font-black">
                   💎
                 </span>
-                <span className="text-[10px] font-bold text-purple-300">Чек от 1,000,000 VND</span>
+                <span className="text-[10px] font-bold text-purple-300">Премиальный VIP-чек</span>
               </div>
               <div>
                 <h4 className="font-black text-purple-300 text-sm">PLATINUM ELITE</h4>
@@ -405,7 +405,7 @@ export const GuestLandingPage: React.FC<GuestLandingPageProps> = ({
               />
               <div>
                 <span className="text-[10px] uppercase font-black text-amber-400 block">Prime Grill Restaurant</span>
-                <h4 className="font-extrabold text-slate-100 text-sm">Фирменный запечённый десерт</h4>
+                <h4 className="font-extrabold text-slate-100 text-sm">Фирменные BBQ-рёбрышки от шефа</h4>
                 <p className="text-xs text-emerald-400 font-bold mt-1">Подарок к заказу</p>
               </div>
             </div>

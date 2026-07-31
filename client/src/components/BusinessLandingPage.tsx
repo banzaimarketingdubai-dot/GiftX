@@ -154,7 +154,7 @@ export const BusinessLandingPage: React.FC<BusinessLandingPageProps> = ({
                     </div>
                   </div>
                   <span className="text-[10px] font-black text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20">
-                    +36,000,000 VND
+                    Рост выручки до +40%
                   </span>
                 </div>
                 <div className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 text-[11px] font-bold text-slate-200 flex items-center justify-between">
@@ -260,7 +260,7 @@ export const BusinessLandingPage: React.FC<BusinessLandingPageProps> = ({
                 <span className="text-xs uppercase font-black text-emerald-400">Шаг 2</span>
                 <h3 className="font-extrabold text-slate-100 text-base">Установите порог чека для бокса</h3>
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  Официант вручает бокс за чек от 600,000 VND. Гости охотно дозаказывают блюда ради открытия!
+                  Официант вручает бокс при достижении целевой суммы чека заведения. Гости охотно дозаказывают позиции!
                 </p>
               </div>
               <img
