@@ -90,10 +90,10 @@ export const App: React.FC = () => {
     if (claim) {
       setClaimToken(claim);
       setRole('GUEST');
-    } else if (roleParam && ['ADMIN', 'MAP', 'WALLET', 'WAITER', 'PROFILE'].includes(roleParam)) {
+    } else if (roleParam && ['ADMIN', 'MAP', 'WALLET', 'WAITER', 'PROFILE', 'GUEST'].includes(roleParam)) {
       setRole(roleParam as any);
-    } else if (!role || role === 'GUEST') {
-      setRole('WALLET');
+    } else if (!role) {
+      setRole('GUEST');
     }
 
     // Проверка первого захода
@@ -149,7 +149,7 @@ export const App: React.FC = () => {
               onClick={() => {
                 triggerHaptic('medium');
                 setActiveLanding(null);
-                setRole('WALLET');
+                setRole('GUEST');
               }}
               className="py-1 px-2 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 text-[10px] font-extrabold flex items-center space-x-1 animate-pulse"
             >
@@ -209,18 +209,18 @@ export const App: React.FC = () => {
       ) : role === 'ADMIN' ? (
         <AdminDashboardScreen />
       ) : role === 'PROFILE' ? (
-        <ProfileScreen onSwitchToClientMode={() => setRole('WALLET')} />
+        <ProfileScreen onSwitchToClientMode={() => setRole('GUEST')} />
       ) : role === 'WALLET' ? (
+        <WalletScreen />
+      ) : (
         <GuestHomeScreen
           onOpenScanner={() => setShowScannerModal(true)}
-          onOpenWallet={() => setRole('PROFILE')}
+          onOpenWallet={() => setRole('WALLET')}
           onOpenMap={() => setRole('MAP')}
           onScanTokenSuccess={(token) => {
             setClaimToken(token);
           }}
         />
-      ) : (
-        <WalletScreen />
       )}
 
       {/* Модалка Сканера QR */}
@@ -271,10 +271,10 @@ export const App: React.FC = () => {
             triggerHaptic('light');
             setClaimToken(null);
             setActiveLanding(null);
-            setRole('WALLET');
+            setRole('GUEST');
           }}
-          className={`flex-1 py-2 px-2 rounded-2xl flex items-center justify-center space-x-1 text-xs font-extrabold transition-all ${
-            (role === 'WALLET' || role === 'GUEST') && !claimToken && !activeLanding
+          className={`flex-1 py-2 px-1.5 rounded-2xl flex items-center justify-center space-x-1 text-xs font-extrabold transition-all ${
+            (role === 'GUEST' || !role) && !claimToken && !activeLanding
               ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20'
               : 'bg-slate-900 text-slate-400 border border-slate-800'
           }`}
@@ -288,9 +288,26 @@ export const App: React.FC = () => {
             triggerHaptic('light');
             setClaimToken(null);
             setActiveLanding(null);
+            setRole('WALLET');
+          }}
+          className={`flex-1 py-2 px-1.5 rounded-2xl flex items-center justify-center space-x-1 text-xs font-extrabold transition-all ${
+            role === 'WALLET' && !claimToken && !activeLanding
+              ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20'
+              : 'bg-slate-900 text-slate-400 border border-slate-800'
+          }`}
+        >
+          <Wallet className="w-4 h-4" />
+          <span>Кошелек</span>
+        </button>
+
+        <button
+          onClick={() => {
+            triggerHaptic('light');
+            setClaimToken(null);
+            setActiveLanding(null);
             setRole('MAP');
           }}
-          className={`flex-1 py-2 px-2 rounded-2xl flex items-center justify-center space-x-1 text-xs font-extrabold transition-all ${
+          className={`flex-1 py-2 px-1.5 rounded-2xl flex items-center justify-center space-x-1 text-xs font-extrabold transition-all ${
             role === 'MAP' && !claimToken && !activeLanding
               ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20'
               : 'bg-slate-900 text-slate-400 border border-slate-800'
@@ -307,7 +324,7 @@ export const App: React.FC = () => {
             setActiveLanding(null);
             setRole('PROFILE');
           }}
-          className={`flex-1 py-2 px-2 rounded-2xl flex items-center justify-center space-x-1 text-xs font-extrabold transition-all ${
+          className={`flex-1 py-2 px-1.5 rounded-2xl flex items-center justify-center space-x-1 text-xs font-extrabold transition-all ${
             (role === 'PROFILE' || role === 'ADMIN' || role === 'WAITER') && !claimToken && !activeLanding
               ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20'
               : 'bg-slate-900 text-slate-400 border border-slate-800'

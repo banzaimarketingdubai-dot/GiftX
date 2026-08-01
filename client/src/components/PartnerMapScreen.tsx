@@ -122,8 +122,8 @@ export const PartnerMapScreen: React.FC = () => {
       attributionControl: false,
     }).setView([10.15, 103.98], 11);
 
-    // Ультра-чистая 3-цветная карта (CartoDB Dark Matter)
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    // Стандартные светлые цвета Google Maps (CartoDB Voyager)
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
       maxZoom: 20,
       subdomains: 'abcd',
     }).addTo(map);
@@ -380,6 +380,20 @@ export const PartnerMapScreen: React.FC = () => {
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Аккуратная плавающая кнопка центрирования карты по локации пользователя (GPS FAB) */}
+      <div className="absolute right-4 bottom-24 z-20">
+        <button
+          onClick={() => {
+            triggerHaptic('heavy');
+            requestUserLocation(true);
+          }}
+          className="w-12 h-12 rounded-full bg-slate-900/90 hover:bg-slate-800 border-2 border-blue-500/80 text-blue-400 flex items-center justify-center shadow-[0_4px_20px_rgba(59,130,246,0.4)] backdrop-blur-xl transition-all active:scale-90 group"
+          title="Моё местоположение"
+        >
+          <Navigation className="w-5 h-5 text-blue-400 group-hover:scale-110 transition-transform" />
+        </button>
       </div>
 
       {/* Нижняя всплывающая карточка выбранного заведения */}

@@ -166,16 +166,16 @@ const PlayingCardsDeck: React.FC<PlayingCardsDeckProps> = ({ vouchers: initialVo
   }
 
   return (
-    <div className="w-full flex flex-col items-center justify-center space-y-3 my-2 relative">
+    <div className="w-full flex flex-col items-center justify-center space-y-2 my-1 relative">
       {/* Панель информации о всех выпавших карточках и их номиналах */}
-      <div className="w-full space-y-2 text-center z-20">
+      <div className="w-full space-y-1.5 text-center z-20">
         <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/40 text-amber-300 text-xs font-black shadow-md">
           <Sparkles className="w-3.5 h-3.5 text-amber-400" />
           <span>🎉 Из бокса выпало карточек: {deck.length} шт.</span>
         </div>
 
         {/* Интерактивные мини-бейджи с номиналами каждой выпавшей карточки */}
-        <div className="flex items-center justify-center space-x-1.5 overflow-x-auto py-1 px-2">
+        <div className="flex items-center justify-center space-x-1.5 overflow-x-auto py-0.5 px-2">
           {deck.map((v, i) => {
             const offer = v.voucherOffer;
             const isSelected = i === activeIndex;
@@ -207,7 +207,7 @@ const PlayingCardsDeck: React.FC<PlayingCardsDeckProps> = ({ vouchers: initialVo
       </div>
 
       {/* 3D Контейнер стопки игральных карт */}
-      <div className="relative w-full h-[250px] flex items-center justify-center perspective-[1200px]">
+      <div className="relative w-full h-[215px] sm:h-[235px] flex items-center justify-center perspective-[1200px] my-1">
         {deck.map((v, index) => {
           const offer = v.voucherOffer;
           const partner = offer?.partner;
@@ -627,17 +627,17 @@ export const GuestUnpackScreen: React.FC<GuestUnpackScreenProps> = ({ claimToken
   }
 
   return (
-    <div className="h-screen max-h-screen flex flex-col justify-between p-5 max-w-md mx-auto relative overflow-hidden touch-none select-none">
+    <div className="min-h-screen flex flex-col justify-between p-3 sm:p-5 max-w-md mx-auto relative overflow-y-auto custom-scrollbar select-none pb-8">
       {/* Шапка источника */}
-      <div className="text-center pt-4 z-10">
-        <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-slate-900/80 border border-slate-800 text-xs text-amber-400 mb-2">
+      <div className="text-center pt-2 sm:pt-4 z-10 shrink-0 space-y-1">
+        <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-slate-900/80 border border-slate-800 text-xs text-amber-400">
           <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
           <span>Подарок от {donorName}</span>
         </div>
-        <h1 className="text-2xl font-extrabold text-gradient-gold tracking-tight">
+        <h1 className="text-xl sm:text-2xl font-black text-gradient-gold tracking-tight">
           {unpacked ? 'Ваши GiftX Pass разблокированы!' : 'Вам вручили GiftX Box!'}
         </h1>
-        <p className="text-slate-400 text-xs mt-1">
+        <p className="text-slate-400 text-[11px] sm:text-xs">
           {unpacked ? 'Свайпайте карточки ↔️ и тапайте для 3D поворота 🔄' : '⚡ Быстро тапайте по коробке, чтобы заполнить шкалу!'}
         </p>
       </div>
@@ -680,7 +680,7 @@ export const GuestUnpackScreen: React.FC<GuestUnpackScreenProps> = ({ claimToken
       )}
 
       {/* Анимационный контур распаковки */}
-      <div className="my-auto flex flex-col items-center justify-center relative min-h-[340px] z-10">
+      <div className="py-2 my-auto flex flex-col items-center justify-center relative w-full z-10">
         {!unpacked ? (
           <motion.div
             onClick={handleBoxTap}
