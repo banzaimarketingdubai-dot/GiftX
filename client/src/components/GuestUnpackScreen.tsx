@@ -272,8 +272,12 @@ const PlayingCardsDeck: React.FC<PlayingCardsDeckProps> = ({ vouchers: initialVo
                 style={{
                   backfaceVisibility: 'hidden',
                   WebkitBackfaceVisibility: 'hidden',
+                  opacity: isFlipped ? 0 : 1,
+                  visibility: isFlipped ? 'hidden' : 'visible',
+                  pointerEvents: isFlipped ? 'none' : 'auto',
+                  transition: 'opacity 0.15s ease-in-out',
                 }}
-                className={`absolute inset-0 w-full h-full rounded-3xl p-4 bg-gradient-to-br from-slate-900 via-slate-950 to-black border-2 ${
+                className={`absolute inset-0 w-full h-full rounded-3xl p-4 bg-slate-950 bg-gradient-to-br from-slate-900 via-slate-950 to-black border-2 ${
                   isSelected ? 'border-amber-400 shadow-[0_0_35px_rgba(245,158,11,0.45)]' : 'border-amber-500/30'
                 } flex flex-col justify-between overflow-hidden`}
               >
@@ -333,8 +337,12 @@ const PlayingCardsDeck: React.FC<PlayingCardsDeckProps> = ({ vouchers: initialVo
                   backfaceVisibility: 'hidden',
                   WebkitBackfaceVisibility: 'hidden',
                   transform: 'rotateY(180deg)',
+                  opacity: isFlipped ? 1 : 0,
+                  visibility: isFlipped ? 'visible' : 'hidden',
+                  pointerEvents: isFlipped ? 'auto' : 'none',
+                  transition: 'opacity 0.15s ease-in-out',
                 }}
-                className="absolute inset-0 w-full h-full rounded-3xl p-4 bg-gradient-to-br from-amber-950 via-slate-950 to-slate-950 border-2 border-amber-400/80 shadow-[0_0_35px_rgba(245,158,11,0.5)] flex flex-col justify-between items-center text-center overflow-hidden"
+                className="absolute inset-0 w-full h-full rounded-3xl p-4 bg-slate-950 bg-gradient-to-br from-amber-950 via-slate-950 to-slate-950 border-2 border-amber-400/80 shadow-[0_0_35px_rgba(245,158,11,0.5)] flex flex-col justify-between items-center text-center overflow-hidden"
               >
                 {/* Геометрический паттерн рубашки игральной карты */}
                 <div className="absolute inset-2 border border-amber-500/30 rounded-2xl pointer-events-none flex items-center justify-center bg-[radial-gradient(#f59e0b_1px,transparent_1px)] [background-size:12px_12px] opacity-20" />
@@ -348,7 +356,7 @@ const PlayingCardsDeck: React.FC<PlayingCardsDeckProps> = ({ vouchers: initialVo
                   </h5>
                 </div>
 
-                <div className="z-10 bg-slate-900/90 p-3 rounded-2xl border border-amber-500/30 text-[11px] text-slate-200 leading-relaxed font-medium">
+                <div className="z-10 bg-slate-900 border border-amber-500/40 p-3 rounded-2xl text-[11px] text-slate-100 leading-relaxed font-medium shadow-lg">
                   Предъявите этот бокс в заведении <span className="text-amber-400 font-bold">{partner?.name}</span> при оплате счета.
                 </div>
 

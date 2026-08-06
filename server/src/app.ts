@@ -4,6 +4,9 @@ import dotenv from 'dotenv';
 import { staffRouter } from './routes/staff.js';
 import { guestRouter } from './routes/guest.js';
 import { adminRouter } from './routes/admin.js';
+import { funnelRouter } from './routes/funnel.js';
+import { telegramFunnelBot } from './services/telegramFunnelBot.js';
+import { FunnelScheduler } from './services/funnelScheduler.js';
 
 dotenv.config();
 
@@ -16,11 +19,18 @@ app.use(express.json());
 app.use('/api/staff', staffRouter);
 app.use('/api/guest', guestRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/funnel', funnelRouter);
 
 app.use('/staff', staffRouter);
 app.use('/guest', guestRouter);
 app.use('/admin', adminRouter);
+app.use('/funnel', funnelRouter);
 
 app.get(['/api/health', '/health'], (_req, res) => {
-  res.json({ status: 'ok', service: 'HappyBox API', timestamp: new Date() });
+  res.json({ status: 'ok', service: 'HappyBox & GiftX Funnel API', timestamp: new Date() });
 });
+
+// Initialize Telegram Bot & Automated Scheduler
+telegramFunnelBot.startPolling();
+FunnelScheduler.startScheduler(15);
+

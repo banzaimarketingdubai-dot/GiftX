@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { prisma } from '../db.js';
 import { notifyTokenClaimed } from '../websocket.js';
+import { B2BAgentEngine } from '../services/b2bAgentEngine.js';
 
 export const guestRouter = Router();
 
@@ -647,20 +648,52 @@ guestRouter.post('/telegram-webhook', async (req: Request, res: Response) => {
 
       // 1. Команда /start
       if (text.startsWith('/start')) {
-        const startParam = text.split(' ')[1] || '';
-        const targetUrl = startParam ? `${appUrl}?claim=${startParam.replace(/^claim_/, '')}` : appUrl;
+        const startParam = (text.split(' ')[1] || '').trim().toLowerCase();
 
-        await sendMessage(
-          `🎉 *Добро пожаловать в GiftX!*\n\nCross-Marketing сеть подарочных сертификатов.\n\nПолучайте эксклюзивные подарки, бесплатные напитки и скидки в лучших заведениях города!`,
-          [
-            [{ text: '🎁 Открыть GiftX App', web_app: { url: targetUrl } }],
+        if (['landing_business', 'landing-business', 'b2b', 'partner', 'business', 'owner'].includes(startParam)) {
+          const senderName = message.from?.first_name || '';
+          await sendMessage(
+            `🏢 *GIFTX ВЬЕТНАМ: ТВОЙ БИЗНЕС БЕЗ РАСХОДОВ НА РЕКЛАМУ*\n\n` +
+            `Здравствуйте${senderName ? `, ${senderName}` : ''}! Я ИИ-консультант и онлайн-ассистент сети GiftX.\n\n` +
+            `🚀 *Автоматическая сеть бесплатного обмена клиентами и роста выручки:*\n\n` +
+            `1️⃣ **БЕСПЛАТНЫЙ ТРАФИК ($0 CAC):** Забудьте о платной рекламе. Автоматический обмен гостями с партнерами в вашем городе.\n` +
+            `2️⃣ **ГАРАНТИРОВАННЫЙ АПСЕЙЛ:** Гости дозаказывают, чтобы получить подарок! Пороги чека (300k, 500k...) мотивируют тратить больше (+40%).\n` +
+            `3️⃣ **0% ТРЕНИЯ (УЖЕ В TELEGRAM):** Не нужно качать приложения! Всё работает внутри Telegram Mini App.\n\n` +
+            `💬 *Задайте мне любой вопрос о подключении, окупаемости или защите от абуза, или нажмите кнопку ниже для мгновенного старта!*`,
             [
-              { text: '👛 Мои Ваучеры', web_app: { url: `${appUrl}?role=WALLET` } },
-              { text: '📍 Карта Заведений', web_app: { url: `${appUrl}?role=MAP` } }
-            ],
-            [{ text: '⚙️ Панель Управляющего', web_app: { url: `${appUrl}?role=ADMIN` } }]
-          ]
-        );
+              [{ text: '🏢 Зарегистрировать Заведение (2 мин)', web_app: { url: `${appUrl}?page=landing-business` } }],
+              [
+                { text: '📊 Демо Панель Управляющего', web_app: { url: `${appUrl}?role=ADMIN` } },
+                { text: '💬 Связаться с основателем', callback_data: 'b2b_contact_founder' }
+              ]
+            ]
+          );
+        } else {
+          const rawParam = text.split(' ')[1] || '';
+          let targetUrl = appUrl;
+          if (rawParam) {
+            if (rawParam.startsWith('claim_')) {
+              targetUrl = `${appUrl}?claim=${rawParam.replace(/^claim_/, '')}`;
+            } else if (['ADMIN', 'MAP', 'WALLET', 'WAITER', 'PROFILE'].includes(rawParam.toUpperCase())) {
+              targetUrl = `${appUrl}?role=${rawParam.toUpperCase()}`;
+            } else {
+              targetUrl = `${appUrl}?claim=${rawParam}`;
+            }
+          }
+
+          await sendMessage(
+            `🎉 *Добро пожаловать в GiftX!*\n\nCross-Marketing сеть подарочных сертификатов.\n\nПолучайте эксклюзивные подарки, бесплатные напитки и скидки в лучших заведениях города!`,
+            [
+              [{ text: '🎁 Открыть GiftX App', web_app: { url: targetUrl } }],
+              [
+                { text: '👛 Мои Ваучеры', web_app: { url: `${appUrl}?role=WALLET` } },
+                { text: '📍 Карта Заведений', web_app: { url: `${appUrl}?role=MAP` } }
+              ],
+              [{ text: '⚙️ Панель Управляющего', web_app: { url: `${appUrl}?role=ADMIN` } }],
+              [{ text: '🏢 Для Владельцев Заведений (B2B)', web_app: { url: `${appUrl}?page=landing-business` } }]
+            ]
+          );
+        }
       }
 
       // 2. Команда /wallet (Мои подарки прямо в чате бота)
@@ -718,6 +751,75 @@ guestRouter.post('/telegram-webhook', async (req: Request, res: Response) => {
           `Нажмите кнопку «Официант» в Mini App, чтобы генерировать QR-коды для гостей или гасить их ваучеры!`,
           [[{ text: '🚀 Запустить GiftX App', web_app: { url: appUrl } }]]
         );
+      }
+
+      // 5. ИИ-Агент Онбординга B2B партнёров (Обработка свободных сообщений)
+      else {
+        const senderName = message.from?.first_name || '';
+        const agentRes = await B2BAgentEngine.processMessage(chatId, text, senderName);
+        await sendMessage(agentRes.text, agentRes.buttons);
+
+        // Уведомление основателю при высоком интересе партнера
+        if (agentRes.isHighIntent) {
+          const ownerChatId = process.env.TELEGRAM_OWNER_CHAT_ID;
+          const username = message.from?.username ? `@${message.from.username}` : 'без username';
+          if (botToken && ownerChatId) {
+            fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                chat_id: ownerChatId,
+                text: `⚡ *[GiftX B2B Заявка / Высокий Интерес]*\n\nПартнёр: *${senderName}* (${username})\nСообщение: _«${text}»_`,
+                parse_mode: 'Markdown'
+              })
+            }).catch((e) => console.warn('High intent lead alert error:', e.message));
+          }
+        }
+      }
+    }
+
+    // 6. Обработка нажатий на инлайн-кнопки (Callback Queries)
+    else if (update?.callback_query) {
+      const cb = update.callback_query;
+      const chatId = cb.message?.chat?.id || cb.from?.id;
+      const senderName = cb.from?.first_name || 'Партнер';
+      const username = cb.from?.username ? `@${cb.from.username}` : 'не указан';
+      const botToken = process.env.TELEGRAM_BOT_TOKEN || '8958055788:AAF3QTtP5l2_CUfbjRFkz0N5brYkWoeE3Xs';
+      const ownerChatId = process.env.TELEGRAM_OWNER_CHAT_ID;
+      const appUrl = process.env.CLIENT_URL || 'https://gift-x.vercel.app';
+
+      if (cb.data === 'b2b_contact_founder') {
+        // Уведомление фаундеру
+        if (botToken && ownerChatId) {
+          fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              chat_id: ownerChatId,
+              text: `🔥 *[GiftX B2B Lead Alert]*\n\nПартнёр *${senderName}* (${username}) запросил личную консультацию / созвон с основателем!`,
+              parse_mode: 'Markdown'
+            })
+          }).catch((e) => console.warn('Founder lead alert error:', e.message));
+        }
+
+        // Ответ пользователю
+        if (botToken && chatId) {
+          fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              chat_id: chatId.toString(),
+              text: `🚀 *Спасибо за ваш запрос!* Основатель GiftX свяжется с вами в Telegram в ближайшее время.\n\nПока вы ждете, можете изучить интерактивную демо-панель заведения:`,
+              parse_mode: 'Markdown',
+              reply_markup: {
+                inline_keyboard: [
+                  [{ text: '📊 Открыть Демо Панель', web_app: { url: `${appUrl}?role=ADMIN` } }],
+                  [{ text: '🏢 Зарегистрировать Заведение', web_app: { url: `${appUrl}?page=landing-business` } }]
+                ]
+              }
+            })
+          }).catch((e) => console.warn('Reply to lead error:', e.message));
+        }
       }
     }
 

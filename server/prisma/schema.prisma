@@ -129,3 +129,43 @@ model StaffIssuanceToken {
   isUsed          Boolean      @default(false)
   claimedByUserId String?
 }
+
+enum FunnelSegment {
+  B2C
+  B2B
+}
+
+enum FunnelStatus {
+  PENDING
+  ACTIVE
+  COMPLETED
+  PAUSED
+}
+
+model FunnelUser {
+  id          String           @id @default(uuid())
+  telegramId  BigInt           @unique
+  username    String?
+  firstName   String?
+  lastName    String?
+  segment     FunnelSegment?
+  currentDay  Int              @default(0)
+  status      FunnelStatus     @default(PENDING)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  lastSentAt  DateTime?
+
+  logs        FunnelMessageLog[]
+}
+
+model FunnelMessageLog {
+  id            String      @id @default(uuid())
+  funnelUserId  String
+  funnelUser    FunnelUser  @relation(fields: [funnelUserId], references: [id], onDelete: Cascade)
+  segment       FunnelSegment
+  dayKey        String
+  generatedText String
+  imageUrl      String?
+  sentAt        DateTime    @default(now())
+}
+

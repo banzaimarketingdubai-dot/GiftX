@@ -70,8 +70,9 @@ export const App: React.FC = () => {
 
     if (pageParam === 'landing-guest' || pageParam === 'guest') {
       setActiveLanding('GUEST');
-    } else if (pageParam === 'landing-business' || pageParam === 'business') {
+    } else if (['landing-business', 'landing_business', 'business', 'b2b', 'partner', 'owner'].includes(pageParam || '')) {
       setActiveLanding('BUSINESS');
+      setShowBusinessOnboardingModal(true);
     }
 
     const tgStartParam = (window as any).Telegram?.WebApp?.initDataUnsafe?.start_param;
@@ -82,8 +83,9 @@ export const App: React.FC = () => {
         setRole(tgStartParam as any);
       } else if (tgStartParam === 'landing_guest' || tgStartParam === 'landing-guest') {
         setActiveLanding('GUEST');
-      } else if (tgStartParam === 'landing_business' || tgStartParam === 'landing-business') {
+      } else if (['landing_business', 'landing-business', 'business', 'b2b', 'partner', 'owner'].includes(tgStartParam.toLowerCase())) {
         setActiveLanding('BUSINESS');
+        setShowBusinessOnboardingModal(true);
       }
     }
 
