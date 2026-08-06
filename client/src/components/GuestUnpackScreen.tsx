@@ -709,29 +709,22 @@ export const GuestUnpackScreen: React.FC<GuestUnpackScreenProps> = ({ claimToken
             }`}></div>
 
             {/* 3D Коробка GiftX UI Asset */}
-            <div className={`w-56 h-56 rounded-3xl flex flex-col items-center justify-center border-2 shadow-2xl relative z-10 overflow-hidden transform transition-all ${
-              powerLevel >= 80 ? 'border-amber-300 shadow-[0_0_40px_rgba(245,158,11,0.7)]' :
-              boxLevel === 'PLATINUM' ? 'glass-card border-purple-500/60 bg-gradient-to-br from-purple-950/80 to-slate-950' :
-              boxLevel === 'GOLD' ? 'glass-gold border-amber-400/60' :
-              boxLevel === 'SILVER' ? 'glass-silver border-cyan-400/50' : 'glass-basic border-purple-400/40'
+            <div className={`w-60 h-60 rounded-3xl flex flex-col items-center justify-center border-2 shadow-2xl relative z-10 overflow-hidden transform transition-all ${
+              powerLevel >= 80 ? 'border-amber-300 shadow-[0_0_45px_rgba(245,158,11,0.85)] scale-105' :
+              boxLevel === 'PLATINUM' ? 'border-purple-500/60 bg-slate-950' :
+              boxLevel === 'GOLD' ? 'border-amber-400/60 bg-slate-950' :
+              boxLevel === 'SILVER' ? 'border-cyan-400/50 bg-slate-950' : 'border-purple-400/40 bg-slate-950'
             }`}>
-              <div className="absolute -top-8 -right-8 w-24 h-24 bg-amber-400/20 blur-2xl rounded-full"></div>
-              
-              <div className="relative">
-                <Gift className={`w-28 h-28 drop-shadow-[0_10px_15px_rgba(245,158,11,0.5)] ${
-                  powerLevel >= 80 ? 'text-amber-300 animate-bounce' :
-                  boxLevel === 'PLATINUM' ? 'text-purple-400' :
-                  boxLevel === 'GOLD' ? 'text-amber-400' :
-                  boxLevel === 'SILVER' ? 'text-cyan-400' : 'text-purple-400'
-                }`} />
-                {/* Фирменный логотип 'X' */}
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <span className="text-3xl font-black tracking-tighter text-white opacity-80 drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]">X</span>
-                </div>
-              </div>
+              <img
+                src={powerLevel >= 80 || isOpening ? '/giftx_open_box.png' : '/giftx_closed_box.png'}
+                alt="GiftX 3D Box"
+                className={`w-full h-full object-cover rounded-3xl transition-all duration-200 ${
+                  powerLevel >= 80 ? 'scale-110 brightness-125' : 'scale-100'
+                }`}
+              />
 
-              <div className="mt-2 px-3 py-1 bg-black/40 backdrop-blur-md rounded-full border border-white/20 text-white text-[11px] font-extrabold uppercase tracking-widest flex items-center space-x-1.5 shadow-lg">
-                <Sparkles className="w-3 h-3 text-amber-400" />
+              <div className="absolute bottom-3 inset-x-0 mx-auto w-fit z-20 px-3 py-1 bg-slate-950/85 backdrop-blur-md rounded-full border border-amber-400/60 text-amber-300 text-[11px] font-extrabold uppercase tracking-widest flex items-center space-x-1.5 shadow-2xl">
+                <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-spin-slow" />
                 <span>GiftX {boxLevel}</span>
               </div>
             </div>
