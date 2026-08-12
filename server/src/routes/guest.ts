@@ -521,7 +521,29 @@ guestRouter.get('/map-partners', async (_req: Request, res: Response) => {
   }
 });
 
-// 5.5. Поиск мест и заведений (Google Places API / OpenStreetMap Nominatim Fallback)
+// Вспомогательные функции для вычисления расстояния между координатами (Гаверсинус)
+function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371; // Радиус Земли в км
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) *
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+function formatDistanceStr(distanceKm: number): string {
+  if (distanceKm < 1) {
+    return `${Math.round(distanceKm * 1000)} м`;
+  }
+  return `${distanceKm.toFixed(1)} км`;
+}
+
+// 5.5. Поиск мест и заведений с автоматической сортировкой по удалению (Google Places API / OpenStreetMap Nominatim Fallback)
 guestRouter.get('/places-search', async (req: Request, res: Response) => {
   try {
     const query = req.query.query as string;
@@ -529,49 +551,76 @@ guestRouter.get('/places-search', async (req: Request, res: Response) => {
       return res.json({ success: true, results: [] });
     }
 
+    const reqLat = req.query.lat ? parseFloat(req.query.lat as string) : 10.1982;
+    const reqLng = req.query.lng ? parseFloat(req.query.lng as string) : 103.9634;
+
     const apiKey = process.env.GOOGLE_MAPS_API_KEY || process.env.VITE_GOOGLE_MAPS_API_KEY;
+
+    let rawResults: any[] = [];
+    let provider = 'nominatim';
 
     // 1. Поиск через Google Places TextSearch API если задан API ключ
     if (apiKey) {
-      const googleRes = await fetch(
-        `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&key=${apiKey}`
-      );
+      const googleUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&location=${reqLat},${reqLng}&radius=50000&key=${apiKey}`;
+      const googleRes = await fetch(googleUrl);
       const googleData = await googleRes.json();
 
       if (googleData.status === 'OK' && googleData.results) {
-        const results = googleData.results.slice(0, 8).map((place: any) => ({
-          name: place.name,
-          address: place.formatted_address,
-          lat: place.geometry.location.lat,
-          lng: place.geometry.location.lng,
-          googleRating: place.rating || 4.8,
-          googleReviewsCount: place.user_ratings_total || 120,
-          googlePlaceId: place.place_id,
-          googleMapsUrl: `https://www.google.com/maps/place/?q=place_id:${place.place_id}`
-        }));
-        return res.json({ success: true, provider: 'google', results });
+        provider = 'google';
+        rawResults = googleData.results.map((place: any) => {
+          const pLat = place.geometry.location.lat;
+          const pLng = place.geometry.location.lng;
+          const distKm = calculateDistanceKm(reqLat, reqLng, pLat, pLng);
+          return {
+            name: place.name,
+            address: place.formatted_address,
+            lat: pLat,
+            lng: pLng,
+            googleRating: place.rating || 4.8,
+            googleReviewsCount: place.user_ratings_total || 120,
+            googlePlaceId: place.place_id,
+            googleMapsUrl: `https://www.google.com/maps/place/?q=place_id:${place.place_id}`,
+            distanceKm: distKm,
+            distanceStr: formatDistanceStr(distKm)
+          };
+        });
       }
     }
 
     // 2. Умный fallback через OpenStreetMap Nominatim API
-    const osmRes = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=8`,
-      { headers: { 'User-Agent': 'GiftX-App/1.0' } }
-    );
-    const osmData = await osmRes.json();
+    if (rawResults.length === 0) {
+      const osmRes = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&lat=${reqLat}&lon=${reqLng}&limit=20`,
+        { headers: { 'User-Agent': 'GiftX-App/1.0' } }
+      );
+      const osmData = await osmRes.json();
 
-    const results = (osmData || []).map((place: any) => ({
-      name: place.display_name.split(',')[0],
-      address: place.display_name,
-      lat: parseFloat(place.lat),
-      lng: parseFloat(place.lon),
-      googleRating: 4.8,
-      googleReviewsCount: Math.floor(Math.random() * 80) + 50,
-      googlePlaceId: `osm_${place.place_id}`,
-      googleMapsUrl: `https://www.google.com/maps/search/?api=1&query=${place.lat},${place.lon}`
-    }));
+      rawResults = (osmData || []).map((place: any) => {
+        const pLat = parseFloat(place.lat);
+        const pLng = parseFloat(place.lon);
+        const distKm = calculateDistanceKm(reqLat, reqLng, pLat, pLng);
+        return {
+          name: place.display_name.split(',')[0],
+          address: place.display_name,
+          lat: pLat,
+          lng: pLng,
+          googleRating: 4.8,
+          googleReviewsCount: Math.floor(Math.random() * 80) + 50,
+          googlePlaceId: `osm_${place.place_id}`,
+          googleMapsUrl: `https://www.google.com/maps/search/?api=1&query=${place.lat},${place.lon}`,
+          distanceKm: distKm,
+          distanceStr: formatDistanceStr(distKm)
+        };
+      });
+    }
 
-    return res.json({ success: true, provider: 'nominatim', results });
+    // Сортировка по удалению (сначала близкие)
+    rawResults.sort((a, b) => a.distanceKm - b.distanceKm);
+
+    // Первые 8 наиболее близких заведений
+    const results = rawResults.slice(0, 8);
+
+    return res.json({ success: true, provider, results });
   } catch (error: any) {
     console.error('Places search error:', error);
     return res.status(500).json({ success: false, error: error.message });
@@ -602,6 +651,9 @@ guestRouter.get('/google-places-nearby', async (req: Request, res: Response) => 
           googleReviewsCount: place.user_ratings_total || 45,
           isGoogleOnly: true
         }));
+        places.sort((a: any, b: any) => {
+          return calculateDistanceKm(lat, lng, a.lat, a.lng) - calculateDistanceKm(lat, lng, b.lat, b.lng);
+        });
         return res.json({ success: true, places });
       }
     }
@@ -613,6 +665,10 @@ guestRouter.get('/google-places-nearby', async (req: Request, res: Response) => 
       { id: 'g3', name: 'Kingkong Mart', address: '141a Tran Hung Dao', lat: 10.1950, lng: 103.9650, googleRating: 4.5, googleReviewsCount: 650, isGoogleOnly: true },
       { id: 'g4', name: 'Long Beach Center', address: '124 Tran Hung Dao', lat: 10.1980, lng: 103.9640, googleRating: 4.4, googleReviewsCount: 320, isGoogleOnly: true },
     ];
+
+    demoGooglePlaces.sort((a, b) => {
+      return calculateDistanceKm(lat, lng, a.lat, a.lng) - calculateDistanceKm(lat, lng, b.lat, b.lng);
+    });
 
     return res.json({ success: true, places: demoGooglePlaces });
   } catch (error: any) {

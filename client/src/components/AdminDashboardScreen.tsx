@@ -28,7 +28,7 @@ import { triggerHaptic, triggerNotificationHaptic } from '../telegram';
 import { DemoBoxOpeningModal } from './DemoBoxOpeningModal';
 
 export const AdminDashboardScreen: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'VENUES' | 'STAFF' | 'APPLICATIONS' | 'OFFERS' | 'ANALYTICS'>('VENUES');
+  const [activeTab, setActiveTab] = useState<'VENUES' | 'MODERATION' | 'STAFF' | 'APPLICATIONS' | 'OFFERS' | 'ANALYTICS'>('VENUES');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showDemoBoxModal, setShowDemoBoxModal] = useState(false);
@@ -84,6 +84,23 @@ export const AdminDashboardScreen: React.FC = () => {
       setError(e.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleModeratePartner = async (partnerId: string, status: 'APPROVED' | 'REJECTED') => {
+    try {
+      triggerNotificationHaptic(status === 'APPROVED' ? 'success' : 'warning');
+      const res = await fetch(`/api/admin/partner/${partnerId}/moderate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      });
+      const data = await res.json();
+      if (data.success) {
+        fetchOverview();
+      }
+    } catch (e) {
+      console.error('Moderate partner error', e);
     }
   };
 
@@ -292,6 +309,7 @@ export const AdminDashboardScreen: React.FC = () => {
       <div className="flex space-x-1 bg-slate-900/90 p-1.5 rounded-2xl border border-slate-800 overflow-x-auto no-scrollbar">
         {[
           { id: 'VENUES', label: '🏢 Заведения' },
+          { id: 'MODERATION', label: `⚖️ Модерация (${partners.filter((p) => p.moderationStatus === 'PENDING').length})` },
           { id: 'STAFF', label: '👥 Персонал' },
           { id: 'APPLICATIONS', label: `📥 Заявки (${applications.filter((a) => a.status === 'PENDING').length})` },
           { id: 'OFFERS', label: '🎁 Ваучеры' },
@@ -403,6 +421,81 @@ export const AdminDashboardScreen: React.FC = () => {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* ВКЛАДКА МОДЕРАЦИЯ ЗАВЕДЕНИЙ */}
+      {activeTab === 'MODERATION' && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center space-x-1.5">
+              <span>⚖️ Заявки заведений на модерацию</span>
+            </h3>
+          </div>
+
+          <div className="space-y-3">
+            {partners.filter((p) => p.moderationStatus === 'PENDING' || !p.moderationStatus).length === 0 ? (
+              <div className="glass-card p-8 rounded-2xl border border-slate-800 text-center text-slate-400 text-xs">
+                🎉 Все новые заведения прошли модерацию! Нет новых заявок.
+              </div>
+            ) : (
+              partners
+                .filter((p) => p.moderationStatus === 'PENDING' || !p.moderationStatus)
+                .map((partner) => (
+                  <div key={partner.id} className="glass-card p-4 rounded-2xl border border-amber-500/30 space-y-3 shadow-xl">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center space-x-3">
+                        <img
+                          src={partner.logoUrl}
+                          alt={partner.name}
+                          className="w-12 h-12 rounded-xl object-cover border border-slate-700 shrink-0"
+                        />
+                        <div>
+                          <span className="text-[9px] uppercase font-bold text-amber-400 px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20">
+                            {partner.category}
+                          </span>
+                          <h4 className="font-bold text-slate-100 text-sm mt-1">{partner.name}</h4>
+                          <p className="text-xs text-slate-400 line-clamp-1">{partner.address}</p>
+                        </div>
+                      </div>
+
+                      <span className="text-[10px] font-black uppercase text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-xl border border-amber-500/20 animate-pulse">
+                        ⏳ На модерации
+                      </span>
+                    </div>
+
+                    {partner.description && (
+                      <p className="text-xs text-slate-300 bg-slate-950/80 p-2.5 rounded-xl border border-slate-800">
+                        📝 «{partner.description}»
+                      </p>
+                    )}
+
+                    <div className="flex items-center justify-between text-[11px] text-slate-400 px-1">
+                      <span>⏰ Часы: {partner.workingHours || '10:00 - 23:00'}</span>
+                      <span>📍 Geo: {partner.lat?.toFixed(3)}, {partner.lng?.toFixed(3)}</span>
+                    </div>
+
+                    <div className="flex space-x-2 pt-2 border-t border-slate-800">
+                      <button
+                        onClick={() => handleModeratePartner(partner.id, 'REJECTED')}
+                        className="flex-1 py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 font-extrabold text-xs flex items-center justify-center space-x-1"
+                      >
+                        <XCircle className="w-4 h-4" />
+                        <span>Отклонить</span>
+                      </button>
+
+                      <button
+                        onClick={() => handleModeratePartner(partner.id, 'APPROVED')}
+                        className="flex-1 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs shadow-md shadow-emerald-500/20 flex items-center justify-center space-x-1"
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                        <span>Одобрить заведение</span>
+                      </button>
+                    </div>
+                  </div>
+                ))
+            )}
           </div>
         </div>
       )}

@@ -335,3 +335,49 @@ adminRouter.delete('/partner/:id', async (req: Request, res: Response) => {
   }
 });
 
+// 9. Изменить статус модерации заведения (APPROVED / REJECTED)
+adminRouter.post('/partner/:id/moderate', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { status, reason } = req.body;
+
+    if (!['APPROVED', 'REJECTED', 'PENDING'].includes(status)) {
+      return res.status(400).json({ success: false, error: 'Некорректный статус модерации' });
+    }
+
+    const updated = await prisma.partner.update({
+      where: { id },
+      data: {
+        moderationStatus: status,
+        ...(reason && { rejectionReason: reason })
+      }
+    });
+
+    // Send Telegram notification to venue creator/owner
+    if (updated.ownerTelegramId) {
+      try {
+        const { telegramFunnelBot } = await import('../services/telegramFunnelBot.js');
+        if (status === 'APPROVED') {
+          await telegramFunnelBot.sendTextMessage(
+            updated.ownerTelegramId,
+            `✅ **ПОЗДРАВЛЯЕМ! Ваше заведение «${updated.name}» успешно прошло модерацию!**\n\n` +
+            `Теперь заведение отображается в Mini App и участвует в сети кросс-маркетинга GiftX.`
+          );
+        } else if (status === 'REJECTED') {
+          await telegramFunnelBot.sendTextMessage(
+            updated.ownerTelegramId,
+            `❌ **Модерация заведения «${updated.name}» не пройдена.**\n\n` +
+            `Причина: ${reason || 'Не соответствует требованиям платформы.'}`
+          );
+        }
+      } catch (e) {
+        console.warn('Moderation notify error:', e);
+      }
+    }
+
+    return res.json({ success: true, partner: updated, message: `Статус заведения изменен на ${status}` });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+

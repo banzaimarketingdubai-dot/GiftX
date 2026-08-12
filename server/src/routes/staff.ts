@@ -244,6 +244,8 @@ staffRouter.post('/partner/location', async (req: Request, res: Response) => {
     const {
       partnerId,
       name,
+      description,
+      workingHours,
       category,
       address,
       logoUrl,
@@ -252,7 +254,8 @@ staffRouter.post('/partner/location', async (req: Request, res: Response) => {
       googleMapsUrl,
       googleRating,
       googleReviewsCount,
-      telegramId
+      telegramId,
+      role
     } = req.body;
 
     let finalLat = lat ? parseFloat(lat) : undefined;
@@ -273,6 +276,8 @@ staffRouter.post('/partner/location', async (req: Request, res: Response) => {
         where: { id: partnerId },
         data: {
           ...(name && { name }),
+          ...(description !== undefined && { description }),
+          ...(workingHours !== undefined && { workingHours }),
           ...(category && { category }),
           ...(address && { address }),
           ...(logoUrl && { logoUrl }),
@@ -293,6 +298,8 @@ staffRouter.post('/partner/location', async (req: Request, res: Response) => {
       const created = await prisma.partner.create({
         data: {
           name,
+          description: description || '',
+          workingHours: workingHours || '10:00 - 23:00',
           category,
           address,
           logoUrl: logoUrl || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=200&q=80',
@@ -301,24 +308,81 @@ staffRouter.post('/partner/location', async (req: Request, res: Response) => {
           googleMapsUrl: googleMapsUrl || `https://maps.google.com/?q=${encodeURIComponent(address)}`,
           googleRating: googleRating ? parseFloat(googleRating) : 4.8,
           googleReviewsCount: googleReviewsCount ? parseInt(googleReviewsCount) : 100,
-          activeStatus: true
+          activeStatus: true,
+          moderationStatus: 'PENDING',
+          ...(telegramId && { ownerTelegramId: BigInt(telegramId) })
         }
       });
 
-      // Если передали telegramId — создаем запись StaffMember со статусом OWNER
+      // Если передали telegramId — создаем запись StaffMember с выбранной ролью
       if (telegramId) {
+        const staffRole = (role as 'OWNER' | 'MANAGER' | 'WAITER') || 'OWNER';
         await prisma.staffMember.create({
           data: {
             partnerId: created.id,
-            name: name + ' (Владелец)',
-            role: 'OWNER',
+            name: `${name} (${staffRole === 'OWNER' ? 'Владелец' : staffRole === 'MANAGER' ? 'Админ' : 'Стаф'})`,
+            role: staffRole,
             telegramId: BigInt(telegramId)
           }
         }).catch((err) => console.error('Auto create staff member error:', err));
       }
 
-      return res.json({ success: true, partner: created, message: 'Заведение успешно зарегистрировано!' });
+      // Отправляем уведомление администраторам GiftX в Telegram
+      try {
+        const { telegramFunnelBot } = await import('../services/telegramFunnelBot.js');
+        const adminIdsStr = process.env.ADMIN_TELEGRAM_IDS || '999000111';
+        const adminIds = adminIdsStr.split(',').map((s) => s.trim()).filter(Boolean);
+
+        const modText =
+          `🆕 **НОВОЕ ЗАВЕДЕНИЕ НА МОДЕРАЦИИ (из TMA)!**\n\n` +
+          `🏬 **Название:** ${created.name}\n` +
+          `📝 **Описание:** ${created.description || 'Не указано'}\n` +
+          `📍 **Адрес:** ${created.address}\n` +
+          `⏰ **Часы:** ${created.workingHours || '10:00 - 23:00'}\n` +
+          `👤 **Создатель ID:** \`${created.ownerTelegramId || telegramId || 'TMA User'}\`\n\n` +
+          `Выберите действие:`;
+
+        for (const adminId of adminIds) {
+          await telegramFunnelBot.sendTextMessage(adminId, modText, [
+            [
+              { text: '✅ Одобрить', callback_data: `mod_approve:${created.id}` },
+              { text: '❌ Отклонить', callback_data: `mod_reject:${created.id}` }
+            ]
+          ]);
+        }
+      } catch (modErr) {
+        console.warn('Moderation notify error:', modErr);
+      }
+
+      return res.json({ success: true, partner: created, message: 'Заведение отправлено на модерацию!' });
     }
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Получить ссылки и QR-коды для сотрудников заведения
+staffRouter.get('/partner/invite-links/:partnerId', async (req: Request, res: Response) => {
+  try {
+    const { partnerId } = req.params;
+    const botUsername = process.env.TELEGRAM_BOT_USERNAME || 'giftx2025_bot';
+
+    const ownerLink = `https://t.me/${botUsername}?start=join_owner_${partnerId}`;
+    const adminLink = `https://t.me/${botUsername}?start=join_admin_${partnerId}`;
+    const staffLink = `https://t.me/${botUsername}?start=join_staff_${partnerId}`;
+
+    const ownerQr = `https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=${encodeURIComponent(ownerLink)}`;
+    const adminQr = `https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=${encodeURIComponent(adminLink)}`;
+    const staffQr = `https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=${encodeURIComponent(staffLink)}`;
+
+    return res.json({
+      success: true,
+      links: {
+        OWNER: { link: ownerLink, qrUrl: ownerQr, label: 'Владелец (Full Access)' },
+        MANAGER: { link: adminLink, qrUrl: adminQr, label: 'Администратор (Управляющий)' },
+        WAITER: { link: staffLink, qrUrl: staffQr, label: 'Официант / Персонал (Выдача боксов)' }
+      }
+    });
   } catch (error: any) {
     return res.status(500).json({ success: false, error: error.message });
   }

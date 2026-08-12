@@ -35,6 +35,12 @@ enum StaffRole {
   OWNER
 }
 
+enum ModerationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 enum VoucherStatus {
   ACTIVE
   REDEEMED
@@ -52,26 +58,31 @@ model User {
 }
 
 model Partner {
-  id             String          @id @default(uuid())
-  name           String
-  category       PartnerCategory
-  logoUrl        String
-  address        String
+  id                 String           @id @default(uuid())
+  name               String
+  description        String?
+  workingHours       String?
+  category           PartnerCategory
+  logoUrl            String
+  address            String
   lat                Float?
   lng                Float?
   googlePlaceId      String?
   googleRating       Float?
-  googleReviewsCount Int?            @default(0)
+  googleReviewsCount Int?             @default(0)
   googleMapsUrl      String?
-  activeStatus   Boolean         @default(true)
-  basicThreshold Float           @default(0)
-  silverThreshold Float          @default(300000)
-  goldThreshold  Float           @default(600000)
-  platinumThreshold Float        @default(1000000)
+  activeStatus       Boolean          @default(true)
+  moderationStatus   ModerationStatus @default(PENDING)
+  rejectionReason    String?
+  ownerTelegramId    BigInt?
+  basicThreshold     Float            @default(0)
+  silverThreshold    Float            @default(300000)
+  goldThreshold      Float            @default(600000)
+  platinumThreshold  Float            @default(1000000)
   
-  staffMembers   StaffMember[]
-  voucherOffers  VoucherOffer[]
-  tokens         StaffIssuanceToken[]
+  staffMembers       StaffMember[]
+  voucherOffers      VoucherOffer[]
+  tokens             StaffIssuanceToken[]
 }
 
 model StaffMember {

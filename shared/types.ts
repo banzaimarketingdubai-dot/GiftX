@@ -11,6 +11,8 @@ export type VoucherCategory =
 
 export type PartnerCategory = 'HORECA' | 'BEAUTY_SPA' | 'AUTO_MOTO' | 'SERVICES' | 'ENTERTAINMENT';
 
+export type ModerationStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+
 // ==========================================
 // 2. СХЕМА ПОЛЬЗОВАТЕЛЕЙ И ПАРТНЕРОВ
 // ==========================================
@@ -28,6 +30,8 @@ export interface User {
 export interface Partner {
   id: string;
   name: string;
+  description?: string;
+  workingHours?: string;
   category: PartnerCategory;
   logoUrl: string;
   address: string;
@@ -39,7 +43,10 @@ export interface Partner {
   googleMapsUrl?: string;
   geoCoordinates?: { lat: number; lng: number };
   activeStatus: boolean;
-  boxThresholds: {
+  moderationStatus?: ModerationStatus;
+  rejectionReason?: string;
+  ownerTelegramId?: number | string;
+  boxThresholds?: {
     BASIC: number;
     SILVER: number;
     GOLD: number;

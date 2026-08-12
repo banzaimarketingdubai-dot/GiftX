@@ -6,7 +6,7 @@ import { triggerHaptic, triggerNotificationHaptic, getTelegramUserData } from '.
 
 interface PartnerRegistrationModalProps {
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (partner?: any) => void;
   initialPartner?: any;
 }
 
@@ -16,7 +16,10 @@ export const PartnerRegistrationModal: React.FC<PartnerRegistrationModalProps> =
   initialPartner,
 }) => {
   const [name, setName] = useState(initialPartner?.name || '');
+  const [description, setDescription] = useState(initialPartner?.description || '');
+  const [workingHours, setWorkingHours] = useState(initialPartner?.workingHours || '10:00 - 23:00');
   const [category, setCategory] = useState<PartnerCategory>(initialPartner?.category || 'HORECA');
+  const [role, setRole] = useState<'OWNER' | 'MANAGER' | 'WAITER'>('OWNER');
   const [address, setAddress] = useState(initialPartner?.address || '');
   const [logoUrl, setLogoUrl] = useState(initialPartner?.logoUrl || '');
   const [lat, setLat] = useState<number>(initialPartner?.lat || 10.1982);
@@ -37,7 +40,27 @@ export const PartnerRegistrationModal: React.FC<PartnerRegistrationModalProps> =
   const leafletMap = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
 
-  // Обработчик живого поиска по названию/адресу
+  // Определение геолокации пользователя при открытии (если не редактируем существующее)
+  useEffect(() => {
+    if (!initialPartner && 'geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const userLat = pos.coords.latitude;
+          const userLng = pos.coords.longitude;
+          setLat(userLat);
+          setLng(userLng);
+          if (leafletMap.current && markerRef.current) {
+            leafletMap.current.setView([userLat, userLng], 15);
+            markerRef.current.setLatLng([userLat, userLng]);
+          }
+        },
+        (err) => console.warn('Geolocation warning:', err.message),
+        { timeout: 5000 }
+      );
+    }
+  }, [initialPartner]);
+
+  // Обработчик живого поиска по названию/адресу с учетом координат и сортировки по близости
   useEffect(() => {
     if (!searchQuery || searchQuery.trim().length < 2) {
       setSearchResults([]);
@@ -48,7 +71,7 @@ export const PartnerRegistrationModal: React.FC<PartnerRegistrationModalProps> =
     const timer = setTimeout(async () => {
       try {
         setIsSearching(true);
-        const res = await fetch(`/api/guest/places-search?query=${encodeURIComponent(searchQuery)}`);
+        const res = await fetch(`/api/guest/places-search?query=${encodeURIComponent(searchQuery)}&lat=${lat}&lng=${lng}`);
         const data = await res.json();
         if (data.success && data.results) {
           setSearchResults(data.results);
@@ -62,7 +85,7 @@ export const PartnerRegistrationModal: React.FC<PartnerRegistrationModalProps> =
     }, 350);
 
     return () => clearTimeout(timer);
-  }, [searchQuery]);
+  }, [searchQuery, lat, lng]);
 
   const selectPlaceResult = (place: any) => {
     setName(place.name);
@@ -198,6 +221,8 @@ export const PartnerRegistrationModal: React.FC<PartnerRegistrationModalProps> =
         body: JSON.stringify({
           partnerId: initialPartner?.id,
           name,
+          description,
+          workingHours,
           category,
           address,
           logoUrl,
@@ -206,7 +231,8 @@ export const PartnerRegistrationModal: React.FC<PartnerRegistrationModalProps> =
           googleMapsUrl,
           googleRating,
           googleReviewsCount,
-          telegramId: tgUser?.id
+          telegramId: tgUser?.id,
+          role
         }),
       });
 
@@ -216,7 +242,7 @@ export const PartnerRegistrationModal: React.FC<PartnerRegistrationModalProps> =
       }
 
       triggerNotificationHaptic('success');
-      onSuccess();
+      onSuccess(data.partner);
       onClose();
     } catch (err: any) {
       setError(err.message);
@@ -238,7 +264,7 @@ export const PartnerRegistrationModal: React.FC<PartnerRegistrationModalProps> =
               <h2 className="text-base font-bold text-slate-100">
                 {initialPartner ? 'Редактировать локацию заведения' : 'Регистрация заведения-партнера'}
               </h2>
-              <p className="text-[11px] text-slate-400">Укажите координаты и данные Google Maps</p>
+              <p className="text-[11px] text-slate-400">Данные заведения и выбор роли пользователя</p>
             </div>
           </div>
           <button
@@ -259,6 +285,59 @@ export const PartnerRegistrationModal: React.FC<PartnerRegistrationModalProps> =
               {error}
             </div>
           )}
+
+          {/* Выбор роли пользователя */}
+          <div>
+            <label className="block text-[11px] font-bold uppercase tracking-wider text-amber-400 mb-1.5">
+              👑 Ваша роль в заведении
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  triggerHaptic('light');
+                  setRole('OWNER');
+                }}
+                className={`py-2 px-2 rounded-xl text-xs font-bold transition-all border ${
+                  role === 'OWNER'
+                    ? 'bg-amber-500/20 border-amber-500 text-amber-300 shadow-md'
+                    : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                👑 Владелец
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  triggerHaptic('light');
+                  setRole('MANAGER');
+                }}
+                className={`py-2 px-2 rounded-xl text-xs font-bold transition-all border ${
+                  role === 'MANAGER'
+                    ? 'bg-amber-500/20 border-amber-500 text-amber-300 shadow-md'
+                    : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                👔 Админ
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  triggerHaptic('light');
+                  setRole('WAITER');
+                }}
+                className={`py-2 px-2 rounded-xl text-xs font-bold transition-all border ${
+                  role === 'WAITER'
+                    ? 'bg-amber-500/20 border-amber-500 text-amber-300 shadow-md'
+                    : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                👨‍🍳 Стаф
+              </button>
+            </div>
+          </div>
 
           {/* Быстрый поиск заведения на Google Maps */}
           <div className="relative">
@@ -285,8 +364,15 @@ export const PartnerRegistrationModal: React.FC<PartnerRegistrationModalProps> =
                     className="w-full p-3 text-left hover:bg-amber-500/10 border-b border-slate-800 last:border-0 flex items-start space-x-2 transition-all"
                   >
                     <span className="text-amber-400 text-sm mt-0.5">📍</span>
-                    <div>
-                      <h4 className="text-xs font-bold text-slate-100 line-clamp-1">{place.name}</h4>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-xs font-bold text-slate-100 line-clamp-1">{place.name}</h4>
+                        {place.distanceStr && (
+                          <span className="text-[10px] font-bold text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20 shrink-0 ml-2">
+                            📍 {place.distanceStr}
+                          </span>
+                        )}
+                      </div>
                       <p className="text-[10px] text-slate-400 line-clamp-1">{place.address}</p>
                       {place.googleRating && (
                         <span className="text-[9px] text-amber-400 font-semibold mt-0.5 inline-block">
@@ -331,6 +417,35 @@ export const PartnerRegistrationModal: React.FC<PartnerRegistrationModalProps> =
                 <option value="ENTERTAINMENT">Развлечения & Яхты</option>
                 <option value="SERVICES">Услуги & Сервис</option>
               </select>
+            </div>
+          </div>
+
+          {/* Описание заведения & Часы работы */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                Описание заведения
+              </label>
+              <input
+                type="text"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Короткое описание для клиентов..."
+                className="w-full py-2.5 px-3 rounded-xl bg-slate-950 border border-slate-800 text-slate-100 text-xs focus:border-amber-500 outline-none transition-all"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                Часы работы
+              </label>
+              <input
+                type="text"
+                value={workingHours}
+                onChange={(e) => setWorkingHours(e.target.value)}
+                placeholder="10:00 - 23:00"
+                className="w-full py-2.5 px-3 rounded-xl bg-slate-950 border border-slate-800 text-slate-100 text-xs focus:border-amber-500 outline-none transition-all"
+              />
             </div>
           </div>
 

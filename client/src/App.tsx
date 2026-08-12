@@ -15,6 +15,7 @@ import { QrScannerModal } from './components/QrScannerModal';
 import { GuestLandingPage } from './components/GuestLandingPage';
 import { BusinessLandingPage } from './components/BusinessLandingPage';
 import { PartnerRegistrationModal } from './components/PartnerRegistrationModal';
+import { StaffInviteModal } from './components/StaffInviteModal';
 import { Home, Wallet, MapPin, User, HelpCircle, Building2, Sparkles } from 'lucide-react';
 
 export const App: React.FC = () => {
@@ -25,6 +26,7 @@ export const App: React.FC = () => {
   const [showHelpGuide, setShowHelpGuide] = useState(false);
   const [showScannerModal, setShowScannerModal] = useState(false);
   const [showPartnerRegisterModal, setShowPartnerRegisterModal] = useState(false);
+  const [staffInvitePartner, setStaffInvitePartner] = useState<any | null>(null);
   const [isBusinessUser, setIsBusinessUser] = useState(false);
   const [staffInfo, setStaffInfo] = useState<any | null>(null);
   const [activeLanding, setActiveLanding] = useState<'GUEST' | 'BUSINESS' | null>(null);
@@ -262,7 +264,21 @@ export const App: React.FC = () => {
       {showPartnerRegisterModal && (
         <PartnerRegistrationModal
           onClose={() => setShowPartnerRegisterModal(false)}
-          onSuccess={() => setShowPartnerRegisterModal(false)}
+          onSuccess={(partner) => {
+            setShowPartnerRegisterModal(false);
+            if (partner) {
+              setStaffInvitePartner(partner);
+            }
+          }}
+        />
+      )}
+
+      {/* Модалка сгенерированных QR-кодов и ссылок для сотрудников */}
+      {staffInvitePartner && (
+        <StaffInviteModal
+          partnerId={staffInvitePartner.id}
+          partnerName={staffInvitePartner.name}
+          onClose={() => setStaffInvitePartner(null)}
         />
       )}
 
