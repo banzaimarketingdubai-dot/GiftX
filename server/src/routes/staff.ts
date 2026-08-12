@@ -291,9 +291,11 @@ staffRouter.post('/partner/location', async (req: Request, res: Response) => {
       return res.json({ success: true, partner: updated, message: 'Локация заведения обновлена' });
     } else {
       // Создание нового партнера при регистрации
-      if (!name || !category || !address) {
-        return res.status(400).json({ success: false, error: 'Укажите название, категорию и адрес заведения' });
+      if (!name || !category) {
+        return res.status(400).json({ success: false, error: 'Укажите название и категорию заведения' });
       }
+
+      const finalAddress = address || 'Локация на карте';
 
       const created = await prisma.partner.create({
         data: {
@@ -301,11 +303,11 @@ staffRouter.post('/partner/location', async (req: Request, res: Response) => {
           description: description || '',
           workingHours: workingHours || '10:00 - 23:00',
           category,
-          address,
+          address: finalAddress,
           logoUrl: logoUrl || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=200&q=80',
           lat: finalLat || 10.1982,
           lng: finalLng || 103.9634,
-          googleMapsUrl: googleMapsUrl || `https://maps.google.com/?q=${encodeURIComponent(address)}`,
+          googleMapsUrl: googleMapsUrl || `https://maps.google.com/?q=${encodeURIComponent(name + ' ' + finalAddress)}`,
           googleRating: googleRating ? parseFloat(googleRating) : 4.8,
           googleReviewsCount: googleReviewsCount ? parseInt(googleReviewsCount) : 100,
           activeStatus: true,

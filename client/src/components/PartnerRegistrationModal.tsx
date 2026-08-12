@@ -452,16 +452,15 @@ export const PartnerRegistrationModal: React.FC<PartnerRegistrationModalProps> =
           {/* Адрес */}
           <div>
             <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">
-              Официальный адрес
+              Официальный адрес <span className="text-[10px] text-slate-500 font-normal">(опционально)</span>
             </label>
             <div className="relative">
               <MapPin className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
               <input
                 type="text"
-                required
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
-                placeholder="город, улица, дом"
+                placeholder="город, улица, дом (опционально)..."
                 className="w-full py-2.5 pl-9 pr-3 rounded-xl bg-slate-950 border border-slate-800 text-slate-100 text-xs focus:border-amber-500 outline-none transition-all"
               />
             </div>

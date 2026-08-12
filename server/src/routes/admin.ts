@@ -96,15 +96,17 @@ adminRouter.post('/partner', async (req: Request, res: Response) => {
       });
       return res.json({ success: true, partner: updated, message: 'Заведение успешно обновлено' });
     } else {
-      if (!name || !category || !address) {
-        return res.status(400).json({ success: false, error: 'Укажите название, категорию и адрес заведения' });
+      if (!name || !category) {
+        return res.status(400).json({ success: false, error: 'Укажите название и категорию заведения' });
       }
+
+      const finalAddress = address || 'Локация на карте';
 
       const created = await prisma.partner.create({
         data: {
           name,
           category,
-          address,
+          address: finalAddress,
           logoUrl: logoUrl || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=200&q=80',
           activeStatus: activeStatus ?? true,
           basicThreshold: basicThreshold ? parseFloat(basicThreshold) : 0,
@@ -115,7 +117,7 @@ adminRouter.post('/partner', async (req: Request, res: Response) => {
           lng: lng ? parseFloat(lng) : 103.9634,
           googleRating: googleRating ? parseFloat(googleRating) : 4.8,
           googleReviewsCount: googleReviewsCount ? parseInt(googleReviewsCount) : 120,
-          googleMapsUrl: googleMapsUrl || `https://maps.google.com/?q=${encodeURIComponent(address)}`
+          googleMapsUrl: googleMapsUrl || `https://maps.google.com/?q=${encodeURIComponent(name + ' ' + finalAddress)}`
         }
       });
       return res.json({ success: true, partner: created, message: 'Заведение успешно создано' });
