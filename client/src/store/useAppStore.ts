@@ -18,6 +18,10 @@ interface AppState {
   setActiveQrToken: (token: string | null, expiresAt: string | null, boxLevel: string | null) => void;
   setClaimedByGuestName: (name: string | null) => void;
 
+  // Map state
+  selectedMapPartner: Partner | null;
+  setSelectedMapPartner: (partner: Partner | null) => void;
+
   // Guest B2C state
   wallet: ClaimedVoucher[];
   setWallet: (wallet: ClaimedVoucher[]) => void;
@@ -33,6 +37,9 @@ export const useAppStore = create<AppState>((set) => ({
   tokenExpiresAt: null,
   activeBoxLevel: null,
   claimedByGuestName: null,
+
+  selectedMapPartner: null,
+  setSelectedMapPartner: (partner) => set({ selectedMapPartner: partner }),
 
   setPartners: (partners) => set({ partners }),
   setSelectedStaff: (staff) => set({ selectedStaff: staff }),

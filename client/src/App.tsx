@@ -16,7 +16,8 @@ import { GuestLandingPage } from './components/GuestLandingPage';
 import { BusinessLandingPage } from './components/BusinessLandingPage';
 import { PartnerRegistrationModal } from './components/PartnerRegistrationModal';
 import { StaffInviteModal } from './components/StaffInviteModal';
-import { Home, Wallet, MapPin, User, HelpCircle, Building2, Sparkles } from 'lucide-react';
+import { DemoBoxOpeningModal } from './components/DemoBoxOpeningModal';
+import { Home, Wallet, MapPin, User, HelpCircle, Building2, Sparkles, Gift } from 'lucide-react';
 
 export const App: React.FC = () => {
   const { role, setRole, setPartners } = useAppStore();
@@ -25,6 +26,7 @@ export const App: React.FC = () => {
   const [showBusinessOnboardingModal, setShowBusinessOnboardingModal] = useState(false);
   const [showHelpGuide, setShowHelpGuide] = useState(false);
   const [showScannerModal, setShowScannerModal] = useState(false);
+  const [showDemoBoxModal, setShowDemoBoxModal] = useState(false);
   const [showPartnerRegisterModal, setShowPartnerRegisterModal] = useState(false);
   const [staffInvitePartner, setStaffInvitePartner] = useState<any | null>(null);
   const [isBusinessUser, setIsBusinessUser] = useState(false);
@@ -75,6 +77,8 @@ export const App: React.FC = () => {
     } else if (['landing-business', 'landing_business', 'business', 'b2b', 'partner', 'owner'].includes(pageParam || '')) {
       setActiveLanding('BUSINESS');
       setShowBusinessOnboardingModal(true);
+    } else if (['demo-box', 'demo_box', 'demo', 'demobox'].includes(pageParam || '')) {
+      setShowDemoBoxModal(true);
     }
 
     const tgStartParam = (window as any).Telegram?.WebApp?.initDataUnsafe?.start_param;
@@ -88,6 +92,8 @@ export const App: React.FC = () => {
       } else if (['landing_business', 'landing-business', 'business', 'b2b', 'partner', 'owner'].includes(tgStartParam.toLowerCase())) {
         setActiveLanding('BUSINESS');
         setShowBusinessOnboardingModal(true);
+      } else if (['demo-box', 'demo_box', 'demo', 'demobox'].includes(tgStartParam.toLowerCase())) {
+        setShowDemoBoxModal(true);
       }
     }
 
@@ -111,7 +117,7 @@ export const App: React.FC = () => {
     <div className="min-h-screen bg-slate-950 text-slate-100 relative pb-16">
       {/* Верхний брендовый хэдер */}
       <div className="sticky top-0 z-40 bg-slate-950/90 backdrop-blur-xl border-b border-slate-800/80 px-4 py-2.5 flex items-center justify-between max-w-md mx-auto">
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 shrink-0">
           <button
             onClick={() => {
               triggerHaptic('medium');
@@ -126,7 +132,7 @@ export const App: React.FC = () => {
           </button>
         </div>
 
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-1.5 overflow-x-auto no-scrollbar">
           {/* Кнопка переключения Лендинг / Приложение */}
           <button
             onClick={() => {
@@ -137,14 +143,14 @@ export const App: React.FC = () => {
                 setActiveLanding('GUEST');
               }
             }}
-            className={`py-1 px-2.5 rounded-xl border text-xs font-black flex items-center space-x-1 transition-all ${
+            className={`py-1 px-2 rounded-xl border text-xs font-black flex items-center space-x-1 transition-all shrink-0 ${
               activeLanding
                 ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-md shadow-amber-500/20'
                 : 'bg-slate-900 hover:bg-slate-800 text-amber-400 border-amber-500/30'
             }`}
           >
             <Sparkles className="w-3.5 h-3.5" />
-            <span>{activeLanding ? 'Приложение' : 'О сервисе 🚀'}</span>
+            <span>{activeLanding ? 'Приложение' : 'О сервисе'}</span>
           </button>
 
           {/* Индикатор бизнес-аккаунта */}
@@ -155,7 +161,7 @@ export const App: React.FC = () => {
                 setActiveLanding(null);
                 setRole('GUEST');
               }}
-              className="py-1 px-2 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 text-[10px] font-extrabold flex items-center space-x-1 animate-pulse"
+              className="py-1 px-2 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 text-[10px] font-extrabold flex items-center space-x-1 animate-pulse shrink-0"
             >
               <Building2 className="w-3 h-3" />
               <span>Бизнес ➔ Клиент</span>
@@ -167,10 +173,28 @@ export const App: React.FC = () => {
               triggerHaptic('light');
               setShowHelpGuide(true);
             }}
-            className="py-1 px-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 text-xs font-bold flex items-center space-x-1.5 transition-all shadow-sm shadow-amber-500/10"
+            className="py-1 px-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 text-xs font-bold flex items-center space-x-1 transition-all shadow-sm shadow-amber-500/10 shrink-0"
           >
             <HelpCircle className="w-3.5 h-3.5" />
             <span>Инструкция</span>
+          </button>
+
+          {/* Пиктограмма профиля справа */}
+          <button
+            onClick={() => {
+              triggerHaptic('light');
+              setClaimToken(null);
+              setActiveLanding(null);
+              setRole('PROFILE');
+            }}
+            title="Профиль"
+            className={`p-1.5 rounded-xl border transition-all flex items-center justify-center shrink-0 ${
+              role === 'PROFILE' && !claimToken && !activeLanding
+                ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-md shadow-amber-500/20'
+                : 'bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/30 text-amber-400 shadow-sm shadow-amber-500/10'
+            }`}
+          >
+            <User className="w-4 h-4" />
           </button>
         </div>
       </div>
@@ -260,6 +284,11 @@ export const App: React.FC = () => {
         />
       )}
 
+      {/* Демо-открытие бокса */}
+      {showDemoBoxModal && (
+        <DemoBoxOpeningModal onClose={() => setShowDemoBoxModal(false)} />
+      )}
+
       {/* Модалка регистрации заведения */}
       {showPartnerRegisterModal && (
         <PartnerRegistrationModal
@@ -283,7 +312,7 @@ export const App: React.FC = () => {
       )}
 
       {/* Нижняя навигация */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 p-2 bg-slate-950/90 backdrop-blur-xl border-t border-slate-800 flex justify-center space-x-1.5 max-w-md mx-auto">
+      <div className="fixed bottom-0 left-0 right-0 z-40 p-2 bg-slate-950/90 backdrop-blur-xl border-t border-slate-800 flex justify-center space-x-2 max-w-md mx-auto">
         <button
           onClick={() => {
             triggerHaptic('light');
@@ -291,7 +320,7 @@ export const App: React.FC = () => {
             setActiveLanding(null);
             setRole('GUEST');
           }}
-          className={`flex-1 py-2 px-1.5 rounded-2xl flex items-center justify-center space-x-1 text-xs font-extrabold transition-all ${
+          className={`flex-1 py-2 px-2 rounded-2xl flex items-center justify-center space-x-1.5 text-xs font-extrabold transition-all ${
             (role === 'GUEST' || !role) && !claimToken && !activeLanding
               ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20'
               : 'bg-slate-900 text-slate-400 border border-slate-800'
@@ -308,14 +337,14 @@ export const App: React.FC = () => {
             setActiveLanding(null);
             setRole('WALLET');
           }}
-          className={`flex-1 py-2 px-1.5 rounded-2xl flex items-center justify-center space-x-1 text-xs font-extrabold transition-all ${
+          className={`flex-1 py-2 px-2 rounded-2xl flex items-center justify-center space-x-1.5 text-xs font-extrabold transition-all ${
             role === 'WALLET' && !claimToken && !activeLanding
               ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20'
               : 'bg-slate-900 text-slate-400 border border-slate-800'
           }`}
         >
-          <Wallet className="w-4 h-4" />
-          <span>Кошелек</span>
+          <Gift className="w-4 h-4" />
+          <span>Подарки</span>
         </button>
 
         <button
@@ -325,7 +354,7 @@ export const App: React.FC = () => {
             setActiveLanding(null);
             setRole('MAP');
           }}
-          className={`flex-1 py-2 px-1.5 rounded-2xl flex items-center justify-center space-x-1 text-xs font-extrabold transition-all ${
+          className={`flex-1 py-2 px-2 rounded-2xl flex items-center justify-center space-x-1.5 text-xs font-extrabold transition-all ${
             role === 'MAP' && !claimToken && !activeLanding
               ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20'
               : 'bg-slate-900 text-slate-400 border border-slate-800'
@@ -333,23 +362,6 @@ export const App: React.FC = () => {
         >
           <MapPin className="w-4 h-4" />
           <span>Карта</span>
-        </button>
-
-        <button
-          onClick={() => {
-            triggerHaptic('light');
-            setClaimToken(null);
-            setActiveLanding(null);
-            setRole('PROFILE');
-          }}
-          className={`flex-1 py-2 px-1.5 rounded-2xl flex items-center justify-center space-x-1 text-xs font-extrabold transition-all ${
-            (role === 'PROFILE' || role === 'ADMIN' || role === 'WAITER') && !claimToken && !activeLanding
-              ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20'
-              : 'bg-slate-900 text-slate-400 border border-slate-800'
-          }`}
-        >
-          <User className="w-4 h-4" />
-          <span>Профиль</span>
         </button>
       </div>
     </div>

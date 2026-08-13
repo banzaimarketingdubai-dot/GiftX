@@ -26,6 +26,7 @@ import { BusinessOnboardingModal } from './BusinessOnboardingModal';
 import { triggerHaptic, triggerNotificationHaptic } from '../telegram';
 
 import { DemoBoxOpeningModal } from './DemoBoxOpeningModal';
+import { PlatformAnalyticsScreen } from './PlatformAnalyticsScreen';
 
 export const AdminDashboardScreen: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'VENUES' | 'MODERATION' | 'STAFF' | 'APPLICATIONS' | 'OFFERS' | 'ANALYTICS'>('VENUES');
@@ -812,42 +813,9 @@ export const AdminDashboardScreen: React.FC = () => {
         </div>
       )}
 
-      {/* ВКЛАДКА 4: АНАЛИТИКА */}
+      {/* ВКЛАДКА 4: АНАЛИТИКА И МОНЕТИЗАЦИЯ */}
       {activeTab === 'ANALYTICS' && (
-        <div className="space-y-4">
-          <div className="glass-card p-5 rounded-2xl border border-slate-800 bg-slate-900/90 space-y-4">
-            <h3 className="text-sm font-bold text-slate-100 flex items-center space-x-2">
-              <TrendingUp className="w-4 h-4 text-emerald-400" />
-              <span>Эффективность Кросс-Маркетинга</span>
-            </h3>
-
-            <div className="space-y-3 text-xs">
-              <div>
-                <div className="flex justify-between text-slate-300 font-semibold mb-1">
-                  <span>Конверсия гашения ваучеров</span>
-                  <span className="text-emerald-400 font-mono font-bold">{stats.redemptionRate}%</span>
-                </div>
-                <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
-                  <div
-                    className="h-full bg-emerald-500 rounded-full transition-all"
-                    style={{ width: `${stats.redemptionRate}%` }}
-                  />
-                </div>
-              </div>
-
-              <div className="pt-3 border-t border-slate-800/80 space-y-2">
-                <div className="flex justify-between text-slate-400">
-                  <span>Всего сгенерировано подарков:</span>
-                  <span className="text-slate-100 font-mono font-bold">{stats.totalClaimed} шт.</span>
-                </div>
-                <div className="flex justify-between text-slate-400">
-                  <span>Погашено гостей в заведениях:</span>
-                  <span className="text-emerald-400 font-mono font-bold">{stats.totalRedeemed} гостей</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <PlatformAnalyticsScreen />
       )}
 
       {/* Модалка обучения перед созданием заведения */}

@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Wallet, Clock, MapPin, Gift, CheckCircle, Sparkles, AlertCircle } from 'lucide-react';
+import { Wallet, Clock, MapPin, Gift, CheckCircle, Sparkles, AlertCircle, Navigation } from 'lucide-react';
 import { ClaimedVoucher } from '../types';
 import { VoucherRedeemModal } from './VoucherRedeemModal';
 import { triggerHaptic, getTelegramUserData } from '../telegram';
+import { useAppStore } from '../store/useAppStore';
 
 export const WalletScreen: React.FC = () => {
+  const { setRole, setSelectedMapPartner } = useAppStore();
   const [wallet, setWallet] = useState<ClaimedVoucher[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'ACTIVE' | 'ARCHIVE'>('ACTIVE');
@@ -79,7 +81,7 @@ export const WalletScreen: React.FC = () => {
               : 'text-slate-400 hover:text-slate-200'
           }`}
         >
-          <span>🎁 Активные ({activeVouchers.length})</span>
+          <span>Активные ({activeVouchers.length})</span>
         </button>
 
         <button
@@ -93,7 +95,7 @@ export const WalletScreen: React.FC = () => {
               : 'text-slate-400 hover:text-slate-200'
           }`}
         >
-          <span>📁 Архив (30 дн.) ({archiveVouchers.length})</span>
+          <span>Архив (30 дн.) ({archiveVouchers.length})</span>
         </button>
       </div>
 
@@ -147,9 +149,27 @@ export const WalletScreen: React.FC = () => {
                       <div className="mt-2 flex items-center justify-between pt-1 border-t border-slate-800/80">
                         <span className="font-black text-emerald-400 text-xs">{offer?.discountValue}</span>
                         
-                        <span className="text-[10px] font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-lg flex items-center space-x-1">
-                          <span>Показать QR 📲</span>
-                        </span>
+                        <div className="flex items-center space-x-1.5">
+                          {partner && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                triggerHaptic('medium');
+                                setSelectedMapPartner(partner);
+                                setRole('MAP');
+                              }}
+                              title="Посмотреть маршрут к заведению на карте"
+                              className="py-1 px-2 rounded-lg bg-blue-500/15 hover:bg-blue-500/25 border border-blue-500/30 text-blue-400 text-[10px] font-extrabold flex items-center space-x-1 transition-all"
+                            >
+                              <Navigation className="w-3 h-3 text-blue-400" />
+                              <span>Маршрут</span>
+                            </button>
+                          )}
+
+                          <span className="text-[10px] font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-1 rounded-lg flex items-center space-x-1">
+                            <span>Показать QR</span>
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -169,7 +189,7 @@ export const WalletScreen: React.FC = () => {
         ) : (
           <div className="space-y-3">
             <div className="text-[10px] text-slate-400 text-center uppercase font-bold tracking-wider mb-2">
-              🔒 Погашенные сертификаты хранятся 30 дней в архиве
+              Погашенные сертификаты хранятся 30 дней в архиве
             </div>
 
             {archiveVouchers.map((v) => {
@@ -196,15 +216,33 @@ export const WalletScreen: React.FC = () => {
                           {partner?.name}
                         </span>
                         
-                        <div className="text-[10px] font-bold">
-                          {isRedeemed ? (
-                            <span className="text-emerald-400 flex items-center space-x-1 bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20">
-                              <CheckCircle className="w-3 h-3" />
-                              <span>Погашен</span>
-                            </span>
-                          ) : (
-                            <span className="text-slate-500 bg-slate-800 px-2 py-0.5 rounded-lg">Сгорел</span>
+                        <div className="flex items-center space-x-1.5">
+                          {partner && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                triggerHaptic('medium');
+                                setSelectedMapPartner(partner);
+                                setRole('MAP');
+                              }}
+                              title="Посмотреть маршрут"
+                              className="py-0.5 px-1.5 rounded-lg bg-blue-500/15 border border-blue-500/30 text-blue-400 text-[10px] font-bold flex items-center space-x-1"
+                            >
+                              <Navigation className="w-3 h-3 text-blue-400" />
+                              <span>Карта</span>
+                            </button>
                           )}
+
+                          <div className="text-[10px] font-bold">
+                            {isRedeemed ? (
+                              <span className="text-emerald-400 flex items-center space-x-1 bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20">
+                                <CheckCircle className="w-3 h-3" />
+                                <span>Погашен</span>
+                              </span>
+                            ) : (
+                              <span className="text-slate-500 bg-slate-800 px-2 py-0.5 rounded-lg">Сгорел</span>
+                            )}
+                          </div>
                         </div>
                       </div>
 

@@ -170,7 +170,7 @@ export const GuestHomeScreen: React.FC<GuestHomeScreenProps> = ({
             <span>GiftX Pass</span>
           </div>
           <h1 className="text-xl font-black text-slate-100">
-            Привет, {tgUser?.first_name || 'Гость'}! 👋
+            Привет, {tgUser?.first_name || 'Гость'}!
           </h1>
           <p className="text-xs text-slate-400">
             Получайте подарки в лучших заведениях города
@@ -178,7 +178,7 @@ export const GuestHomeScreen: React.FC<GuestHomeScreenProps> = ({
         </div>
 
         <div className="w-14 h-14 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center font-black text-2xl text-amber-400 shrink-0 shadow-lg shadow-amber-500/20 z-10">
-          {tgUser?.first_name ? tgUser.first_name[0].toUpperCase() : '🎁'}
+          {tgUser?.first_name ? tgUser.first_name[0].toUpperCase() : <Gift className="w-7 h-7 text-amber-400" />}
         </div>
       </div>
 
@@ -275,8 +275,9 @@ export const GuestHomeScreen: React.FC<GuestHomeScreenProps> = ({
             </div>
           </div>
 
-          <span className="text-[10px] text-amber-400 font-mono font-bold px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20">
-            📍 GPS
+          <span className="text-[10px] text-amber-400 font-mono font-bold px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 flex items-center space-x-1">
+            <Navigation className="w-3 h-3 text-amber-400 inline" />
+            <span>GPS</span>
           </span>
         </div>
 

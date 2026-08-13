@@ -20,7 +20,8 @@ import {
   FileText,
   Trophy,
   Send,
-  Flame
+  Flame,
+  TrendingUp
 } from 'lucide-react';
 import { getTelegramUserData, triggerHaptic, triggerNotificationHaptic } from '../telegram';
 import { PartnerRegistrationModal } from './PartnerRegistrationModal';
@@ -28,6 +29,7 @@ import { BusinessOnboardingModal } from './BusinessOnboardingModal';
 import { ManageUserRoleModal } from './ManageUserRoleModal';
 import { AdminDashboardScreen } from './AdminDashboardScreen';
 import { WaiterScreen } from './WaiterScreen';
+import { PlatformAnalyticsScreen } from './PlatformAnalyticsScreen';
 import { useAppStore } from '../store/useAppStore';
 
 interface ProfileScreenProps {
@@ -74,7 +76,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [showBusinessOnboardingModal, setShowBusinessOnboardingModal] = useState(false);
   const [showManageRoleModal, setShowManageRoleModal] = useState(false);
-  const [viewMode, setViewMode] = useState<'PROFILE' | 'ADMIN' | 'WAITER'>('PROFILE');
+  const [viewMode, setViewMode] = useState<'PROFILE' | 'ADMIN' | 'WAITER' | 'ANALYTICS'>('PROFILE');
 
   // Состояние заявок для заведения владельца/управляющего
   const [partnerApps, setPartnerApps] = useState<any[]>([]);
@@ -169,7 +171,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
       });
       const data = await res.json();
       if (data.success) {
-        alert(`🎉 Поздравление победителю [${winnerName}] успешно отправлено в Telegram Бот!\n\nТекст сообщения:\n${data.botMessage}`);
+        alert(`Поздравление победителю [${winnerName}] успешно отправлено в Telegram Бот!\n\nТекст сообщения:\n${data.botMessage}`);
       }
     } catch (e: any) {
       alert('Ошибка отправки: ' + e.message);
@@ -187,7 +189,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
       });
       const data = await res.json();
       if (data.success) {
-        alert(`📊 Дневной отчет заведения «${data.partnerName}» отправлен Владельцу в Telegram Бот!\n\nТекст отчета:\n${data.reportMessage}`);
+        alert(`Дневной отчет заведения «${data.partnerName}» отправлен Владельцу в Telegram Бот!\n\nТекст отчета:\n${data.reportMessage}`);
       }
     } catch (e: any) {
       alert('Ошибка отправки отчета: ' + e.message);
@@ -246,6 +248,29 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
     setViewMode('PROFILE');
     setRole('PROFILE');
   };
+
+  // Экран Детальной Аналитики и Монетизации
+  if (viewMode === 'ANALYTICS') {
+    return (
+      <div className="relative min-h-screen bg-slate-950">
+        <div className="bg-slate-900/90 border-b border-slate-800 p-3 max-w-md mx-auto flex items-center justify-between sticky top-0 z-50 backdrop-blur-md">
+          <button
+            onClick={() => {
+              triggerHaptic('light');
+              setViewMode('PROFILE');
+            }}
+            className="text-xs font-bold text-amber-400 flex items-center space-x-1 hover:underline"
+          >
+            <span>← Назад в Мой Профиль</span>
+          </button>
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2 py-0.5 rounded bg-slate-950 border border-slate-800">
+            Аналитика & Биллинг
+          </span>
+        </div>
+        <PlatformAnalyticsScreen onClose={() => setViewMode('PROFILE')} />
+      </div>
+    );
+  }
 
   // Если пользователь внутри профиля переключил вид на встроенный Admin или Waiter экран
   if (viewMode === 'ADMIN') {
@@ -318,7 +343,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
             ) : (
               <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-600 p-0.5 shadow-lg shadow-amber-500/20 shrink-0 group-hover:scale-105 transition-transform">
                 <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center font-black text-2xl text-amber-400">
-                  {tgUser?.first_name ? tgUser.first_name[0].toUpperCase() : '👤'}
+                  {tgUser?.first_name ? tgUser.first_name[0].toUpperCase() : <UserIcon className="w-7 h-7 text-amber-400" />}
                 </div>
               </div>
             )}
@@ -347,7 +372,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
 
           <div className="py-1 px-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] font-bold flex items-center space-x-1 shadow-sm shrink-0">
             <Sliders className="w-3.5 h-3.5" />
-            <span>⚙️ Смена роли</span>
+            <span>Смена роли</span>
           </div>
         </div>
       </div>
@@ -383,24 +408,40 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
             </p>
 
             {(staffInfo.role === 'OWNER' || staffInfo.role === 'MANAGER') && (
-              <button
-                onClick={() => {
-                  triggerHaptic('medium');
-                  setViewMode('ADMIN');
-                  setRole('ADMIN');
-                }}
-                className="w-full p-3.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs flex items-center justify-between transition-all shadow-lg shadow-amber-500/20 active:scale-[0.99]"
-              >
-                <div className="flex items-center space-x-2.5">
-                  <Sliders className="w-4 h-4" />
-                  <span>
-                    {staffInfo.role === 'MANAGER'
-                      ? 'Открыть Панель Управляющего'
-                      : 'Открыть Панель Владельца'}
-                  </span>
-                </div>
-                <ChevronRight className="w-4 h-4" />
-              </button>
+              <>
+                <button
+                  onClick={() => {
+                    triggerHaptic('medium');
+                    setViewMode('ADMIN');
+                    setRole('ADMIN');
+                  }}
+                  className="w-full p-3.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs flex items-center justify-between transition-all shadow-lg shadow-amber-500/20 active:scale-[0.99]"
+                >
+                  <div className="flex items-center space-x-2.5">
+                    <Sliders className="w-4 h-4" />
+                    <span>
+                      {staffInfo.role === 'MANAGER'
+                        ? 'Открыть Панель Управляющего'
+                        : 'Открыть Панель Владельца'}
+                    </span>
+                  </div>
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+
+                <button
+                  onClick={() => {
+                    triggerHaptic('medium');
+                    setViewMode('ANALYTICS');
+                  }}
+                  className="w-full p-3.5 rounded-2xl bg-slate-900 hover:bg-slate-800 border border-amber-500/40 text-amber-300 font-extrabold text-xs flex items-center justify-between transition-all shadow-md active:scale-[0.99]"
+                >
+                  <div className="flex items-center space-x-2.5">
+                    <TrendingUp className="w-4 h-4 text-amber-400" />
+                    <span>Статистика & Биллинг Монетизации</span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-amber-400" />
+                </button>
+              </>
             )}
 
             <button
@@ -479,7 +520,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
                             </span>
                           </div>
                           {app.comment && (
-                            <span className="text-[10px] text-slate-400 block mt-0.5">💬 {app.comment}</span>
+                            <span className="text-[10px] text-slate-400 block mt-0.5">{app.comment}</span>
                           )}
                         </div>
 
@@ -502,13 +543,13 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
                               onClick={() => handleRejectPartnerApp(app.id)}
                               className="flex-1 py-1.5 px-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-[10px] font-bold whitespace-nowrap flex items-center justify-center"
                             >
-                              ❌ Отклонить
+                              Отклонить
                             </button>
                             <button
                               onClick={() => handleApprovePartnerApp(app.id)}
                               className="flex-1 py-1.5 px-2 rounded-lg bg-emerald-500 text-slate-950 font-black text-[10px] shadow-sm shadow-emerald-500/20 hover:bg-emerald-400 whitespace-nowrap flex items-center justify-center"
                             >
-                              ✅ Одобрить
+                              Одобрить
                             </button>
                           </div>
                         )}
@@ -519,12 +560,12 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
             </div>
           )}
 
-          {/* 🏆 Турнирная таблица персонала заведения (Leaderboard & Gamification) */}
+          {/* Турнирная таблица персонала заведения (Leaderboard & Gamification) */}
           <div className="pt-3 border-t border-amber-500/20 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 font-bold text-sm">
-                  🏆
+                  <Award className="w-4 h-4 text-amber-400" />
                 </div>
                 <div>
                   <h4 className="font-extrabold text-slate-100 text-xs uppercase tracking-wider">
@@ -544,7 +585,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
                       : 'text-slate-400 hover:text-slate-200'
                   }`}
                 >
-                  📅 Сегодня
+                  Сегодня
                 </button>
                 <button
                   onClick={() => setLeaderboardPeriod('week')}
@@ -554,7 +595,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
                       : 'text-slate-400 hover:text-slate-200'
                   }`}
                 >
-                  📆 За неделю
+                  За неделю
                 </button>
               </div>
             </div>
@@ -563,12 +604,12 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
             {topLeader && (
               <div className="p-3 rounded-2xl bg-gradient-to-br from-amber-500/20 via-slate-900 to-slate-950 border border-amber-400/40 flex items-center justify-between shadow-lg">
                 <div className="flex items-center space-x-2.5">
-                  <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/50 flex items-center justify-center text-xl shrink-0 shadow-md animate-pulse">
-                    🥇
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/50 flex items-center justify-center shrink-0 shadow-md animate-pulse">
+                    <Trophy className="w-5 h-5 text-amber-400" />
                   </div>
                   <div>
                     <span className="text-[9px] uppercase font-black text-amber-400 tracking-widest block">
-                      👑 Лидер {leaderboardPeriod === 'today' ? 'дня' : 'недели'}
+                      Лидер {leaderboardPeriod === 'today' ? 'дня' : 'недели'}
                     </span>
                     <h5 className="font-extrabold text-slate-100 text-xs">{topLeader.name}</h5>
                     <span className="text-[10px] font-bold text-emerald-400">
@@ -582,7 +623,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
                   className="px-2.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-[10px] font-black shadow-md shadow-amber-500/20 active:scale-95 flex items-center space-x-1 shrink-0"
                 >
                   <Trophy className="w-3 h-3 text-slate-950" />
-                  <span>Поздравить в Bot 🎉</span>
+                  <span>Поздравить в Bot</span>
                 </button>
               </div>
             )}
@@ -625,7 +666,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
                 className="w-full py-3 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border border-slate-700 hover:border-amber-500/40 text-amber-400 font-extrabold text-xs flex items-center justify-center space-x-2 shadow-lg transition-all active:scale-[0.99] mt-2"
               >
                 <Send className="w-4 h-4 text-amber-400" />
-                <span>📊 Отправить дневной отчет Владельцу в Telegram</span>
+                <span>Отправить дневной отчет Владельцу в Telegram</span>
               </button>
             )}
           </div>
@@ -636,8 +677,8 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
       {!isStaff && (
         <div className="glass-card p-5 rounded-3xl border border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-slate-900 to-slate-950 space-y-4 shadow-xl">
           <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 text-2xl shrink-0">
-              🏬
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 shrink-0">
+              <Building2 className="w-6 h-6 text-amber-400" />
             </div>
             <div>
               <span className="text-[9px] uppercase font-extrabold text-amber-400 tracking-widest px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20">
@@ -689,6 +730,20 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
         <h4 className="text-[10px] uppercase font-bold text-slate-500 tracking-wider px-1">
           Настройки и сессии
         </h4>
+
+        <button
+          onClick={() => {
+            triggerHaptic('medium');
+            setViewMode('ANALYTICS');
+          }}
+          className="w-full p-3.5 rounded-2xl bg-slate-900 border border-slate-800 text-slate-200 text-xs font-bold flex items-center justify-between hover:bg-slate-800/80 transition-all"
+        >
+          <div className="flex items-center space-x-2.5">
+            <TrendingUp className="w-4 h-4 text-amber-400" />
+            <span>Статистика посещаемости и Монетизации</span>
+          </div>
+          <ChevronRight className="w-4 h-4 text-slate-500" />
+        </button>
 
         <button
           onClick={() => {

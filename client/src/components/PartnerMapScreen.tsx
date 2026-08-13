@@ -5,8 +5,10 @@ import { Partner, ClaimedVoucher } from '../types';
 import { GoogleReviewsModal } from './GoogleReviewsModal';
 import { PartnerRegistrationModal } from './PartnerRegistrationModal';
 import { triggerHaptic, getTelegramUserData } from '../telegram';
+import { useAppStore } from '../store/useAppStore';
 
 export const PartnerMapScreen: React.FC = () => {
+  const { selectedMapPartner } = useAppStore();
   const [partners, setPartners] = useState<Partner[]>([]);
   const [userWallet, setUserWallet] = useState<ClaimedVoucher[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,6 +53,16 @@ export const PartnerMapScreen: React.FC = () => {
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Автоматический фокус карты при открытии маршрута конкретного заведения
+  useEffect(() => {
+    if (selectedMapPartner) {
+      setSelectedPartner(selectedMapPartner);
+      if (leafletMapRef.current && selectedMapPartner.lat && selectedMapPartner.lng) {
+        leafletMapRef.current.flyTo([selectedMapPartner.lat, selectedMapPartner.lng], 15, { duration: 1.2 });
+      }
+    }
+  }, [selectedMapPartner]);
 
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const userMarkerRef = useRef<L.Marker | null>(null);
@@ -326,7 +338,7 @@ export const PartnerMapScreen: React.FC = () => {
               title="Мое местоположение"
               className="w-8 h-8 rounded-xl bg-blue-500/20 border border-blue-500/30 text-blue-400 font-bold flex items-center justify-center hover:bg-blue-500/30 transition-all shadow-md"
             >
-              🎯
+              <Navigation className="w-4 h-4 text-blue-400" />
             </button>
 
             <button
@@ -357,11 +369,11 @@ export const PartnerMapScreen: React.FC = () => {
         {/* Фильтры категорий */}
         <div className="flex space-x-2 overflow-x-auto no-scrollbar pb-1">
           {[
-            { id: 'ALL', label: 'Все', icon: '📍' },
-            { id: 'HORECA', label: 'HoReCa', icon: '🍸' },
-            { id: 'BEAUTY_SPA', label: 'Beauty & Spa', icon: '💆' },
-            { id: 'AUTO_MOTO', label: 'Auto & Moto', icon: '🛵' },
-            { id: 'ENTERTAINMENT', label: 'Развлечения', icon: '🛥️' },
+            { id: 'ALL', label: 'Все' },
+            { id: 'HORECA', label: 'HoReCa' },
+            { id: 'BEAUTY_SPA', label: 'Beauty & Spa' },
+            { id: 'AUTO_MOTO', label: 'Auto & Moto' },
+            { id: 'ENTERTAINMENT', label: 'Развлечения' },
           ].map((cat) => (
             <button
               key={cat.id}
@@ -375,7 +387,6 @@ export const PartnerMapScreen: React.FC = () => {
                   : 'bg-slate-900/90 text-slate-400 border border-slate-800'
               }`}
             >
-              <span>{cat.icon}</span>
               <span>{cat.label}</span>
             </button>
           ))}

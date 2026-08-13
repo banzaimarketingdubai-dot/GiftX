@@ -195,7 +195,7 @@ export class TelegramFunnelBot {
   }
 
   /**
-   * Send persistent Bottom Reply Keyboard ("БИЗНЕС", "Сотрудники", "Mini App")
+   * Send persistent Bottom Reply Keyboard ("БИЗНЕС", "Сотрудники", "🎁 ДЕМО", "Mini App")
    */
   public async sendPersistentB2BReplyKeyboard(telegramId: bigint | number | string): Promise<void> {
     if (!this.isConfigured()) return;
@@ -209,7 +209,8 @@ export class TelegramFunnelBot {
         reply_markup: {
           keyboard: [
             [{ text: '🏢 БИЗНЕС' }, { text: '👥 Сотрудники' }],
-            [{ text: '📱 Mini App' }, { text: 'ℹ️ О GiftX' }]
+            [{ text: '🎁 ДЕМО (Открытие бокса)' }, { text: '📱 Mini App' }],
+            [{ text: 'ℹ️ О GiftX' }]
           ],
           resize_keyboard: true,
           is_persistent: true
@@ -227,6 +228,26 @@ export class TelegramFunnelBot {
   }
 
   /**
+   * Deliver Demo Box opening message with WebApp button
+   */
+  public async sendDemoBoxMessage(telegramId: bigint | number | string): Promise<void> {
+    const appUrl = process.env.CLIENT_URL || 'https://gift-x.vercel.app';
+
+    const text =
+      `🎁 **ДЕМО-РАСПАКОВКА БОКСА GIFTX**\n\n` +
+      `Интерактивный 3D-экран открытия сюрприз-бокса для презентации владельцам заведений, администраторам и клиентам.\n\n` +
+      `👇 Нажмите кнопку ниже, чтобы запустить демо-открытие бокса:`;
+
+    const inlineButtons: InlineButton[][] = [
+      [
+        { text: '🎁 Открыть ДЕМО-Бокс', url: `${appUrl}?page=demo-box` }
+      ]
+    ];
+
+    await this.sendTextMessage(telegramId, text, inlineButtons);
+  }
+
+  /**
    * Handle incoming plain text messages (Wizard progression or Reply Menu clicks)
    */
   public async handleMessageText(telegramId: bigint, text: string, firstName: string): Promise<void> {
@@ -235,6 +256,11 @@ export class TelegramFunnelBot {
 
     // 1. Reply menu button handler
     const cleanText = text.trim().toLowerCase();
+
+    if (cleanText.startsWith('/demo') || cleanText.includes('демо') || cleanText === '🎁 демо (открытие бокса)') {
+      await this.sendDemoBoxMessage(telegramId);
+      return;
+    }
 
     if (cleanText === '🏢 бизнес' || cleanText === 'бизнес') {
       await this.showBusinessMenu(telegramId, firstName);
@@ -249,7 +275,7 @@ export class TelegramFunnelBot {
     if (cleanText === '📱 mini app' || cleanText === 'mini app') {
       const appUrl = process.env.CLIENT_URL || 'https://gift-x.vercel.app';
       await this.sendTextMessage(telegramId, `📱 **Открыть GiftX Mini App:**\n${appUrl}`, [
-        [{ text: '🚀 Запустить Mini App', url: appUrl }]
+        [{ text: 'Запустить Mini App', url: appUrl }]
       ]);
       return;
     }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import { Gift, Sparkles, AlertTriangle, ShieldCheck, ArrowRight, MapPin, ChevronLeft, ChevronRight, RotateCw } from 'lucide-react';
+import { Gift, Sparkles, AlertTriangle, ShieldCheck, ArrowRight, MapPin, ChevronLeft, ChevronRight, RotateCw, Navigation } from 'lucide-react';
 import { triggerHaptic, triggerNotificationHaptic, getTelegramUserData } from '../telegram';
 import { ClaimedVoucher } from '../types';
 import { useAppStore } from '../store/useAppStore';
@@ -17,6 +17,7 @@ interface PlayingCardsDeckProps {
 }
 
 const PlayingCardsDeck: React.FC<PlayingCardsDeckProps> = ({ vouchers: initialVouchers, onFinished }) => {
+  const { setRole, setSelectedMapPartner } = useAppStore();
   const [deck, setDeck] = useState<ClaimedVoucher[]>(initialVouchers);
   const [savedCount, setSavedCount] = useState(0);
   const [discardedCount, setDiscardedCount] = useState(0);
@@ -319,15 +320,33 @@ const PlayingCardsDeck: React.FC<PlayingCardsDeckProps> = ({ vouchers: initialVo
 
                 {/* Нижняя панель карточки */}
                 <div className="pt-2 border-t border-slate-800/80 flex justify-between items-center text-[10px] z-10">
-                  <span className="flex items-center space-x-1 text-slate-400 truncate max-w-[170px]">
+                  <span className="flex items-center space-x-1 text-slate-400 truncate max-w-[130px]">
                     <MapPin className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                     <span className="truncate">{partner?.address}</span>
                   </span>
 
-                  <span className="text-amber-400 font-mono font-bold flex items-center space-x-1 bg-amber-500/10 px-2 py-0.5 rounded-lg border border-amber-500/20">
-                    <RotateCw className="w-3 h-3" />
-                    <span>Тап = Рубашка 🔄</span>
-                  </span>
+                  <div className="flex items-center space-x-1">
+                    {partner && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          triggerHaptic('medium');
+                          setSelectedMapPartner(partner);
+                          setRole('MAP');
+                        }}
+                        title="Маршрут на карте"
+                        className="py-0.5 px-1.5 rounded-md bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/40 text-blue-300 font-extrabold flex items-center space-x-1 text-[9px]"
+                      >
+                        <Navigation className="w-2.5 h-2.5 text-blue-300" />
+                        <span>Маршрут</span>
+                      </button>
+                    )}
+
+                    <span className="text-amber-400 font-mono font-bold flex items-center space-x-0.5 bg-amber-500/10 px-1.5 py-0.5 rounded-lg border border-amber-500/20 text-[9px]">
+                      <RotateCw className="w-2.5 h-2.5" />
+                      <span>3D 🔄</span>
+                    </span>
+                  </div>
                 </div>
               </div>
 

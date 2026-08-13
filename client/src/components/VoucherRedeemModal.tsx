@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { X, CheckCircle2, AlertCircle, Lock, Building2, MapPin } from 'lucide-react';
+import { X, CheckCircle2, AlertCircle, Lock, Building2, MapPin, Navigation } from 'lucide-react';
 import { ClaimedVoucher } from '../types';
 import { triggerHaptic, triggerNotificationHaptic } from '../telegram';
 
@@ -115,16 +115,29 @@ export const VoucherRedeemModal: React.FC<VoucherRedeemModalProps> = ({
               <span>{partner?.name}</span>
             </div>
 
-            {/* Локация заведения на Google Maps */}
-            <a
-              href={partner?.googleMapsUrl || `https://maps.google.com/?q=${encodeURIComponent(partner?.name + ' ' + partner?.address)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center space-x-1.5 text-xs text-amber-400 font-semibold bg-amber-500/10 border border-amber-500/20 py-1.5 px-3 rounded-xl hover:bg-amber-500/20 transition-all truncate max-w-full"
-            >
-              <MapPin className="w-3.5 h-3.5 shrink-0" />
-              <span className="truncate">{partner?.address}</span>
-            </a>
+            {/* Локация заведения и кнопка прокладки маршрута */}
+            <div className="flex items-center justify-center space-x-2">
+              <a
+                href={partner?.googleMapsUrl || `https://maps.google.com/?q=${encodeURIComponent(partner?.name + ' ' + partner?.address)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center space-x-1.5 text-xs text-amber-400 font-semibold bg-amber-500/10 border border-amber-500/20 py-1.5 px-3 rounded-xl hover:bg-amber-500/20 transition-all truncate max-w-[65%]"
+              >
+                <MapPin className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">{partner?.address}</span>
+              </a>
+
+              <a
+                href={partner?.googleMapsUrl || `https://www.google.com/maps/dir/?api=1&destination=${partner?.lat || 10.1982},${partner?.lng || 103.9634}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Маршрут в навигаторе устройства"
+                className="inline-flex items-center space-x-1 text-xs text-slate-950 font-black bg-amber-500 hover:bg-amber-400 py-1.5 px-3 rounded-xl shadow-md transition-all shrink-0 active:scale-95"
+              >
+                <Navigation className="w-3.5 h-3.5" />
+                <span>Маршрут</span>
+              </a>
+            </div>
 
             <img
               src={offer?.imageUrl}
