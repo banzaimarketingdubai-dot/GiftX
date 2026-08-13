@@ -8,10 +8,10 @@ interface DemoBoxOpeningModalProps {
 }
 
 export const DemoBoxOpeningModal: React.FC<DemoBoxOpeningModalProps> = ({ onClose }) => {
-  const [boxLevel, setBoxLevel] = useState<'BASIC' | 'SILVER' | 'GOLD' | 'PLATINUM'>('GOLD');
+  const [boxLevel, setBoxLevel] = useState<'SILVER' | 'GOLD' | 'PLATINUM'>('GOLD');
   const [isPlayingDemo, setIsPlayingDemo] = useState(false);
 
-  const handleStartDemo = (level: 'BASIC' | 'SILVER' | 'GOLD' | 'PLATINUM') => {
+  const handleStartDemo = (level: 'SILVER' | 'GOLD' | 'PLATINUM') => {
     triggerHaptic('heavy');
     setBoxLevel(level);
     setIsPlayingDemo(true);
@@ -107,18 +107,7 @@ export const DemoBoxOpeningModal: React.FC<DemoBoxOpeningModalProps> = ({ onClos
             🎁 Выберите уровень бокса для показа:
           </label>
 
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <button
-              onClick={() => handleStartDemo('BASIC')}
-              className="p-3.5 rounded-2xl bg-slate-950 border border-purple-500/30 hover:border-purple-500/60 font-bold text-left space-y-1 transition-all group active:scale-95 shadow-md"
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-purple-300 font-black">🥉 BASIC</span>
-                <Play className="w-4 h-4 text-purple-400 group-hover:translate-x-0.5 transition-transform" />
-              </div>
-              <p className="text-[10px] text-slate-400 font-normal">Подарки при обычном чеке</p>
-            </button>
-
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
             <button
               onClick={() => handleStartDemo('SILVER')}
               className="p-3.5 rounded-2xl bg-slate-950 border border-cyan-500/30 hover:border-cyan-500/60 font-bold text-left space-y-1 transition-all group active:scale-95 shadow-md"
@@ -127,7 +116,7 @@ export const DemoBoxOpeningModal: React.FC<DemoBoxOpeningModalProps> = ({ onClos
                 <span className="text-cyan-300 font-black">🥈 SILVER</span>
                 <Play className="w-4 h-4 text-cyan-400 group-hover:translate-x-0.5 transition-transform" />
               </div>
-              <p className="text-[10px] text-slate-400 font-normal">Подарки от 300k VND</p>
+              <p className="text-[10px] text-slate-400 font-normal">Чек от 300k VND</p>
             </button>
 
             <button
@@ -138,7 +127,7 @@ export const DemoBoxOpeningModal: React.FC<DemoBoxOpeningModalProps> = ({ onClos
                 <span className="text-amber-400 font-black">🥇 GOLD</span>
                 <Play className="w-4 h-4 text-amber-400 group-hover:translate-x-0.5 transition-transform" />
               </div>
-              <p className="text-[10px] text-slate-400 font-normal">Подарки от 600k VND</p>
+              <p className="text-[10px] text-slate-400 font-normal">Чек от 600k VND</p>
             </button>
 
             <button
@@ -149,7 +138,7 @@ export const DemoBoxOpeningModal: React.FC<DemoBoxOpeningModalProps> = ({ onClos
                 <span className="text-purple-300 font-black">💎 PLATINUM</span>
                 <Play className="w-4 h-4 text-purple-400 group-hover:translate-x-0.5 transition-transform" />
               </div>
-              <p className="text-[10px] text-slate-400 font-normal">VIP Подарки от 1.2M VND</p>
+              <p className="text-[10px] text-slate-400 font-normal">VIP Чек от 1.0M VND</p>
             </button>
           </div>
         </div>

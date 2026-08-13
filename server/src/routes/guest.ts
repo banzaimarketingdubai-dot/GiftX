@@ -85,13 +85,13 @@ guestRouter.post('/claim-box', async (req: Request, res: Response) => {
           voucherOfferId: 'vo_demo_1',
           status: 'ACTIVE',
           claimedAt: new Date(),
-          expiresAt: new Date(Date.now() + 48 * 3600 * 1000),
+          expiresAt: new Date(Date.now() + 72 * 3600 * 1000),
           voucherOffer: {
             id: 'vo_demo_1',
             title: 'Бесплатный массаж стоп 30 мин',
             description: 'При заказе любого массажа тела от 60 мин',
             discountValue: 'FREE (100%)',
-            validityHours: 48,
+            validityHours: 72,
             imageUrl: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=500&q=80',
             partner: { name: 'Lotus Wellness & Spa', address: 'Phu Quoc, Duong Dong, Main Rd 12' }
           }
@@ -102,13 +102,13 @@ guestRouter.post('/claim-box', async (req: Request, res: Response) => {
           voucherOfferId: 'vo_demo_2',
           status: 'ACTIVE',
           claimedAt: new Date(),
-          expiresAt: new Date(Date.now() + 48 * 3600 * 1000),
+          expiresAt: new Date(Date.now() + 72 * 3600 * 1000),
           voucherOffer: {
             id: 'vo_demo_2',
             title: 'Скидка 20% на аренду байка Premium',
             description: 'Действует на Honda SH / NVX при аренде от 2 дней',
             discountValue: '-20%',
-            validityHours: 48,
+            validityHours: 72,
             imageUrl: 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=500&q=80',
             partner: { name: 'Island Moto & Buggy Rental', address: 'Phu Quoc, An Thoi Town' }
           }
@@ -268,13 +268,13 @@ guestRouter.post('/claim-box', async (req: Request, res: Response) => {
           voucherOfferId: 'vo_demo_1',
           status: 'ACTIVE',
           claimedAt: new Date(),
-          expiresAt: new Date(Date.now() + 48 * 3600 * 1000),
+          expiresAt: new Date(Date.now() + 72 * 3600 * 1000),
           voucherOffer: {
             id: 'vo_demo_1',
             title: 'Бесплатный массаж стоп 30 мин',
-            description: 'При закаزه любого массажа тела от 60 мин',
+            description: 'При заказе любого массажа тела от 60 мин',
             discountValue: 'FREE (100%)',
-            validityHours: 48,
+            validityHours: 72,
             imageUrl: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=500&q=80',
             partner: { name: 'Lotus Wellness & Spa', address: 'Phu Quoc, Duong Dong, Main Rd 12' }
           }
@@ -728,12 +728,14 @@ guestRouter.post('/telegram-webhook', async (req: Request, res: Response) => {
           const rawParam = text.split(' ')[1] || '';
           let targetUrl = appUrl;
           if (rawParam) {
-            if (rawParam.startsWith('claim_')) {
+            if (rawParam.startsWith('venue_')) {
+              targetUrl = `${appUrl}?venue=${rawParam.replace(/^venue_/, '')}`;
+            } else if (rawParam.startsWith('claim_')) {
               targetUrl = `${appUrl}?claim=${rawParam.replace(/^claim_/, '')}`;
             } else if (['ADMIN', 'MAP', 'WALLET', 'WAITER', 'PROFILE'].includes(rawParam.toUpperCase())) {
               targetUrl = `${appUrl}?role=${rawParam.toUpperCase()}`;
             } else {
-              targetUrl = `${appUrl}?claim=${rawParam}`;
+              targetUrl = `${appUrl}?venue=${rawParam}`;
             }
           }
 

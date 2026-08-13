@@ -13,7 +13,7 @@ export const StaffInviteModal: React.FC<StaffInviteModalProps> = ({
   partnerName,
   onClose,
 }) => {
-  const [activeTab, setActiveTab] = useState<'WAITER' | 'MANAGER' | 'OWNER'>('WAITER');
+  const [activeTab, setActiveTab] = useState<'VENUE' | 'WAITER' | 'MANAGER' | 'OWNER'>('VENUE');
   const [copiedRole, setCopiedRole] = useState<string | null>(null);
   const [linksData, setLinksData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -29,11 +29,13 @@ export const StaffInviteModal: React.FC<StaffInviteModalProps> = ({
         } else {
           // Fallback links generator
           const botUsername = 'giftx2025_bot';
+          const venueLink = `https://t.me/${botUsername}?start=venue_${partnerId}`;
           const ownerLink = `https://t.me/${botUsername}?start=join_owner_${partnerId}`;
           const adminLink = `https://t.me/${botUsername}?start=join_admin_${partnerId}`;
           const staffLink = `https://t.me/${botUsername}?start=join_staff_${partnerId}`;
 
           setLinksData({
+            VENUE: { link: venueLink, qrUrl: `https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=${encodeURIComponent(venueLink)}`, label: '🌐 Единый Универсальный QR Заведения (для Всех)' },
             OWNER: { link: ownerLink, qrUrl: `https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=${encodeURIComponent(ownerLink)}`, label: 'Владелец (Full Access)' },
             MANAGER: { link: adminLink, qrUrl: `https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=${encodeURIComponent(adminLink)}`, label: 'Администратор (Управляющий)' },
             WAITER: { link: staffLink, qrUrl: `https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=${encodeURIComponent(staffLink)}`, label: 'Официант / Персонал (Выдача боксов)' }
@@ -61,7 +63,7 @@ export const StaffInviteModal: React.FC<StaffInviteModalProps> = ({
 
   const handleShareTelegram = (link: string, label: string) => {
     triggerHaptic('light');
-    const shareText = `Присоединяйтесь к заведению «${partnerName}» в GiftX Business на роль ${label}:`;
+    const shareText = `Единый QR-код заведения «${partnerName}» в GiftX:`;
     const tgShareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(shareText)}`;
     window.open(tgShareUrl, '_blank');
   };
@@ -88,27 +90,42 @@ export const StaffInviteModal: React.FC<StaffInviteModalProps> = ({
           <div className="flex items-center space-x-2">
             <span className="text-[10px] font-black tracking-widest px-3 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-400 rounded-full uppercase flex items-center space-x-1">
               <Users className="w-3 h-3 text-amber-400" />
-              <span>СОТРУДНИКИ & QR</span>
+              <span>ЕДИНЫЙ QR & СТАФ</span>
             </span>
           </div>
           <h2 className="text-xl font-black text-slate-100">{partnerName}</h2>
-          <p className="text-xs text-slate-400">Ссылки и QR-коды для подключения персонала</p>
+          <p className="text-xs text-slate-400">Единый QR для клиентов, персонала и админов</p>
         </div>
 
         {/* Табы ролей */}
-        <div className="grid grid-cols-3 gap-2 my-4 z-10">
+        <div className="grid grid-cols-4 gap-1.5 my-4 z-10 text-[10px]">
+          <button
+            onClick={() => {
+              triggerHaptic('light');
+              setActiveTab('VENUE');
+            }}
+            className={`py-2 px-1.5 rounded-xl font-extrabold flex items-center justify-center space-x-1 transition-all border ${
+              activeTab === 'VENUE'
+                ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-md'
+                : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <QrCode className="w-3.5 h-3.5 shrink-0" />
+            <span>Единый QR</span>
+          </button>
+
           <button
             onClick={() => {
               triggerHaptic('light');
               setActiveTab('WAITER');
             }}
-            className={`py-2.5 px-2 rounded-xl text-xs font-extrabold flex items-center justify-center space-x-1.5 transition-all border ${
+            className={`py-2 px-1.5 rounded-xl font-extrabold flex items-center justify-center space-x-1 transition-all border ${
               activeTab === 'WAITER'
                 ? 'bg-amber-500/20 border-amber-500 text-amber-300 shadow-md'
                 : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
             }`}
           >
-            <UserCheck className="w-3.5 h-3.5" />
+            <UserCheck className="w-3.5 h-3.5 shrink-0" />
             <span>Стаф</span>
           </button>
 
@@ -117,13 +134,13 @@ export const StaffInviteModal: React.FC<StaffInviteModalProps> = ({
               triggerHaptic('light');
               setActiveTab('MANAGER');
             }}
-            className={`py-2.5 px-2 rounded-xl text-xs font-extrabold flex items-center justify-center space-x-1.5 transition-all border ${
+            className={`py-2 px-1.5 rounded-xl font-extrabold flex items-center justify-center space-x-1 transition-all border ${
               activeTab === 'MANAGER'
                 ? 'bg-amber-500/20 border-amber-500 text-amber-300 shadow-md'
                 : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
             }`}
           >
-            <Shield className="w-3.5 h-3.5" />
+            <Shield className="w-3.5 h-3.5 shrink-0" />
             <span>Админ</span>
           </button>
 
@@ -132,14 +149,14 @@ export const StaffInviteModal: React.FC<StaffInviteModalProps> = ({
               triggerHaptic('light');
               setActiveTab('OWNER');
             }}
-            className={`py-2.5 px-2 rounded-xl text-xs font-extrabold flex items-center justify-center space-x-1.5 transition-all border ${
+            className={`py-2 px-1.5 rounded-xl font-extrabold flex items-center justify-center space-x-1 transition-all border ${
               activeTab === 'OWNER'
                 ? 'bg-amber-500/20 border-amber-500 text-amber-300 shadow-md'
                 : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
             }`}
           >
-            <Crown className="w-3.5 h-3.5 text-amber-400" />
-            <span>Владелец</span>
+            <Crown className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+            <span>Оунер</span>
           </button>
         </div>
 

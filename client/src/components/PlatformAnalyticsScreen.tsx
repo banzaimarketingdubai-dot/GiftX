@@ -302,7 +302,6 @@ export const PlatformAnalyticsScreen: React.FC<PlatformAnalyticsScreenProps> = (
           {analyticsData.boxStats.map((box: any) => {
             const getBoxBadgeStyle = (lvl: string) => {
               switch (lvl) {
-                case 'BASIC': return 'border-purple-500/30 text-purple-300 bg-purple-950/30';
                 case 'SILVER': return 'border-cyan-500/30 text-cyan-300 bg-cyan-950/30';
                 case 'GOLD': return 'border-amber-500/40 text-amber-400 bg-amber-950/30';
                 case 'PLATINUM': return 'border-purple-400/50 text-purple-200 bg-purple-900/30';
@@ -420,37 +419,56 @@ export const PlatformAnalyticsScreen: React.FC<PlatformAnalyticsScreenProps> = (
           </div>
         </div>
 
-        <div className="space-y-2 max-h-72 overflow-y-auto no-scrollbar">
+        <div className="space-y-3 max-h-96 overflow-y-auto no-scrollbar">
           {filteredOffers.length === 0 ? (
             <div className="p-6 text-center text-slate-500 text-xs bg-slate-950/40 rounded-2xl border border-slate-800">
               Акции не найдены
             </div>
           ) : (
             filteredOffers.map((offer: any) => (
-              <div key={offer.id} className="p-3 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-1.5 text-xs">
+              <div key={offer.id} className="p-3.5 rounded-2xl bg-slate-950/90 border border-slate-800 space-y-2.5 text-xs shadow-md">
                 <div className="flex items-start justify-between">
-                  <div>
-                    <div className="flex items-center space-x-1.5">
-                      <span className="font-bold text-slate-100">{offer.title}</span>
+                  <div className="space-y-0.5">
+                    <div className="flex items-center space-x-1.5 flex-wrap">
+                      <span className="font-extrabold text-slate-100 text-xs">{offer.title}</span>
+                      <span className="text-[9px] font-black text-amber-400 px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20">
+                        {offer.targetBoxLevel || 'GOLD'} БОКС
+                      </span>
                       <span className="text-[9px] font-bold text-emerald-400 px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">
                         {offer.discountValue}
                       </span>
                     </div>
-                    <span className="text-[10px] text-slate-400 block mt-0.5">
-                      🏬 {offer.partnerName}
+                    <span className="text-[10px] text-slate-400 block">
+                      🏬 {offer.partnerName} • Лимит: {offer.totalLimit || 1000} шт.
                     </span>
                   </div>
 
-                  <div className="text-right">
-                    <span className="font-black text-amber-400 block">{offer.activationsCount} сканов</span>
-                    <span className="text-[9px] text-emerald-400 font-mono font-bold">${offer.revenue.toFixed(2)}</span>
+                  <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500/20 to-purple-500/20 text-amber-300 border border-amber-500/30 shrink-0">
+                    {offer.viralityBadge || '🔥 Виральный Хит'}
+                  </span>
+                </div>
+
+                {/* Воронка виральности: Выпало -> Сохранено -> Реализовано */}
+                <div className="grid grid-cols-3 gap-1.5 p-2 rounded-xl bg-slate-900/80 border border-slate-800 text-[10px] text-center">
+                  <div>
+                    <span className="text-slate-400 block text-[9px] font-bold">📦 Выпало</span>
+                    <strong className="text-slate-200 text-xs font-black">{offer.droppedCount || offer.claimedCount || 0}</strong>
+                  </div>
+                  <div>
+                    <span className="text-purple-400 block text-[9px] font-bold">👛 Сохранено</span>
+                    <strong className="text-purple-300 text-xs font-black">{offer.savedCount || Math.round((offer.droppedCount || 10) * 0.8)}</strong>
+                    <span className="text-[8px] text-purple-400/80 block">({offer.saveRate || 78}%)</span>
+                  </div>
+                  <div>
+                    <span className="text-emerald-400 block text-[9px] font-bold">🎉 Погашено</span>
+                    <strong className="text-emerald-400 text-xs font-black">{offer.redeemedCount || offer.activationsCount || 0}</strong>
+                    <span className="text-[8px] text-emerald-400/80 block">({offer.conversionRate || 0}%)</span>
                   </div>
                 </div>
 
-                <div className="pt-1 border-t border-slate-800/60 flex items-center justify-between text-[10px] text-slate-500">
-                  <span>Выдано: {offer.claimedCount}</span>
-                  <span>Срок: {offer.validityHours}ч</span>
-                  <span>Конверсия: <strong className="text-emerald-400">{offer.conversionRate}%</strong></span>
+                <div className="flex items-center justify-between text-[10px] text-slate-400 pt-0.5">
+                  <span>Таймер годности: <strong className="text-slate-200">72 часа (3 дня)</strong></span>
+                  <span>Начислено биллинг: <strong className="text-emerald-400 font-mono">${(offer.revenue || 0).toFixed(2)}</strong></span>
                 </div>
               </div>
             ))

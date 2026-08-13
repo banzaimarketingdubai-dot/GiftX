@@ -158,12 +158,12 @@ adminRouter.get('/analytics', async (req: Request, res: Response) => {
     const totalExpiredVouchers = Math.round(totalIssuedBoxes * 0.15);
     const estimatedRevenue = totalActivations * fee;
 
-    // Статистика реализаций по видам боксов (BASIC, SILVER, GOLD, PLATINUM)
-    const boxTiers = ['BASIC', 'SILVER', 'GOLD', 'PLATINUM'] as const;
+    // Статистика реализаций по видам боксов (SILVER, GOLD, PLATINUM)
+    const boxTiers = ['SILVER', 'GOLD', 'PLATINUM'] as const;
     const boxStats = boxTiers.map((level) => {
       const levelTokens = tokens.filter((t) => t.boxLevel === level);
       const isDemo = levelTokens.length === 0;
-      const shareMultiplier = level === 'GOLD' ? 0.4 : level === 'SILVER' ? 0.3 : level === 'BASIC' ? 0.2 : 0.1;
+      const shareMultiplier = level === 'GOLD' ? 0.5 : level === 'SILVER' ? 0.3 : 0.2;
       
       const levelIssuedCount = isDemo ? Math.round(totalIssuedBoxes * shareMultiplier) : levelTokens.length;
       const levelActivationsCount = isDemo ? Math.round(totalActivations * shareMultiplier) : Math.round(levelIssuedCount * 0.42);
@@ -171,8 +171,8 @@ adminRouter.get('/analytics', async (req: Request, res: Response) => {
 
       return {
         level,
-        title: level === 'BASIC' ? 'Bronze (Basic)' : level === 'SILVER' ? 'Silver' : level === 'GOLD' ? 'Gold' : 'Platinum VIP',
-        description: level === 'BASIC' ? 'Обычный чек' : level === 'SILVER' ? 'Чек от 300k VND' : level === 'GOLD' ? 'Чек от 600k VND' : 'VIP чек от 1.2M VND',
+        title: level === 'SILVER' ? 'Silver' : level === 'GOLD' ? 'Gold' : 'Platinum VIP',
+        description: level === 'SILVER' ? 'Чек от 300k VND' : level === 'GOLD' ? 'Чек от 600k VND' : 'VIP чек от 1.0M VND',
         issuedCount: levelIssuedCount,
         activationsCount: levelActivationsCount,
         revenue: levelRevenue,
@@ -222,7 +222,7 @@ adminRouter.get('/analytics', async (req: Request, res: Response) => {
           title: 'Коктейль «Sunset Special» в подарок',
           discountValue: '100% Скидка',
           category: 'TRAFFIC_MAGNET',
-          validityHours: 48,
+          validityHours: 72,
           partner: partners[0] || { name: 'Sunset Beach Club' }
         } as any,
         {
@@ -238,7 +238,7 @@ adminRouter.get('/analytics', async (req: Request, res: Response) => {
           title: 'Бесплатная аренда сапборда на 1 час',
           discountValue: '1 час FREE',
           category: 'ANCHOR',
-          validityHours: 48,
+          validityHours: 72,
           partner: partners[0] || { name: 'Sunset Beach Club' }
         } as any
       ];
@@ -248,10 +248,17 @@ adminRouter.get('/analytics', async (req: Request, res: Response) => {
       const oClaimed = (o.claimed || []).filter((v) => !startDate || new Date(v.claimedAt) >= startDate);
       const isDemo = oClaimed.length === 0;
 
-      const claimedCount = isDemo ? Math.round(totalIssuedBoxes / 3 * (idx === 0 ? 1.4 : idx === 1 ? 1.0 : 0.6)) : oClaimed.length;
-      const activationsCount = isDemo ? Math.round(claimedCount * 0.44) : oClaimed.filter((v) => v.status === 'REDEEMED').length;
-      const revenue = activationsCount * fee;
-      const conversionRate = claimedCount > 0 ? Math.round((activationsCount / claimedCount) * 100) : 0;
+      const droppedCount = isDemo ? Math.round(totalIssuedBoxes / 2.5 * (idx === 0 ? 1.4 : idx === 1 ? 1.0 : 0.7)) : oClaimed.length;
+      const savedCount = isDemo ? Math.round(droppedCount * 0.78) : oClaimed.filter((v) => v.status === 'ACTIVE' || v.status === 'REDEEMED').length;
+      const redeemedCount = isDemo ? Math.round(droppedCount * 0.44) : oClaimed.filter((v) => v.status === 'REDEEMED').length;
+      const revenue = redeemedCount * fee;
+      const conversionRate = droppedCount > 0 ? Math.round((redeemedCount / droppedCount) * 100) : 0;
+      const saveRate = droppedCount > 0 ? Math.round((savedCount / droppedCount) * 100) : 0;
+
+      let viralityBadge = '🔥 Виральный Хит';
+      if (conversionRate < 10) viralityBadge = '💡 Низкая конверсия';
+      else if (conversionRate < 25) viralityBadge = '📈 Обычный спрос';
+      else if (conversionRate < 35) viralityBadge = '⭐ Высокий спрос';
 
       return {
         id: o.id,
@@ -259,10 +266,15 @@ adminRouter.get('/analytics', async (req: Request, res: Response) => {
         partnerName: o.partner?.name || 'Заведение',
         discountValue: o.discountValue,
         category: o.category,
+        targetBoxLevel: (o as any).targetBoxLevel || (idx === 0 ? 'SILVER' : idx === 1 ? 'GOLD' : 'PLATINUM'),
         validityHours: o.validityHours,
-        claimedCount,
-        activationsCount,
+        totalLimit: o.totalLimit || 1000,
+        droppedCount,
+        savedCount,
+        redeemedCount,
+        saveRate,
         conversionRate,
+        viralityBadge,
         revenue
       };
     });
@@ -436,7 +448,7 @@ adminRouter.post('/offer', async (req: Request, res: Response) => {
           category,
           discountValue,
           imageUrl: imageUrl || 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=500&q=80',
-          validityHours: validityHours ? parseInt(validityHours) : 48,
+          validityHours: validityHours ? parseInt(validityHours) : 72,
           totalLimit: totalLimit ? parseInt(totalLimit) : 1000
         }
       });
@@ -450,7 +462,7 @@ adminRouter.post('/offer', async (req: Request, res: Response) => {
           category,
           discountValue,
           imageUrl: imageUrl || 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=500&q=80',
-          validityHours: validityHours ? parseInt(validityHours) : 48,
+          validityHours: validityHours ? parseInt(validityHours) : 72,
           totalLimit: totalLimit ? parseInt(totalLimit) : 1000
         }
       });

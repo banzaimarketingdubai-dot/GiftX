@@ -105,9 +105,10 @@ model VoucherOffer {
   title         String
   description   String
   category      VoucherCategory
+  targetBoxLevel BoxLevel?      @default(GOLD)
   discountValue String
   imageUrl      String
-  validityHours Int             @default(48)
+  validityHours Int             @default(72)
   totalLimit    Int             @default(1000)
   claimedCount  Int             @default(0)
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MapPin, X, Link as LinkIcon, Star, Check, Globe, Navigation, Building2 } from 'lucide-react';
+import { MapPin, X, Link as LinkIcon, Star, Check, Globe, Navigation, Building2, PlusCircle } from 'lucide-react';
 import L from 'leaflet';
 import { PartnerCategory } from '../types';
 import { triggerHaptic, triggerNotificationHaptic, getTelegramUserData } from '../telegram';
@@ -19,7 +19,23 @@ export const PartnerRegistrationModal: React.FC<PartnerRegistrationModalProps> =
   const [description, setDescription] = useState(initialPartner?.description || '');
   const [workingHours, setWorkingHours] = useState(initialPartner?.workingHours || '10:00 - 23:00');
   const [category, setCategory] = useState<PartnerCategory>(initialPartner?.category || 'HORECA');
+  const [customCategories, setCustomCategories] = useState<string[]>(['Фитнес & Спорт', 'Шопинг & Ритейл', 'Отели & Виллы']);
+  const [isCreatingNewCategory, setIsCreatingNewCategory] = useState<boolean>(false);
+  const [newCategoryInput, setNewCategoryInput] = useState<string>('');
   const [role, setRole] = useState<'OWNER' | 'MANAGER' | 'WAITER'>('OWNER');
+
+  const handleAddCustomCategory = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const trimmed = newCategoryInput.trim();
+    if (!trimmed) return;
+    triggerNotificationHaptic('success');
+    if (!customCategories.includes(trimmed)) {
+      setCustomCategories((prev) => [...prev, trimmed]);
+    }
+    setCategory(trimmed as PartnerCategory);
+    setNewCategoryInput('');
+    setIsCreatingNewCategory(false);
+  };
   const [address, setAddress] = useState(initialPartner?.address || '');
   const [logoUrl, setLogoUrl] = useState(initialPartner?.logoUrl || '');
   const [lat, setLat] = useState<number>(initialPartner?.lat || 10.1982);
@@ -403,20 +419,82 @@ export const PartnerRegistrationModal: React.FC<PartnerRegistrationModalProps> =
             </div>
 
             <div>
-              <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">
-                Категория
-              </label>
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value as PartnerCategory)}
-                className="w-full py-2.5 px-3 rounded-xl bg-slate-950 border border-slate-800 text-slate-100 text-xs focus:border-amber-500 outline-none transition-all"
-              >
-                <option value="HORECA">HoReCa (Рестораны/Бары)</option>
-                <option value="BEAUTY_SPA">Beauty & Spa</option>
-                <option value="AUTO_MOTO">Auto & Moto</option>
-                <option value="ENTERTAINMENT">Развлечения & Яхты</option>
-                <option value="SERVICES">Услуги & Сервис</option>
-              </select>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                  Категория
+                </label>
+                {!isCreatingNewCategory && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic('light');
+                      setIsCreatingNewCategory(true);
+                    }}
+                    className="text-[10px] font-extrabold text-amber-400 hover:text-amber-300 flex items-center space-x-1"
+                  >
+                    <PlusCircle className="w-3 h-3 text-amber-400 inline" />
+                    <span>Создать новую</span>
+                  </button>
+                )}
+              </div>
+
+              {!isCreatingNewCategory ? (
+                <select
+                  value={category}
+                  onChange={(e) => {
+                    if (e.target.value === 'CREATE_NEW') {
+                      setIsCreatingNewCategory(true);
+                    } else {
+                      setCategory(e.target.value as PartnerCategory);
+                    }
+                  }}
+                  className="w-full py-2.5 px-3 rounded-xl bg-slate-950 border border-slate-800 text-slate-100 text-xs focus:border-amber-500 outline-none transition-all font-semibold"
+                >
+                  <option value="HORECA">HoReCa (Рестораны/Бары)</option>
+                  <option value="BEAUTY_SPA">Beauty & Spa</option>
+                  <option value="AUTO_MOTO">Auto & Moto</option>
+                  <option value="ENTERTAINMENT">Развлечения & Яхты</option>
+                  <option value="SERVICES">Услуги & Сервис</option>
+                  {customCategories.map((c) => (
+                    <option key={c} value={c}>✨ {c}</option>
+                  ))}
+                  <option value="CREATE_NEW">➕ Создать новую категорию...</option>
+                </select>
+              ) : (
+                <div className="space-y-1.5 p-2 rounded-xl bg-slate-950 border border-amber-500/40 animate-fadeIn">
+                  <div className="flex space-x-1.5">
+                    <input
+                      type="text"
+                      autoFocus
+                      value={newCategoryInput}
+                      onChange={(e) => setNewCategoryInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddCustomCategory();
+                        }
+                      }}
+                      placeholder="Название новой категории..."
+                      className="flex-1 py-1.5 px-2.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-100 text-xs focus:border-amber-400 outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleAddCustomCategory()}
+                      className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-lg shadow-md shrink-0 active:scale-95"
+                    >
+                      Добавить
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsCreatingNewCategory(false)}
+                      className="px-2 py-1.5 bg-slate-800 text-slate-400 hover:text-white text-xs rounded-lg shrink-0"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <p className="text-[9px] text-amber-300">Пример: Фитнес & Спорт, Отели & Виллы, Шопинг</p>
+                </div>
+              )}
             </div>
           </div>
 

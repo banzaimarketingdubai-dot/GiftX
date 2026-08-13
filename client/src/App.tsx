@@ -69,6 +69,7 @@ export const App: React.FC = () => {
     // Проверка параметров URL или Telegram WebApp start_param
     const urlParams = new URLSearchParams(window.location.search);
     let claim = urlParams.get('claim') || urlParams.get('tgWebAppStartParam');
+    let venueId = urlParams.get('venue');
     const roleParam = urlParams.get('role');
     const pageParam = urlParams.get('page');
 
@@ -83,7 +84,9 @@ export const App: React.FC = () => {
 
     const tgStartParam = (window as any).Telegram?.WebApp?.initDataUnsafe?.start_param;
     if (tgStartParam) {
-      if (tgStartParam.startsWith('claim_')) {
+      if (tgStartParam.startsWith('venue_')) {
+        venueId = tgStartParam.replace(/^venue_/, '');
+      } else if (tgStartParam.startsWith('claim_')) {
         claim = tgStartParam.replace(/^claim_/, '');
       } else if (['ADMIN', 'MAP', 'WALLET', 'WAITER', 'PROFILE'].includes(tgStartParam)) {
         setRole(tgStartParam as any);
@@ -97,7 +100,41 @@ export const App: React.FC = () => {
       }
     }
 
-    if (claim) {
+    // ЛОГИКА АКТИВАЦИИ ПО ЕДИНОМУ КУАР-КОДУ ЗАВЕДЕНИЯ (VENUE QR)
+    if (venueId) {
+      const demoStaffStr = localStorage.getItem('giftx_demo_staff');
+      const savedStaff = demoStaffStr ? JSON.parse(demoStaffStr) : null;
+
+      if (savedStaff && (savedStaff.partnerId === venueId || venueId.includes('demo'))) {
+        if (savedStaff.role === 'WAITER') {
+          // 2. У официанта открывается меню выбора боксов заведения
+          setRole('WAITER');
+        } else {
+          // 3. У администратора / суперадмина открывается статистика по заведению
+          setRole('ADMIN');
+        }
+      } else if (tgUser?.id) {
+        fetch(`/api/staff/check-member/${tgUser.id}`)
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.success && data.isStaff) {
+              setRole(data.staff.role === 'WAITER' ? 'WAITER' : 'ADMIN');
+            } else {
+              // 1. У гостя открывается главный экран приложения и сканер QR
+              setRole('GUEST');
+              setShowScannerModal(true);
+            }
+          })
+          .catch(() => {
+            setRole('GUEST');
+            setShowScannerModal(true);
+          });
+      } else {
+        // 1. У гостя открывается главный экран и камера
+        setRole('GUEST');
+        setShowScannerModal(true);
+      }
+    } else if (claim) {
       setClaimToken(claim);
       setRole('GUEST');
     } else if (roleParam && ['ADMIN', 'MAP', 'WALLET', 'WAITER', 'PROFILE', 'GUEST'].includes(roleParam)) {

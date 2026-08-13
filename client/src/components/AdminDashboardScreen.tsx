@@ -20,7 +20,7 @@ import {
   XCircle,
   UserCheck
 } from 'lucide-react';
-import { Partner, StaffMember, VoucherOffer, PartnerCategory, VoucherCategory } from '../types';
+import { Partner, StaffMember, VoucherOffer, PartnerCategory, VoucherCategory, BoxLevel } from '../types';
 import { PartnerRegistrationModal } from './PartnerRegistrationModal';
 import { BusinessOnboardingModal } from './BusinessOnboardingModal';
 import { triggerHaptic, triggerNotificationHaptic } from '../telegram';
@@ -65,8 +65,9 @@ export const AdminDashboardScreen: React.FC = () => {
     title: '',
     description: '',
     category: 'TRAFFIC_MAGNET' as VoucherCategory,
+    targetBoxLevel: 'GOLD' as BoxLevel,
     discountValue: '',
-    validityHours: 48,
+    validityHours: 72,
     totalLimit: 1000,
   });
 
@@ -727,8 +728,9 @@ export const AdminDashboardScreen: React.FC = () => {
                   title: '',
                   description: '',
                   category: 'TRAFFIC_MAGNET',
+                  targetBoxLevel: 'GOLD',
                   discountValue: '',
-                  validityHours: 48,
+                  validityHours: 72,
                   totalLimit: 1000,
                 });
                 setShowOfferModal(true);
@@ -787,6 +789,7 @@ export const AdminDashboardScreen: React.FC = () => {
                               title: offer.title,
                               description: offer.description,
                               category: offer.category,
+                              targetBoxLevel: offer.targetBoxLevel || 'GOLD',
                               discountValue: offer.discountValue,
                               validityHours: offer.validityHours,
                               totalLimit: offer.totalLimit,
@@ -952,6 +955,21 @@ export const AdminDashboardScreen: React.FC = () => {
                   <option value="TRAFFIC_MAGNET">TRAFFIC_MAGNET (Частая услуга/Напиток)</option>
                   <option value="LIFESTYLE">LIFESTYLE (Скидка 15-30%)</option>
                   <option value="ANCHOR">ANCHOR (Якорь / Фиксированный сертификат)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase font-bold text-amber-400 mb-1">
+                  📦 Уровень бокса для впадения (Номинал)
+                </label>
+                <select
+                  value={(offerForm as any).targetBoxLevel || 'GOLD'}
+                  onChange={(e) => setOfferForm({ ...offerForm, targetBoxLevel: e.target.value as any })}
+                  className="w-full p-2.5 rounded-xl bg-slate-950 border border-amber-500/40 text-slate-100 text-xs font-bold"
+                >
+                  <option value="SILVER">🥈 Серебряный бокс (Чек от 300k VND)</option>
+                  <option value="GOLD">🥇 Золотой бокс (Чек от 600k VND)</option>
+                  <option value="PLATINUM">💎 Платиновый VIP бокс (Чек от 1.0M VND)</option>
                 </select>
               </div>
 

@@ -369,10 +369,12 @@ staffRouter.get('/partner/invite-links/:partnerId', async (req: Request, res: Re
     const { partnerId } = req.params;
     const botUsername = process.env.TELEGRAM_BOT_USERNAME || 'giftx2025_bot';
 
+    const universalLink = `https://t.me/${botUsername}?start=venue_${partnerId}`;
     const ownerLink = `https://t.me/${botUsername}?start=join_owner_${partnerId}`;
     const adminLink = `https://t.me/${botUsername}?start=join_admin_${partnerId}`;
     const staffLink = `https://t.me/${botUsername}?start=join_staff_${partnerId}`;
 
+    const universalQr = `https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=${encodeURIComponent(universalLink)}`;
     const ownerQr = `https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=${encodeURIComponent(ownerLink)}`;
     const adminQr = `https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=${encodeURIComponent(adminLink)}`;
     const staffQr = `https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=${encodeURIComponent(staffLink)}`;
@@ -380,6 +382,7 @@ staffRouter.get('/partner/invite-links/:partnerId', async (req: Request, res: Re
     return res.json({
       success: true,
       links: {
+        VENUE: { link: universalLink, qrUrl: universalQr, label: '🌐 Единый Универсальный QR Заведения (для Всех)' },
         OWNER: { link: ownerLink, qrUrl: ownerQr, label: 'Владелец (Full Access)' },
         MANAGER: { link: adminLink, qrUrl: adminQr, label: 'Администратор (Управляющий)' },
         WAITER: { link: staffLink, qrUrl: staffQr, label: 'Официант / Персонал (Выдача боксов)' }

@@ -112,7 +112,7 @@ async function main() {
         category: VoucherCategory.TRAFFIC_MAGNET,
         discountValue: 'FREE (100%)',
         imageUrl: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=500&q=80',
-        validityHours: 48,
+        validityHours: 72,
         totalLimit: 500
       },
       {
@@ -132,7 +132,7 @@ async function main() {
         category: VoucherCategory.ANCHOR,
         discountValue: '300,000 VND',
         imageUrl: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=500&q=80',
-        validityHours: 96,
+        validityHours: 72,
         totalLimit: 150
       }
     ]
@@ -148,7 +148,7 @@ async function main() {
         category: VoucherCategory.TRAFFIC_MAGNET,
         discountValue: 'FREE GIFT',
         imageUrl: 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=500&q=80',
-        validityHours: 48,
+        validityHours: 72,
         totalLimit: 400
       },
       {
@@ -158,7 +158,7 @@ async function main() {
         category: VoucherCategory.LIFESTYLE,
         discountValue: '-20%',
         imageUrl: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?w=500&q=80',
-        validityHours: 48,
+        validityHours: 72,
         totalLimit: 250
       },
       {
@@ -184,7 +184,7 @@ async function main() {
         category: VoucherCategory.TRAFFIC_MAGNET,
         discountValue: 'FREE DRINK',
         imageUrl: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=500&q=80',
-        validityHours: 48,
+        validityHours: 72,
         totalLimit: 500
       },
       {
@@ -204,7 +204,7 @@ async function main() {
         category: VoucherCategory.ANCHOR,
         discountValue: '500,000 VND',
         imageUrl: 'https://images.unsplash.com/photo-1569263979104-865ab7cd8d13?w=500&q=80',
-        validityHours: 96,
+        validityHours: 72,
         totalLimit: 80
       }
     ]

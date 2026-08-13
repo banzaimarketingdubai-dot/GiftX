@@ -124,7 +124,7 @@ export const WaiterScreen: React.FC = () => {
   }, [activeQrToken, claimedByGuestName, timeLeft]);
 
   // Вызов API генерации токена
-  const handleIssueBox = async (boxLevel: 'BASIC' | 'SILVER' | 'GOLD') => {
+  const handleIssueBox = async (boxLevel: 'SILVER' | 'GOLD' | 'PLATINUM') => {
     if (!selectedStaff) return;
     triggerHaptic('medium');
     setLoading(true);
@@ -548,23 +548,6 @@ export const WaiterScreen: React.FC = () => {
 
           <button
             disabled={loading}
-            onClick={() => handleIssueBox('BASIC')}
-            className="w-full p-4 rounded-2xl glass-basic border border-purple-500/40 hover:border-purple-400 flex items-center justify-between group transition-all transform active:scale-95 shadow-lg shadow-purple-500/10"
-          >
-            <div className="flex items-center space-x-3.5">
-              <div className="w-12 h-12 rounded-xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
-                📦
-              </div>
-              <div className="text-left">
-                <div className="font-bold text-purple-200 text-base">БАЗОВЫЙ БОКС</div>
-                <div className="text-xs text-purple-300/70 font-medium">Чек до 299,000 VND</div>
-              </div>
-            </div>
-            <QrCode className="w-6 h-6 text-purple-400" />
-          </button>
-
-          <button
-            disabled={loading}
             onClick={() => handleIssueBox('SILVER')}
             className="w-full p-4 rounded-2xl glass-silver border border-cyan-500/40 hover:border-cyan-400 flex items-center justify-between group transition-all transform active:scale-95 shadow-lg shadow-cyan-500/10"
           >
@@ -591,10 +574,27 @@ export const WaiterScreen: React.FC = () => {
               </div>
               <div className="text-left">
                 <div className="font-bold text-gradient-gold text-base">ЗОЛОТОЙ БОКС</div>
-                <div className="text-xs text-amber-300/80 font-medium">Чек от 600,000 VND</div>
+                <div className="text-xs text-amber-300/80 font-medium">Чек: 600k - 999k VND</div>
               </div>
             </div>
             <Sparkles className="w-6 h-6 text-amber-400 animate-spin-slow" />
+          </button>
+
+          <button
+            disabled={loading}
+            onClick={() => handleIssueBox('PLATINUM')}
+            className="w-full p-4 rounded-2xl border border-purple-400/60 bg-gradient-to-r from-purple-950/60 via-slate-900 to-purple-950/60 hover:border-purple-300 flex items-center justify-between group transition-all transform active:scale-95 shadow-xl shadow-purple-500/20"
+          >
+            <div className="flex items-center space-x-3.5">
+              <div className="w-12 h-12 rounded-xl bg-purple-500/20 border border-purple-400/50 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                💎
+              </div>
+              <div className="text-left">
+                <div className="font-bold text-purple-200 text-base">ПЛАТИНОВЫЙ VIP БОКС</div>
+                <div className="text-xs text-purple-300/80 font-medium">Чек от 1,000,000 VND</div>
+              </div>
+            </div>
+            <Sparkles className="w-6 h-6 text-purple-400 animate-pulse" />
           </button>
         </div>
       )}
