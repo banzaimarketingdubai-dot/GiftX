@@ -15,7 +15,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ onClose }) => 
       icon: Gift,
       color: 'from-amber-500 to-amber-600',
       badge: 'ШАГ 1 ИЗ 3: О СЕРВИСЕ',
-      title: 'Что такое GiftX VIP Pass?',
+      title: 'Что такое GiftX?',
       subtitle: 'Инновационная система привилегий и подарков',
       description: 'Каждый раз, когда вы отдыхаете в ресторанах, СПА и барах сети GiftX, вам вручают подарочные боксы с бесплатными сертификатами в лучшие заведения города!',
       illustration: '🍷 🍸 💆‍♀️ 🎟️'

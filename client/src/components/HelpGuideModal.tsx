@@ -113,7 +113,7 @@ export const HelpGuideModal: React.FC<HelpGuideModalProps> = ({ onClose, default
                     <span>Распаковка 3D-коробки (3 Тапа)</span>
                   </div>
                   <p className="text-slate-300 text-[11px]">
-                    Нажмите на подарочную коробку на экране 3 раза. После взрыва вы получите веер из **5 уникальных ваучеров** (GiftX Pass).
+                    Нажмите на подарочную коробку на экране 3 раза. После взрыва вы получите веер из **5 уникальных ваучеров** (GiftX).
                   </p>
                 </div>
 

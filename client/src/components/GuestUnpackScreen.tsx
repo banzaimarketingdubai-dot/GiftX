@@ -290,7 +290,7 @@ const PlayingCardsDeck: React.FC<PlayingCardsDeckProps> = ({ vouchers: initialVo
                 <div className="flex justify-between items-center z-10">
                   <div className="flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] font-black uppercase tracking-wider">
                     <Sparkles className="w-3 h-3 text-amber-400" />
-                    <span>GiftX Pass #{index + 1}</span>
+                    <span>GiftX #{index + 1}</span>
                   </div>
 
                   <span className="text-base font-black text-emerald-400 drop-shadow-md">
@@ -662,7 +662,7 @@ export const GuestUnpackScreen: React.FC<GuestUnpackScreenProps> = ({ claimToken
           <span>Подарок от {donorName}</span>
         </div>
         <h1 className="text-xl sm:text-2xl font-black text-gradient-gold tracking-tight">
-          {unpacked ? 'Ваши GiftX Pass разблокированы!' : 'Вам вручили GiftX Box!'}
+          {unpacked ? 'Ваши Подарки разблокированы!' : 'Вам вручили GiftX Box!'}
         </h1>
         <p className="text-slate-400 text-[11px] sm:text-xs">
           {unpacked ? 'Свайпайте карточки ↔️ и тапайте для 3D поворота 🔄' : '⚡ Быстро тапайте по коробке, чтобы заполнить шкалу!'}

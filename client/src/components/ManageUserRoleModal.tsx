@@ -219,7 +219,7 @@ export const ManageUserRoleModal: React.FC<ManageUserRoleModalProps> = ({
                 }`}
               >
                 <span>🎁 Гость</span>
-                <span className="text-[9px] opacity-80 block mt-1">Клиентский VIP Pass</span>
+                <span className="text-[9px] opacity-80 block mt-1">Клиентские подарки</span>
               </button>
 
               <button

@@ -167,7 +167,7 @@ export const GuestHomeScreen: React.FC<GuestHomeScreenProps> = ({
         <div className="space-y-1 z-10">
           <div className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 text-[10px] font-extrabold uppercase tracking-widest">
             <Sparkles className="w-3 h-3 text-amber-400" />
-            <span>GiftX Pass</span>
+            <span>GiftX</span>
           </div>
           <h1 className="text-xl font-black text-slate-100">
             Привет, {tgUser?.first_name || 'Гость'}!
@@ -182,7 +182,41 @@ export const GuestHomeScreen: React.FC<GuestHomeScreenProps> = ({
         </div>
       </div>
 
-      {/* 2. ГЛАВНАЯ КНОПКА-ГЕРОЙ: 📸 СКАНИРОВАТЬ QR-КОД ОФИЦИАНТА */}
+      {/* 2. ИНТЕРАКТИВНЫЙ БЛОК-ИНСТРУКЦИЯ: 💡 КАК ЭТО РАБОТАЕТ */}
+      <div className="glass-card p-5 rounded-3xl border border-slate-800 bg-slate-950/80 space-y-3 shadow-xl">
+        <h4 className="text-xs font-black text-amber-400 uppercase tracking-wider flex items-center space-x-1.5">
+          <ShieldCheck className="w-4 h-4 text-amber-400" />
+          <span>Как получать подарки в 3 шага:</span>
+        </h4>
+
+        <div className="grid grid-cols-3 gap-2 text-center text-[10px]">
+          <div className="p-2.5 rounded-2xl bg-slate-900 border border-slate-800 space-y-1">
+            <div className="w-7 h-7 mx-auto rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-xs">
+              1
+            </div>
+            <div className="font-bold text-slate-200">Отдыхайте</div>
+            <div className="text-slate-400 leading-tight text-[9px]">Делайте заказы у партнеров</div>
+          </div>
+
+          <div className="p-2.5 rounded-2xl bg-slate-900 border border-slate-800 space-y-1">
+            <div className="w-7 h-7 mx-auto rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold text-xs">
+              2
+            </div>
+            <div className="font-bold text-slate-200">Сканируйте</div>
+            <div className="text-slate-400 leading-tight text-[9px]">QR-код у официанта</div>
+          </div>
+
+          <div className="p-2.5 rounded-2xl bg-slate-900 border border-slate-800 space-y-1">
+            <div className="w-7 h-7 mx-auto rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs">
+              3
+            </div>
+            <div className="font-bold text-slate-200">Забирайте</div>
+            <div className="text-slate-400 leading-tight text-[9px]">5 эксклюзивных подарков</div>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. ГЛАВНАЯ КНОПКА-ГЕРОЙ: 📸 СКАНИРОВАТЬ QR-КОД ОФИЦИАНТА */}
       <motion.div
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
@@ -227,7 +261,7 @@ export const GuestHomeScreen: React.FC<GuestHomeScreenProps> = ({
         </div>
       </motion.div>
 
-      {/* 3. КАРТОЧКА МОИ ПОДАРКИ (КОШЕЛЕК) */}
+      {/* 4. КАРТОЧКА МОИ ПОДАРКИ (КОШЕЛЕК) */}
       <div
         onClick={() => {
           triggerHaptic('medium');
@@ -262,7 +296,7 @@ export const GuestHomeScreen: React.FC<GuestHomeScreenProps> = ({
         </div>
       </div>
 
-      {/* 4. КАРТА ЗАВЕДЕНИЙ С ПРЕВЬЮ И ЦЕНТРИРОВАНИЕМ ПО ЛОКАЦИИ ГОСТЯ */}
+      {/* 5. КАРТА ЗАВЕДЕНИЙ С ПРЕВЬЮ И ЦЕНТРИРОВАНИЕМ ПО ЛОКАЦИИ ГОСТЯ */}
       <div className="glass-card p-4 rounded-3xl border border-slate-800 bg-slate-900/90 space-y-3 shadow-xl">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
@@ -301,40 +335,6 @@ export const GuestHomeScreen: React.FC<GuestHomeScreenProps> = ({
           <span>Открыть полноэкранную карту ({partners.length} мест)</span>
           <ChevronRight className="w-4 h-4 text-slate-400" />
         </button>
-      </div>
-
-      {/* 5. ИНТЕРАКТИВНЫЙ БЛОК-ИНСТРУКЦИЯ: 💡 КАК ЭТО РАБОТАЕТ */}
-      <div className="glass-card p-5 rounded-3xl border border-slate-800 bg-slate-950/80 space-y-3">
-        <h4 className="text-xs font-black text-amber-400 uppercase tracking-wider flex items-center space-x-1.5">
-          <ShieldCheck className="w-4 h-4 text-amber-400" />
-          <span>Как получать подарки в 3 шага:</span>
-        </h4>
-
-        <div className="grid grid-cols-3 gap-2 text-center text-[10px]">
-          <div className="p-2.5 rounded-2xl bg-slate-900 border border-slate-800 space-y-1">
-            <div className="w-7 h-7 mx-auto rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-xs">
-              1
-            </div>
-            <div className="font-bold text-slate-200">Отдыхайте</div>
-            <div className="text-slate-400 leading-tight text-[9px]">Делайте заказы у партнеров</div>
-          </div>
-
-          <div className="p-2.5 rounded-2xl bg-slate-900 border border-slate-800 space-y-1">
-            <div className="w-7 h-7 mx-auto rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold text-xs">
-              2
-            </div>
-            <div className="font-bold text-slate-200">Сканируйте</div>
-            <div className="text-slate-400 leading-tight text-[9px]">QR-код у официанта</div>
-          </div>
-
-          <div className="p-2.5 rounded-2xl bg-slate-900 border border-slate-800 space-y-1">
-            <div className="w-7 h-7 mx-auto rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs">
-              3
-            </div>
-            <div className="font-bold text-slate-200">Забирайте</div>
-            <div className="text-slate-400 leading-tight text-[9px]">5 эксклюзивных подарков</div>
-          </div>
-        </div>
       </div>
     </div>
   );

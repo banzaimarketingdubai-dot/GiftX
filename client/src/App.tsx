@@ -128,7 +128,7 @@ export const App: React.FC = () => {
             <div className="w-7 h-7 rounded-lg bg-amber-500/20 border border-amber-500/40 flex items-center justify-center font-black text-amber-400 text-xs">
               X
             </div>
-            <span className="font-extrabold text-sm text-gradient-gold tracking-tight">GiftX Pass</span>
+            <span className="font-extrabold text-sm text-gradient-gold tracking-tight">GiftX</span>
           </button>
         </div>
 
