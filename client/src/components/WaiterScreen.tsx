@@ -19,6 +19,15 @@ export const WaiterScreen: React.FC = () => {
 
   const [loading, setLoading] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number>(180);
+  const [checkAmountInput, setCheckAmountInput] = useState<string>('500000');
+
+  // Авто-определение бокса по сумме чека
+  const getAutoBoxLevel = (amount: number): 'SILVER' | 'GOLD' | 'PLATINUM' | null => {
+    if (amount < 300000) return null;
+    if (amount < 600000) return 'SILVER';
+    if (amount < 1000000) return 'GOLD';
+    return 'PLATINUM';
+  };
 
   // Модалка подачи заявки персонала
   const [showApplyModal, setShowApplyModal] = useState(false);
@@ -539,63 +548,118 @@ export const WaiterScreen: React.FC = () => {
         </div>
       )}
 
-      {/* Кнопки выдачи боксов для официанта */}
+      {/* Ввод суммы счёта для официанта (Авто-определение бокса) */}
       {!activeQrToken && (
-        <div className="space-y-3.5 my-auto py-4">
-          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider text-center">
-            Выберите бокс по сумме чека гостя:
-          </p>
-
-          <button
-            disabled={loading}
-            onClick={() => handleIssueBox('SILVER')}
-            className="w-full p-4 rounded-2xl glass-silver border border-cyan-500/40 hover:border-cyan-400 flex items-center justify-between group transition-all transform active:scale-95 shadow-lg shadow-cyan-500/10"
-          >
-            <div className="flex items-center space-x-3.5">
-              <div className="w-12 h-12 rounded-xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
-                🥈
-              </div>
-              <div className="text-left">
-                <div className="font-bold text-cyan-100 text-base">СЕРЕБРЯНЫЙ БОКС</div>
-                <div className="text-xs text-cyan-300/70 font-medium">Чек: 300k - 599k VND</div>
-              </div>
+        <div className="space-y-4 my-auto py-4 animate-fadeIn">
+          <div className="glass-card p-5 rounded-3xl border border-amber-500/30 bg-slate-900/90 space-y-4 shadow-2xl">
+            <div className="text-center space-y-1">
+              <span className="text-[10px] font-extrabold uppercase tracking-widest px-3 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-400 rounded-full">
+                Авто-выдача подарка
+              </span>
+              <h3 className="text-lg font-black text-slate-100">Введите сумму счёта гостя</h3>
+              <p className="text-xs text-slate-400">Система сама определит уровень бокса на основании суммы</p>
             </div>
-            <QrCode className="w-6 h-6 text-cyan-400" />
-          </button>
 
-          <button
-            disabled={loading}
-            onClick={() => handleIssueBox('GOLD')}
-            className="w-full p-4 rounded-2xl glass-gold border border-amber-500/50 hover:border-amber-400 flex items-center justify-between group transition-all transform active:scale-95 shadow-xl shadow-amber-500/20"
-          >
-            <div className="flex items-center space-x-3.5">
-              <div className="w-12 h-12 rounded-xl bg-amber-500/20 border border-amber-500/50 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
-                🥇
-              </div>
-              <div className="text-left">
-                <div className="font-bold text-gradient-gold text-base">ЗОЛОТОЙ БОКС</div>
-                <div className="text-xs text-amber-300/80 font-medium">Чек: 600k - 999k VND</div>
-              </div>
+            {/* Поле ввода суммы */}
+            <div className="relative">
+              <input
+                type="number"
+                value={checkAmountInput}
+                onChange={(e) => setCheckAmountInput(e.target.value)}
+                placeholder="450000"
+                className="w-full p-4 pl-4 pr-16 rounded-2xl bg-slate-950 border-2 border-amber-500/40 text-amber-300 font-mono font-black text-xl text-center focus:border-amber-400 outline-none shadow-inner"
+              />
+              <span className="absolute right-4 top-4 font-black text-xs text-amber-400/80">VND</span>
             </div>
-            <Sparkles className="w-6 h-6 text-amber-400 animate-spin-slow" />
-          </button>
 
-          <button
-            disabled={loading}
-            onClick={() => handleIssueBox('PLATINUM')}
-            className="w-full p-4 rounded-2xl border border-purple-400/60 bg-gradient-to-r from-purple-950/60 via-slate-900 to-purple-950/60 hover:border-purple-300 flex items-center justify-between group transition-all transform active:scale-95 shadow-xl shadow-purple-500/20"
-          >
-            <div className="flex items-center space-x-3.5">
-              <div className="w-12 h-12 rounded-xl bg-purple-500/20 border border-purple-400/50 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
-                💎
-              </div>
-              <div className="text-left">
-                <div className="font-bold text-purple-200 text-base">ПЛАТИНОВЫЙ VIP БОКС</div>
-                <div className="text-xs text-purple-300/80 font-medium">Чек от 1,000,000 VND</div>
-              </div>
+            {/* Быстрые кнопки пресетов сумм */}
+            <div className="grid grid-cols-3 gap-2 text-xs">
+              <button
+                type="button"
+                onClick={() => {
+                  triggerHaptic('light');
+                  setCheckAmountInput('350000');
+                }}
+                className="py-2 px-1 rounded-xl bg-slate-950 border border-cyan-500/40 text-cyan-300 font-bold hover:bg-cyan-500/20 transition-all text-center"
+              >
+                🥈 350k VND
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  triggerHaptic('light');
+                  setCheckAmountInput('650000');
+                }}
+                className="py-2 px-1 rounded-xl bg-slate-950 border border-amber-500/40 text-amber-300 font-bold hover:bg-amber-500/20 transition-all text-center"
+              >
+                🥇 650k VND
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  triggerHaptic('light');
+                  setCheckAmountInput('1200000');
+                }}
+                className="py-2 px-1 rounded-xl bg-slate-950 border border-purple-500/40 text-purple-300 font-bold hover:bg-purple-500/20 transition-all text-center"
+              >
+                💎 1.2M VND
+              </button>
             </div>
-            <Sparkles className="w-6 h-6 text-purple-400 animate-pulse" />
-          </button>
+
+            {/* Динамическая карточка определенного бокса */}
+            {(() => {
+              const numVal = parseFloat(checkAmountInput) || 0;
+              const level = getAutoBoxLevel(numVal);
+
+              if (!level) {
+                return (
+                  <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-center text-xs text-amber-300 font-bold">
+                    ⚠️ Порог выдачи подарка — от 300,000 VND
+                  </div>
+                );
+              }
+
+              const isSilver = level === 'SILVER';
+              const isGold = level === 'GOLD';
+
+              return (
+                <div className={`p-4 rounded-2xl border flex items-center justify-between transition-all ${
+                  isSilver ? 'glass-silver border-cyan-500/50' :
+                  isGold ? 'glass-gold border-amber-500/50' : 'bg-purple-950/40 border-purple-400/50'
+                }`}>
+                  <div className="flex items-center space-x-3">
+                    <span className="text-3xl">{isSilver ? '🥈' : isGold ? '🥇' : '💎'}</span>
+                    <div>
+                      <span className="text-xs font-black uppercase tracking-wider block text-slate-100">
+                        {isSilver ? 'СЕРЕБРЯНЫЙ БОКС' : isGold ? 'ЗОЛОТОЙ БОКС' : 'ПЛАТИНОВЫЙ VIP БОКС'}
+                      </span>
+                      <span className="text-[10px] text-slate-300 font-medium">
+                        Рассчитано по чеку {numVal.toLocaleString()} VND
+                      </span>
+                    </div>
+                  </div>
+                  <Sparkles className={`w-5 h-5 ${isSilver ? 'text-cyan-400' : isGold ? 'text-amber-400' : 'text-purple-400'} animate-pulse`} />
+                </div>
+              );
+            })()}
+
+            {/* Главная кнопка генерации QR */}
+            <button
+              disabled={loading || !getAutoBoxLevel(parseFloat(checkAmountInput) || 0)}
+              onClick={() => {
+                const level = getAutoBoxLevel(parseFloat(checkAmountInput) || 0);
+                if (level) {
+                  handleIssueBox(level);
+                }
+              }}
+              className="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 hover:to-amber-300 font-black text-slate-950 text-sm flex items-center justify-center space-x-2 shadow-xl shadow-amber-500/25 disabled:opacity-40 transition-all active:scale-95"
+            >
+              <QrCode className="w-5 h-5 text-slate-950" />
+              <span>Показать QR-код гостю</span>
+            </button>
+          </div>
         </div>
       )}
 

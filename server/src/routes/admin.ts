@@ -454,6 +454,18 @@ adminRouter.post('/offer', async (req: Request, res: Response) => {
       });
       return res.json({ success: true, offer: updated, message: 'Ваучер успешно обновлен' });
     } else {
+      // Проверка лимита: максимум 3 вида подарков на заведение
+      const existingOffersCount = await prisma.voucherOffer.count({
+        where: { partnerId }
+      }).catch(() => 0);
+
+      if (existingOffersCount >= 3) {
+        return res.status(400).json({
+          success: false,
+          error: 'Максимум 3 вида подарков на одно заведение! Отредактируйте или пополните количество существующего подарка.'
+        });
+      }
+
       const created = await prisma.voucherOffer.create({
         data: {
           partnerId,
