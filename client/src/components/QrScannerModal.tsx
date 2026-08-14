@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { QrCode, X, Sparkles, AlertTriangle, Check, Camera, ShieldCheck } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { QrCode, X, Sparkles, AlertTriangle, Check, Camera, ShieldCheck, RefreshCw } from 'lucide-react';
+import { Html5Qrcode } from 'html5-qrcode';
 import { tg, triggerHaptic, triggerNotificationHaptic } from '../telegram';
 
 interface QrScannerModalProps {
@@ -10,6 +11,9 @@ interface QrScannerModalProps {
 export const QrScannerModal: React.FC<QrScannerModalProps> = ({ onClose, onScanSuccess }) => {
   const [manualToken, setManualToken] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const [isCameraActive, setIsCameraActive] = useState(false);
+  const scannerRef = useRef<Html5Qrcode | null>(null);
 
   // Извлечение токена из отсканированного текста/ссылки
   const extractToken = (text: string): string | null => {
@@ -43,8 +47,10 @@ export const QrScannerModal: React.FC<QrScannerModalProps> = ({ onClose, onScanS
     }
   };
 
-  // Вызов нативного сканера Telegram если доступен
+  // Вызов сканера (Telegram native или HTML5 Web Camera)
   useEffect(() => {
+    let mounted = true;
+
     if (tg?.showScanQrPopup) {
       try {
         tg.showScanQrPopup(
@@ -56,17 +62,58 @@ export const QrScannerModal: React.FC<QrScannerModalProps> = ({ onClose, onScanS
               onClose();
               return true;
             } else {
-              // Пользователь закрыл или свернул нативный видоискатель
               try { tg.closeScanQrPopup(); } catch {}
               onClose();
               return true;
             }
           }
         );
+        return;
       } catch (e) {
-        console.warn('Native Telegram QR popup error', e);
+        console.warn('Native Telegram QR popup error, fallback to HTML5 scanner', e);
       }
     }
+
+    // Инициализация HTML5 Web-камеры для браузерной версии
+    const qrRegionId = 'html5-qr-reader';
+    const html5QrCode = new Html5Qrcode(qrRegionId);
+    scannerRef.current = html5QrCode;
+
+    html5QrCode
+      .start(
+        { facingMode: 'environment' },
+        {
+          fps: 10,
+          qrbox: { width: 200, height: 200 },
+        },
+        (decodedText) => {
+          if (!mounted) return;
+          handleScanResult(decodedText);
+          html5QrCode.stop().catch((e) => console.warn('Scanner stop error', e));
+          onClose();
+        },
+        () => {
+          // Игнорируем ошибки каждого кадра до тех пор, пока QR не попал в видоискатель
+        }
+      )
+      .then(() => {
+        if (mounted) setIsCameraActive(true);
+      })
+      .catch((err) => {
+        console.warn('HTML5 Camera QR initialization error:', err);
+        if (mounted) {
+          setCameraError('Камера недоступна. Предоставьте доступ к камере или введите код вручную.');
+        }
+      });
+
+    return () => {
+      mounted = false;
+      if (scannerRef.current) {
+        if (scannerRef.current.isScanning) {
+          scannerRef.current.stop().catch((e) => console.warn('Cleanup scanner stop error', e));
+        }
+      }
+    };
   }, []);
 
   const handleManualSubmit = (e: React.FormEvent) => {
@@ -89,6 +136,11 @@ export const QrScannerModal: React.FC<QrScannerModalProps> = ({ onClose, onScanS
       e.stopPropagation();
     }
     triggerHaptic('light');
+
+    if (scannerRef.current && scannerRef.current.isScanning) {
+      scannerRef.current.stop().catch((err) => console.warn('Error stopping scanner:', err));
+    }
+
     try {
       if (tg?.closeScanQrPopup) {
         tg.closeScanQrPopup();
@@ -126,7 +178,7 @@ export const QrScannerModal: React.FC<QrScannerModalProps> = ({ onClose, onScanS
             <Camera className="w-7 h-7 text-amber-400 animate-pulse" />
           </div>
           <h3 className="text-lg font-black text-slate-100">Сканер QR-кода Официанта</h3>
-          <p className="text-xs text-slate-400">Наведите камеру на QR-код с экрана официанта</p>
+          <p className="text-xs text-slate-400">Наведите камеру смартфона на QR-код заведения</p>
         </div>
 
         {/* Инструкция для гостя — как попросить QR у официанта */}
@@ -143,24 +195,40 @@ export const QrScannerModal: React.FC<QrScannerModalProps> = ({ onClose, onScanS
           </p>
         </div>
 
-        {/* Анимированная рамка видоискателя сканера */}
-        <div className="my-auto relative flex items-center justify-center py-4">
-          <div className="w-52 h-52 rounded-3xl border-2 border-dashed border-amber-500/60 relative overflow-hidden flex items-center justify-center bg-slate-950/60 shadow-inner">
-            {/* Анимированный лазерный луч сканирования */}
-            <div className="absolute inset-x-0 h-1 bg-gradient-to-r from-transparent via-amber-400 to-transparent shadow-[0_0_15px_#f59e0b] animate-scan-line" />
+        {/* Анимированный элемент видоискателя с встроенным контейнером html5-qrcode */}
+        <div className="my-auto relative flex items-center justify-center py-2 z-10">
+          <div className="w-60 h-60 rounded-3xl border-2 border-dashed border-amber-500/60 relative overflow-hidden bg-slate-950/80 shadow-inner flex items-center justify-center">
+            {/* Контейнер HTML5 видеопотока */}
+            <div id="html5-qr-reader" className="w-full h-full object-cover overflow-hidden rounded-2xl" />
 
-            <div className="text-center space-y-2 p-4 pointer-events-none">
-              <QrCode className="w-16 h-16 text-amber-400/40 mx-auto animate-pulse" />
-              <span className="text-[10px] font-bold text-amber-300 uppercase tracking-widest block">
-                Сканирование...
-              </span>
-            </div>
+            {/* Заглушка сканирования если видео еще грузится или не запущено */}
+            {!isCameraActive && !cameraError && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/90 space-y-2 p-4 text-center">
+                <QrCode className="w-12 h-12 text-amber-400/60 animate-pulse" />
+                <span className="text-[10px] font-bold text-amber-300 uppercase tracking-widest block">
+                  Запуск веб-камеры...
+                </span>
+              </div>
+            )}
+
+            {/* Ошибка доступа к камере */}
+            {cameraError && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/95 space-y-2 p-4 text-center">
+                <AlertTriangle className="w-10 h-10 text-amber-400" />
+                <span className="text-[11px] text-amber-200 font-semibold">{cameraError}</span>
+              </div>
+            )}
+
+            {/* Анимированный лазерный луч сканирования при активной камере */}
+            {isCameraActive && (
+              <div className="absolute inset-x-0 h-1 bg-gradient-to-r from-transparent via-amber-400 to-transparent shadow-[0_0_15px_#f59e0b] animate-scan-line pointer-events-none" />
+            )}
 
             {/* Уголки рамки */}
-            <div className="absolute top-3 left-3 w-4 h-4 border-t-2 border-l-2 border-amber-400 rounded-tl" />
-            <div className="absolute top-3 right-3 w-4 h-4 border-t-2 border-r-2 border-amber-400 rounded-tr" />
-            <div className="absolute bottom-3 left-3 w-4 h-4 border-b-2 border-l-2 border-amber-400 rounded-bl" />
-            <div className="absolute bottom-3 right-3 w-4 h-4 border-b-2 border-r-2 border-amber-400 rounded-br" />
+            <div className="absolute top-3 left-3 w-4 h-4 border-t-2 border-l-2 border-amber-400 rounded-tl pointer-events-none" />
+            <div className="absolute top-3 right-3 w-4 h-4 border-t-2 border-r-2 border-amber-400 rounded-tr pointer-events-none" />
+            <div className="absolute bottom-3 left-3 w-4 h-4 border-b-2 border-l-2 border-amber-400 rounded-bl pointer-events-none" />
+            <div className="absolute bottom-3 right-3 w-4 h-4 border-b-2 border-r-2 border-amber-400 rounded-br pointer-events-none" />
           </div>
         </div>
 

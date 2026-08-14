@@ -627,6 +627,142 @@ guestRouter.get('/places-search', async (req: Request, res: Response) => {
   }
 });
 
+// 5.55. Парсинг данных заведения из ссылки Google Maps
+guestRouter.post('/parse-google-url', async (req: Request, res: Response) => {
+  try {
+    let { url } = req.body;
+    if (!url || typeof url !== 'string') {
+      return res.status(400).json({ success: false, error: 'Укажите URL Google Maps' });
+    }
+
+    url = url.trim();
+
+    let expandedUrl = url;
+    if (url.includes('goo.gl') || url.includes('maps.app.')) {
+      try {
+        const headRes = await fetch(url, { method: 'GET', redirect: 'follow', headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' } });
+        if (headRes.url) {
+          expandedUrl = headRes.url;
+        }
+      } catch (err) {
+        console.warn('URL expansion failed:', err);
+      }
+    }
+
+    let parsedName: string | undefined;
+    let parsedLat: number | undefined;
+    let parsedLng: number | undefined;
+
+    const atMatch = expandedUrl.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+    if (atMatch) {
+      parsedLat = parseFloat(atMatch[1]);
+      parsedLng = parseFloat(atMatch[2]);
+    } else {
+      const qCoord = expandedUrl.match(/q=(-?\d+\.\d+),(-?\d+\.\d+)/) || expandedUrl.match(/ll=(-?\d+\.\d+),(-?\d+\.\d+)/);
+      if (qCoord) {
+        parsedLat = parseFloat(qCoord[1]);
+        parsedLng = parseFloat(qCoord[2]);
+      }
+    }
+
+    const placeMatch = expandedUrl.match(/\/maps\/place\/([^/@?]+)/);
+    if (placeMatch) {
+      parsedName = decodeURIComponent(placeMatch[1].replace(/\+/g, ' '));
+    } else {
+      try {
+        const urlObj = new URL(expandedUrl.startsWith('http') ? expandedUrl : `https://${expandedUrl}`);
+        const q = urlObj.searchParams.get('q');
+        if (q && !q.match(/^-?\d+\.\d+,-?\d+\.\d+$/)) {
+          parsedName = q;
+        }
+      } catch (e) {}
+    }
+
+    let googleRating: number | undefined;
+    let googleReviewsCount: number | undefined;
+    let workingHours: string | undefined;
+    let address: string | undefined;
+
+    const apiKey = process.env.GOOGLE_MAPS_API_KEY || process.env.VITE_GOOGLE_MAPS_API_KEY;
+
+    if (apiKey && (parsedName || (parsedLat && parsedLng))) {
+      try {
+        const queryStr = parsedName || `${parsedLat},${parsedLng}`;
+        const locationBias = (parsedLat && parsedLng) ? `&location=${parsedLat},${parsedLng}&radius=5000` : '';
+        const googleUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(queryStr)}${locationBias}&key=${apiKey}`;
+        const gRes = await fetch(googleUrl);
+        const gData = await gRes.json();
+
+        if (gData.status === 'OK' && gData.results && gData.results.length > 0) {
+          const place = gData.results[0];
+          if (!parsedName) parsedName = place.name;
+          address = place.formatted_address;
+          if (!parsedLat || !parsedLng) {
+            parsedLat = place.geometry.location.lat;
+            parsedLng = place.geometry.location.lng;
+          }
+          if (place.rating) googleRating = place.rating;
+          if (place.user_ratings_total) googleReviewsCount = place.user_ratings_total;
+
+          if (place.place_id) {
+            const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.place_id}&fields=opening_hours,name,rating,user_ratings_total,formatted_address&key=${apiKey}`;
+            const dRes = await fetch(detailsUrl);
+            const dData = await dRes.json();
+            if (dData.result) {
+              const resObj = dData.result;
+              if (resObj.rating) googleRating = resObj.rating;
+              if (resObj.user_ratings_total) googleReviewsCount = resObj.user_ratings_total;
+              if (resObj.opening_hours && resObj.opening_hours.weekday_text && resObj.opening_hours.weekday_text.length > 0) {
+                const firstDayText = resObj.opening_hours.weekday_text[0];
+                const timeMatch = firstDayText.match(/(\d{1,2}:\d{2}\s*(?:AM|PM)?)\s*–\s*(\d{1,2}:\d{2}\s*(?:AM|PM)?)/i);
+                if (timeMatch) {
+                  workingHours = `${timeMatch[1]} - ${timeMatch[2]}`;
+                }
+              }
+            }
+          }
+        }
+      } catch (gErr) {
+        console.warn('Google Places API lookup error:', gErr);
+      }
+    }
+
+    if (parsedName && (!parsedLat || !parsedLng || !address)) {
+      try {
+        const osmRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(parsedName)}&limit=1`, {
+          headers: { 'User-Agent': 'GiftX-App/1.0' }
+        });
+        const osmData = await osmRes.json();
+        if (osmData && osmData.length > 0) {
+          if (!parsedLat || !parsedLng) {
+            parsedLat = parseFloat(osmData[0].lat);
+            parsedLng = parseFloat(osmData[0].lon);
+          }
+          if (!address) address = osmData[0].display_name;
+        }
+      } catch (osmErr) {
+        console.warn('OSM fallback error:', osmErr);
+      }
+    }
+
+    return res.json({
+      success: true,
+      data: {
+        name: parsedName || undefined,
+        googleRating: googleRating || undefined,
+        googleReviewsCount: googleReviewsCount || undefined,
+        workingHours: workingHours || undefined,
+        address: address || undefined,
+        lat: parsedLat || undefined,
+        lng: parsedLng || undefined,
+        googleMapsUrl: expandedUrl
+      }
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // 5.6. Рядом стоящие бизнесы Google Maps (серые маркеры)
 guestRouter.get('/google-places-nearby', async (req: Request, res: Response) => {
   try {

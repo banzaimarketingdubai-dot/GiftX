@@ -21,7 +21,10 @@ import {
   Trophy,
   Send,
   Flame,
-  TrendingUp
+  TrendingUp,
+  Link,
+  Copy,
+  ExternalLink
 } from 'lucide-react';
 import { getTelegramUserData, triggerHaptic, triggerNotificationHaptic } from '../telegram';
 import { PartnerRegistrationModal } from './PartnerRegistrationModal';
@@ -77,6 +80,10 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
   const [showBusinessOnboardingModal, setShowBusinessOnboardingModal] = useState(false);
   const [showManageRoleModal, setShowManageRoleModal] = useState(false);
   const [viewMode, setViewMode] = useState<'PROFILE' | 'ADMIN' | 'WAITER' | 'ANALYTICS'>('PROFILE');
+
+  // Состояние копирования Revoo-ссылок
+  const [revooLinkCopied, setRevooLinkCopied] = useState(false);
+  const [revooTmaCopied, setRevooTmaCopied] = useState(false);
 
   // Состояние заявок для заведения владельца/управляющего
   const [partnerApps, setPartnerApps] = useState<any[]>([]);
@@ -378,7 +385,30 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
       </div>
 
       {/* Блок привязанного бизнеса (если пользователь является сотрудником/владельцем/менеджером) */}
-      {isStaff && staffInfo?.partner && (
+      {isStaff && staffInfo?.partner && (() => {
+        // --- Revoo venue deep link ---
+        const botUsername = (import.meta as any).env?.VITE_TELEGRAM_BOT_USERNAME || 'giftx2025_bot';
+        const partnerId = staffInfo.partner.id;
+
+        // Прямая Web App ссылка (для открытия напрямую в любом браузере)
+        const revooWebAppLink = `${window.location.origin}/?venue=${partnerId}`;
+        // Telegram Mini App ссылка (для открытия через Telegram Бот)
+        const revooTmaLink = `https://t.me/${botUsername}?start=venue_${partnerId}`;
+
+        const handleCopyRevooLink = (linkToCopy: string, type: 'webapp' | 'tma') => {
+          triggerHaptic('light');
+          navigator.clipboard.writeText(linkToCopy).then(() => {
+            if (type === 'webapp') {
+              setRevooLinkCopied(true);
+              setTimeout(() => setRevooLinkCopied(false), 2500);
+            } else {
+              setRevooTmaCopied(true);
+              setTimeout(() => setRevooTmaCopied(false), 2500);
+            }
+          });
+        };
+
+        return (
         <div className="glass-card p-5 rounded-3xl border border-amber-500/30 bg-amber-950/20 space-y-4 shadow-xl">
           <div className="flex items-center justify-between border-b border-amber-500/20 pb-3">
             <div className="flex items-center space-x-3">
@@ -399,6 +429,67 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
             <span className="px-2.5 py-1 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 font-black text-xs">
               {staffInfo.role}
             </span>
+          </div>
+
+          {/* ── Revoo Direct WebApp Link Block ── */}
+          <div className="p-3.5 rounded-2xl bg-gradient-to-br from-violet-950/70 via-slate-900 to-slate-950 border border-violet-500/40 space-y-2.5 shadow-inner">
+            <div className="flex items-center space-x-2">
+              <div className="w-7 h-7 rounded-xl bg-violet-500/20 border border-violet-500/40 flex items-center justify-center shrink-0">
+                <Link className="w-3.5 h-3.5 text-violet-400" />
+              </div>
+              <div>
+                <span className="text-[9px] uppercase font-black tracking-widest text-violet-400 block">Revoo — WebApp Ссылка Заведения</span>
+                <span className="text-[10px] text-slate-400">Прямой URL для открытия в браузере (аналог QR)</span>
+              </div>
+            </div>
+
+            {/* Direct WebApp Link preview */}
+            <div className="flex items-center space-x-2 bg-slate-950/90 rounded-xl px-3 py-2 border border-slate-800">
+              <span className="text-[10px] text-violet-300 font-mono truncate flex-1 select-all">{revooWebAppLink}</span>
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex space-x-2">
+              <button
+                id="revoo-copy-webapp-btn"
+                onClick={() => handleCopyRevooLink(revooWebAppLink, 'webapp')}
+                className={`flex-1 py-2 px-3 rounded-xl text-[11px] font-extrabold flex items-center justify-center space-x-1.5 transition-all active:scale-95 ${
+                  revooLinkCopied
+                    ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-400'
+                    : 'bg-violet-500/20 border border-violet-500/40 text-violet-300 hover:bg-violet-500/30'
+                }`}
+              >
+                {revooLinkCopied ? (
+                  <><Check className="w-3.5 h-3.5" /><span>Скопировано!</span></>
+                ) : (
+                  <><Copy className="w-3.5 h-3.5" /><span>Скопировать WebApp URL</span></>
+                )}
+              </button>
+
+              <a
+                id="revoo-open-webapp-btn"
+                href={revooWebAppLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => triggerHaptic('light')}
+                className="py-2 px-3 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-[11px] font-extrabold flex items-center justify-center space-x-1.5 transition-all active:scale-95 shadow-md shadow-violet-500/20"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span>Открыть</span>
+              </a>
+            </div>
+
+            {/* Вторичный вариант: Telegram Mini App URL */}
+            <div className="pt-2 border-t border-violet-500/20 flex items-center justify-between text-[10px]">
+              <span className="text-slate-400 font-medium">Вариант для Telegram (TMA):</span>
+              <button
+                onClick={() => handleCopyRevooLink(revooTmaLink, 'tma')}
+                className="text-violet-400 hover:text-violet-300 font-bold flex items-center space-x-1 underline"
+              >
+                <Copy className="w-3 h-3" />
+                <span>{revooTmaCopied ? 'Скопировано!' : 'Скопировать TMA-ссылку'}</span>
+              </button>
+            </div>
           </div>
 
           {/* Панель переключения рабочих режимов для владельца/персонала */}
@@ -671,7 +762,8 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
             )}
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {/* Баннер регистрации бизнеса и быстрый переход в Панель Управляющего (если пользователь еще не привязан к бизнесу) */}
       {!isStaff && (

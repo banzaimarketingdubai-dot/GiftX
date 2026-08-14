@@ -48,10 +48,14 @@ export interface Partner {
   googleReviewsCount?: number;
   googleMapsUrl?: string;
   geoCoordinates?: { lat: number; lng: number };
-  activeStatus: boolean;
+  activeStatus?: boolean;
   moderationStatus?: ModerationStatus;
   rejectionReason?: string;
   ownerTelegramId?: number | string;
+  basicThreshold?: number;
+  silverThreshold?: number;
+  goldThreshold?: number;
+  platinumThreshold?: number;
   boxThresholds?: {
     SILVER: number;
     GOLD: number;

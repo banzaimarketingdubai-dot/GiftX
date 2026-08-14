@@ -4,6 +4,7 @@ import L from 'leaflet';
 import { Partner, ClaimedVoucher } from '../types';
 import { GoogleReviewsModal } from './GoogleReviewsModal';
 import { PartnerRegistrationModal } from './PartnerRegistrationModal';
+import { VenueGuestModal } from './VenueGuestModal';
 import { triggerHaptic, getTelegramUserData } from '../telegram';
 import { useAppStore } from '../store/useAppStore';
 
@@ -18,6 +19,7 @@ export const PartnerMapScreen: React.FC = () => {
   
   const [showReviewsModal, setShowReviewsModal] = useState(false);
   const [showRegistrationModal, setShowRegistrationModal] = useState(false);
+  const [showVenueModal, setShowVenueModal] = useState(false);
 
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const leafletMapRef = useRef<L.Map | null>(null);
@@ -498,35 +500,59 @@ export const PartnerMapScreen: React.FC = () => {
               );
             })()}
 
-            {/* Две ключевые кнопки действий */}
-            <div className="mt-3.5 grid grid-cols-2 gap-2">
+            {/* Две ключевые кнопки действий + Условия боксов */}
+            <div className="mt-3 space-y-2">
               <button
                 onClick={() => {
-                  triggerHaptic('medium');
-                  setShowReviewsModal(true);
+                  triggerHaptic('heavy');
+                  setShowVenueModal(true);
                 }}
-                className="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs flex items-center justify-center space-x-1.5 border border-slate-700 transition-all"
+                className="w-full py-2.5 px-3 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-extrabold text-xs flex items-center justify-center space-x-2 transition-all shadow-md"
               >
-                <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
-                <span>Google Отзывы</span>
+                <Gift className="w-4 h-4 text-amber-400" />
+                <span>🎁 Условия Боксов & Инструкция</span>
               </button>
 
-              <a
-                href={
-                  selectedPartner.googleMapsUrl ||
-                  `https://www.google.com/maps/dir/?api=1&destination=${selectedPartner.lat || 10.1982},${selectedPartner.lng || 103.9634}`
-                }
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => triggerHaptic('medium')}
-                className="py-2.5 px-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center justify-center space-x-1.5 transition-all shadow-md shadow-amber-500/20"
-              >
-                <Navigation className="w-3.5 h-3.5" />
-                <span>Маршрут</span>
-              </a>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => {
+                    triggerHaptic('medium');
+                    setShowReviewsModal(true);
+                  }}
+                  className="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs flex items-center justify-center space-x-1.5 border border-slate-700 transition-all"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Google Отзывы</span>
+                </button>
+
+                <a
+                  href={
+                    selectedPartner.googleMapsUrl ||
+                    `https://www.google.com/maps/dir/?api=1&destination=${selectedPartner.lat || 10.1982},${selectedPartner.lng || 103.9634}`
+                  }
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => triggerHaptic('medium')}
+                  className="py-2.5 px-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center justify-center space-x-1.5 transition-all shadow-md shadow-amber-500/20"
+                >
+                  <Navigation className="w-3.5 h-3.5" />
+                  <span>Маршрут</span>
+                </a>
+              </div>
             </div>
           </div>
         </div>
+      )}
+
+      {/* Модальное окно заведения (Условия боксов & Инструкция) */}
+      {showVenueModal && selectedPartner && (
+        <VenueGuestModal
+          partner={selectedPartner}
+          onClose={() => setShowVenueModal(false)}
+          onOpenScanner={() => {
+            setShowVenueModal(false);
+          }}
+        />
       )}
 
       {/* Модальное окно отзывов Google */}

@@ -17,11 +17,13 @@ import { BusinessLandingPage } from './components/BusinessLandingPage';
 import { PartnerRegistrationModal } from './components/PartnerRegistrationModal';
 import { StaffInviteModal } from './components/StaffInviteModal';
 import { DemoBoxOpeningModal } from './components/DemoBoxOpeningModal';
+import { VenueGuestModal } from './components/VenueGuestModal';
 import { Home, Wallet, MapPin, User, HelpCircle, Building2, Sparkles, Gift } from 'lucide-react';
 
 export const App: React.FC = () => {
   const { role, setRole, setPartners } = useAppStore();
   const [claimToken, setClaimToken] = useState<string | null>(null);
+  const [venueModalPartnerId, setVenueModalPartnerId] = useState<string | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showBusinessOnboardingModal, setShowBusinessOnboardingModal] = useState(false);
   const [showHelpGuide, setShowHelpGuide] = useState(false);
@@ -120,19 +122,19 @@ export const App: React.FC = () => {
             if (data.success && data.isStaff) {
               setRole(data.staff.role === 'WAITER' ? 'WAITER' : 'ADMIN');
             } else {
-              // 1. У гостя открывается главный экран приложения и сканер QR
+              // 1. У гостя открывается экран заведения с боксами и инструкцией
               setRole('GUEST');
-              setShowScannerModal(true);
+              setVenueModalPartnerId(venueId);
             }
           })
           .catch(() => {
             setRole('GUEST');
-            setShowScannerModal(true);
+            setVenueModalPartnerId(venueId);
           });
       } else {
-        // 1. У гостя открывается главный экран и камера
+        // 1. У гостя открывается экран заведения с боксами и инструкцией
         setRole('GUEST');
-        setShowScannerModal(true);
+        setVenueModalPartnerId(venueId);
       }
     } else if (claim) {
       setClaimToken(claim);
@@ -345,6 +347,18 @@ export const App: React.FC = () => {
           partnerId={staffInvitePartner.id}
           partnerName={staffInvitePartner.name}
           onClose={() => setStaffInvitePartner(null)}
+        />
+      )}
+
+      {/* Модалка экрана заведения для гостя (Боксы, пороги чеков и инструкция) */}
+      {venueModalPartnerId && (
+        <VenueGuestModal
+          partnerId={venueModalPartnerId}
+          onClose={() => setVenueModalPartnerId(null)}
+          onOpenScanner={() => {
+            setVenueModalPartnerId(null);
+            setShowScannerModal(true);
+          }}
         />
       )}
 

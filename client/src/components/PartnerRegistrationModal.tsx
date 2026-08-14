@@ -18,6 +18,22 @@ export const PartnerRegistrationModal: React.FC<PartnerRegistrationModalProps> =
   const [name, setName] = useState(initialPartner?.name || '');
   const [description, setDescription] = useState(initialPartner?.description || '');
   const [workingHours, setWorkingHours] = useState(initialPartner?.workingHours || '10:00 - 23:00');
+  
+  const [openTime, setOpenTime] = useState<string>(() => {
+    if (initialPartner?.workingHours) {
+      const parts = initialPartner.workingHours.split('-');
+      if (parts[0]) return parts[0].trim();
+    }
+    return '10:00';
+  });
+  const [closeTime, setCloseTime] = useState<string>(() => {
+    if (initialPartner?.workingHours) {
+      const parts = initialPartner.workingHours.split('-');
+      if (parts[1]) return parts[1].trim();
+    }
+    return '23:00';
+  });
+
   const [category, setCategory] = useState<PartnerCategory>(initialPartner?.category || 'HORECA');
   const [customCategories, setCustomCategories] = useState<string[]>(['Фитнес & Спорт', 'Шопинг & Ритейл', 'Отели & Виллы']);
   const [isCreatingNewCategory, setIsCreatingNewCategory] = useState<boolean>(false);
@@ -41,9 +57,10 @@ export const PartnerRegistrationModal: React.FC<PartnerRegistrationModalProps> =
   const [lat, setLat] = useState<number>(initialPartner?.lat || 10.1982);
   const [lng, setLng] = useState<number>(initialPartner?.lng || 103.9634);
   const [googleMapsUrl, setGoogleMapsUrl] = useState(initialPartner?.googleMapsUrl || '');
-  const [googleRating, setGoogleRating] = useState<number>(initialPartner?.googleRating || 4.8);
-  const [googleReviewsCount, setGoogleReviewsCount] = useState<number>(initialPartner?.googleReviewsCount || 150);
+  const [googleRating, setGoogleRating] = useState<number | ''>(initialPartner?.googleRating ?? '');
+  const [googleReviewsCount, setGoogleReviewsCount] = useState<number | ''>(initialPartner?.googleReviewsCount ?? '');
   const [loading, setLoading] = useState(false);
+  const [isParsingUrl, setIsParsingUrl] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Живой поиск мест на Google Maps
@@ -104,12 +121,12 @@ export const PartnerRegistrationModal: React.FC<PartnerRegistrationModalProps> =
   }, [searchQuery, lat, lng]);
 
   const selectPlaceResult = (place: any) => {
-    setName(place.name);
-    setAddress(place.address);
-    setLat(place.lat);
-    setLng(place.lng);
-    if (place.googleRating) setGoogleRating(place.googleRating);
-    if (place.googleReviewsCount) setGoogleReviewsCount(place.googleReviewsCount);
+    if (place.name) setName(place.name);
+    if (place.address) setAddress(place.address);
+    if (place.lat) setLat(place.lat);
+    if (place.lng) setLng(place.lng);
+    if (place.googleRating !== undefined) setGoogleRating(place.googleRating);
+    if (place.googleReviewsCount !== undefined) setGoogleReviewsCount(place.googleReviewsCount);
     if (place.googleMapsUrl) setGoogleMapsUrl(place.googleMapsUrl);
 
     if (leafletMap.current && markerRef.current) {
@@ -189,12 +206,12 @@ export const PartnerRegistrationModal: React.FC<PartnerRegistrationModalProps> =
     };
   }, []);
 
-  // Разбор вставленной ссылки Google Maps
-  const handleGoogleUrlChange = (url: string) => {
+  // Разбор вставленной ссылки Google Maps и получение данных из API
+  const handleGoogleUrlChange = async (url: string) => {
     setGoogleMapsUrl(url);
-    if (!url) return;
+    if (!url || url.trim().length < 5) return;
 
-    // Парсим @lat,lng
+    // Быстрый локальный разбор координат из URL (@lat,lng)
     const atMatch = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
     if (atMatch) {
       const parsedLat = parseFloat(atMatch[1]);
@@ -205,22 +222,45 @@ export const PartnerRegistrationModal: React.FC<PartnerRegistrationModalProps> =
         leafletMap.current.setView([parsedLat, parsedLng], 16);
         markerRef.current.setLatLng([parsedLat, parsedLng]);
       }
-      triggerNotificationHaptic('success');
-      return;
     }
 
-    // Парсим q=lat,lng
-    const qMatch = url.match(/q=(-?\d+\.\d+),(-?\d+\.\d+)/);
-    if (qMatch) {
-      const parsedLat = parseFloat(qMatch[1]);
-      const parsedLng = parseFloat(qMatch[2]);
-      setLat(parsedLat);
-      setLng(parsedLng);
-      if (leafletMap.current && markerRef.current) {
-        leafletMap.current.setView([parsedLat, parsedLng], 16);
-        markerRef.current.setLatLng([parsedLat, parsedLng]);
+    // Глубокий парсинг через серверную функцию parse-google-url
+    try {
+      setIsParsingUrl(true);
+      const res = await fetch('/api/guest/parse-google-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url })
+      });
+      const data = await res.json();
+      if (data.success && data.data) {
+        const d = data.data;
+        if (d.name) setName(d.name);
+        if (d.address) setAddress(d.address);
+        if (d.lat && d.lng) {
+          setLat(d.lat);
+          setLng(d.lng);
+          if (leafletMap.current && markerRef.current) {
+            leafletMap.current.setView([d.lat, d.lng], 16);
+            markerRef.current.setLatLng([d.lat, d.lng]);
+          }
+        }
+        if (d.googleRating !== undefined) setGoogleRating(d.googleRating);
+        if (d.googleReviewsCount !== undefined) setGoogleReviewsCount(d.googleReviewsCount);
+        if (d.workingHours) {
+          setWorkingHours(d.workingHours);
+          const parts = d.workingHours.split('-');
+          if (parts.length === 2) {
+            setOpenTime(parts[0].trim());
+            setCloseTime(parts[1].trim());
+          }
+        }
+        triggerNotificationHaptic('success');
       }
-      triggerNotificationHaptic('success');
+    } catch (err) {
+      console.warn('Parse Google URL failed:', err);
+    } finally {
+      setIsParsingUrl(false);
     }
   };
 
@@ -245,8 +285,8 @@ export const PartnerRegistrationModal: React.FC<PartnerRegistrationModalProps> =
           lat,
           lng,
           googleMapsUrl,
-          googleRating,
-          googleReviewsCount,
+          googleRating: googleRating !== '' ? Number(googleRating) : undefined,
+          googleReviewsCount: googleReviewsCount !== '' ? Number(googleReviewsCount) : undefined,
           telegramId: tgUser?.id,
           role
         }),
@@ -353,6 +393,34 @@ export const PartnerRegistrationModal: React.FC<PartnerRegistrationModalProps> =
                 👨‍🍳 Стаф
               </button>
             </div>
+          </div>
+
+          {/* 🌟 Ссылка на Google Maps (поднята наверх для мгновенного автозаполнения) */}
+          <div>
+            <label className="block text-[11px] font-bold uppercase tracking-wider text-amber-400 mb-1 flex items-center justify-between">
+              <span className="flex items-center space-x-1">
+                <LinkIcon className="w-3.5 h-3.5 text-amber-400 inline" />
+                <span>Ссылка на Google Maps (Автозаполнение)</span>
+              </span>
+              {isParsingUrl && <span className="text-[10px] text-amber-400 animate-pulse">Парсинг данных...</span>}
+            </label>
+            <div className="relative">
+              <input
+                type="url"
+                value={googleMapsUrl}
+                onChange={(e) => handleGoogleUrlChange(e.target.value)}
+                placeholder="Вставьте ссылку Google Maps (например, https://maps.app.goo.gl/...)..."
+                className="w-full py-2.5 pl-3 pr-10 rounded-xl bg-slate-950 border border-amber-500/40 text-slate-100 text-xs focus:border-amber-400 outline-none transition-all shadow-md"
+              />
+              {isParsingUrl ? (
+                <div className="absolute right-3 top-2.5 w-4 h-4 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Globe className="w-4 h-4 text-amber-400/60 absolute right-3 top-3 pointer-events-none" />
+              )}
+            </div>
+            <p className="text-[10px] text-slate-400 mt-1">
+              📍 Вставьте ссылку на Google Карты — название, координаты, отзывы и часы работы заполнятся автоматически.
+            </p>
           </div>
 
           {/* Быстрый поиск заведения на Google Maps */}
@@ -498,7 +566,7 @@ export const PartnerRegistrationModal: React.FC<PartnerRegistrationModalProps> =
             </div>
           </div>
 
-          {/* Описание заведения & Часы работы */}
+          {/* Описание заведения & Часы работы (с выпадающим списком / селектором времени) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">
@@ -515,15 +583,69 @@ export const PartnerRegistrationModal: React.FC<PartnerRegistrationModalProps> =
 
             <div>
               <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">
-                Часы работы
+                Часы работы (выбор времени)
               </label>
-              <input
-                type="text"
-                value={workingHours}
-                onChange={(e) => setWorkingHours(e.target.value)}
-                placeholder="10:00 - 23:00"
-                className="w-full py-2.5 px-3 rounded-xl bg-slate-950 border border-slate-800 text-slate-100 text-xs focus:border-amber-500 outline-none transition-all"
-              />
+              <div className="flex items-center space-x-2">
+                <div className="flex-1">
+                  <span className="text-[9px] text-slate-500 block mb-0.5 font-bold">Открытие</span>
+                  <input
+                    type="time"
+                    value={openTime}
+                    onChange={(e) => {
+                      const newOpen = e.target.value;
+                      setOpenTime(newOpen);
+                      setWorkingHours(`${newOpen} - ${closeTime}`);
+                    }}
+                    className="w-full py-2 px-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-100 text-xs focus:border-amber-500 outline-none font-mono"
+                  />
+                </div>
+                <span className="text-slate-500 font-bold mt-3">–</span>
+                <div className="flex-1">
+                  <span className="text-[9px] text-slate-500 block mb-0.5 font-bold">Закрытие</span>
+                  <input
+                    type="time"
+                    value={closeTime}
+                    onChange={(e) => {
+                      const newClose = e.target.value;
+                      setCloseTime(newClose);
+                      setWorkingHours(`${openTime} - ${newClose}`);
+                    }}
+                    className="w-full py-2 px-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-100 text-xs focus:border-amber-500 outline-none font-mono"
+                  />
+                </div>
+              </div>
+              
+              {/* Пресеты быстрого выбора времени */}
+              <div className="flex items-center space-x-1 mt-1.5 overflow-x-auto pb-0.5">
+                {['09:00 - 22:00', '10:00 - 23:00', '12:00 - 00:00', '24/7'].map((preset) => (
+                  <button
+                    key={preset}
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic('light');
+                      if (preset === '24/7') {
+                        setWorkingHours('24/7 (Круглосуточно)');
+                        setOpenTime('00:00');
+                        setCloseTime('23:59');
+                      } else {
+                        setWorkingHours(preset);
+                        const [o, c] = preset.split(' - ');
+                        if (o && c) {
+                          setOpenTime(o.trim());
+                          setCloseTime(c.trim());
+                        }
+                      }
+                    }}
+                    className={`px-2 py-0.5 rounded-lg text-[9px] font-semibold border transition-all whitespace-nowrap ${
+                      workingHours.includes(preset)
+                        ? 'bg-amber-500/20 border-amber-500 text-amber-300'
+                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    {preset}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -542,26 +664,6 @@ export const PartnerRegistrationModal: React.FC<PartnerRegistrationModalProps> =
                 className="w-full py-2.5 pl-9 pr-3 rounded-xl bg-slate-950 border border-slate-800 text-slate-100 text-xs focus:border-amber-500 outline-none transition-all"
               />
             </div>
-          </div>
-
-          {/* Ссылка на Google Maps */}
-          <div>
-            <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">
-              Ссылка на Google Maps (автозаполнение координат)
-            </label>
-            <div className="relative">
-              <LinkIcon className="w-4 h-4 text-amber-400 absolute left-3 top-3" />
-              <input
-                type="url"
-                value={googleMapsUrl}
-                onChange={(e) => handleGoogleUrlChange(e.target.value)}
-                placeholder="https://maps.google.com/?q=..."
-                className="w-full py-2.5 pl-9 pr-3 rounded-xl bg-slate-950 border border-amber-500/40 text-slate-100 text-xs focus:border-amber-400 outline-none transition-all"
-              />
-            </div>
-            <p className="text-[10px] text-slate-500 mt-1">
-              Вставьте ссылку на место из Google Карт — координаты определятся автоматически.
-            </p>
           </div>
 
           {/* Выбор точки на карте */}
@@ -584,7 +686,7 @@ export const PartnerRegistrationModal: React.FC<PartnerRegistrationModalProps> =
             </p>
           </div>
 
-          {/* Рейтинг Google Maps */}
+          {/* Рейтинг Google Maps и отзывы (оставляются пустыми, если не удалось спарсить) */}
           <div className="grid grid-cols-2 gap-3 pt-1">
             <div>
               <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">
@@ -596,7 +698,8 @@ export const PartnerRegistrationModal: React.FC<PartnerRegistrationModalProps> =
                 min="1"
                 max="5"
                 value={googleRating}
-                onChange={(e) => setGoogleRating(parseFloat(e.target.value))}
+                placeholder="Оставить пустым..."
+                onChange={(e) => setGoogleRating(e.target.value === '' ? '' : parseFloat(e.target.value))}
                 className="w-full py-2 px-3 rounded-xl bg-slate-950 border border-slate-800 text-slate-100 text-xs focus:border-amber-500 outline-none font-mono"
               />
             </div>
@@ -608,7 +711,8 @@ export const PartnerRegistrationModal: React.FC<PartnerRegistrationModalProps> =
               <input
                 type="number"
                 value={googleReviewsCount}
-                onChange={(e) => setGoogleReviewsCount(parseInt(e.target.value))}
+                placeholder="Оставить пустым..."
+                onChange={(e) => setGoogleReviewsCount(e.target.value === '' ? '' : parseInt(e.target.value))}
                 className="w-full py-2 px-3 rounded-xl bg-slate-950 border border-slate-800 text-slate-100 text-xs focus:border-amber-500 outline-none font-mono"
               />
             </div>
@@ -618,14 +722,14 @@ export const PartnerRegistrationModal: React.FC<PartnerRegistrationModalProps> =
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm flex items-center justify-center space-x-2 transition-all shadow-lg shadow-amber-500/20 active:scale-[0.99] disabled:opacity-50"
+            className="w-full py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-sm flex items-center justify-center space-x-2 transition-all shadow-lg shadow-amber-500/20 active:scale-[0.99] disabled:opacity-50"
           >
             {loading ? (
               <span>Сохранение...</span>
             ) : (
               <>
                 <Check className="w-4 h-4" />
-                <span>Сохранить локацию заведения</span>
+                <span>{initialPartner ? 'СОХРАНИТЬ ЛОКАЦИЮ' : 'СОЗДАТЬ БИЗНЕС'}</span>
               </>
             )}
           </button>
