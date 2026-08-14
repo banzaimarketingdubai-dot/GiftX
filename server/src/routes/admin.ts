@@ -310,7 +310,11 @@ adminRouter.post('/partner', async (req: Request, res: Response) => {
       category,
       logoUrl,
       address,
+      description,
+      workingHours,
       activeStatus,
+      moderationStatus,
+      ownerTelegramId,
       basicThreshold,
       silverThreshold,
       goldThreshold,
@@ -322,6 +326,8 @@ adminRouter.post('/partner', async (req: Request, res: Response) => {
       googleMapsUrl
     } = req.body;
 
+    const parsedOwnerTgId = ownerTelegramId ? BigInt(String(ownerTelegramId)) : undefined;
+
     if (id) {
       const updated = await prisma.partner.update({
         where: { id },
@@ -330,7 +336,11 @@ adminRouter.post('/partner', async (req: Request, res: Response) => {
           ...(category && { category }),
           ...(logoUrl && { logoUrl }),
           ...(address && { address }),
+          ...(description !== undefined && { description }),
+          ...(workingHours !== undefined && { workingHours }),
           ...(activeStatus !== undefined && { activeStatus }),
+          ...(moderationStatus && { moderationStatus }),
+          ...(ownerTelegramId !== undefined && { ownerTelegramId: parsedOwnerTgId }),
           ...(basicThreshold !== undefined && { basicThreshold: parseFloat(basicThreshold) }),
           ...(silverThreshold !== undefined && { silverThreshold: parseFloat(silverThreshold) }),
           ...(goldThreshold !== undefined && { goldThreshold: parseFloat(goldThreshold) }),
@@ -355,8 +365,12 @@ adminRouter.post('/partner', async (req: Request, res: Response) => {
           name,
           category,
           address: finalAddress,
+          description: description || null,
+          workingHours: workingHours || null,
           logoUrl: logoUrl || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=200&q=80',
           activeStatus: activeStatus ?? true,
+          moderationStatus: moderationStatus || 'PENDING',
+          ownerTelegramId: parsedOwnerTgId,
           basicThreshold: basicThreshold ? parseFloat(basicThreshold) : 0,
           silverThreshold: silverThreshold ? parseFloat(silverThreshold) : 300000,
           goldThreshold: goldThreshold ? parseFloat(goldThreshold) : 600000,
@@ -375,14 +389,16 @@ adminRouter.post('/partner', async (req: Request, res: Response) => {
   }
 });
 
-// 3. Создание / Редактирование сотрудника и назначение ролей (WAITER, MANAGER, OWNER)
+// 3. Создание / Редактирование сотрудника и назначение ролей (WAITER, MANAGER, OWNER, SUPER_ADMIN)
 adminRouter.post('/staff', async (req: Request, res: Response) => {
   try {
-    const { id, partnerId, name, role } = req.body;
+    const { id, partnerId, name, role, telegramId } = req.body;
 
     if (!partnerId || !name) {
       return res.status(400).json({ success: false, error: 'Укажите partnerId и имя сотрудника' });
     }
+
+    const parsedTgId = telegramId ? BigInt(String(telegramId)) : undefined;
 
     if (id) {
       const updated = await prisma.staffMember.update({
@@ -390,18 +406,37 @@ adminRouter.post('/staff', async (req: Request, res: Response) => {
         data: {
           name,
           role: role || 'WAITER',
-          partnerId
+          partnerId,
+          ...(telegramId !== undefined && { telegramId: parsedTgId })
         }
       });
+
+      // Если роль OWNER — обновляем ownerTelegramId у заведения
+      if (role === 'OWNER' && parsedTgId) {
+        await prisma.partner.update({
+          where: { id: partnerId },
+          data: { ownerTelegramId: parsedTgId }
+        }).catch(() => {});
+      }
+
       return res.json({ success: true, staff: updated, message: 'Сотрудник успешно обновлен' });
     } else {
       const created = await prisma.staffMember.create({
         data: {
           partnerId,
           name,
-          role: role || 'WAITER'
+          role: role || 'WAITER',
+          telegramId: parsedTgId
         }
       });
+
+      if (role === 'OWNER' && parsedTgId) {
+        await prisma.partner.update({
+          where: { id: partnerId },
+          data: { ownerTelegramId: parsedTgId }
+        }).catch(() => {});
+      }
+
       return res.json({ success: true, staff: created, message: 'Сотрудник успешно добавлен' });
     }
   } catch (error: any) {
@@ -642,4 +677,149 @@ adminRouter.post('/partner/:id/moderate', async (req: Request, res: Response) =>
     return res.status(500).json({ success: false, error: error.message });
   }
 });
+
+// ==========================================
+// 10. SUPER ADMIN DATABASE MODELING API
+// ==========================================
+
+// Список всех таблиц и количества записей
+adminRouter.get('/db/tables', async (_req: Request, res: Response) => {
+  try {
+    const [
+      partnerCount,
+      staffCount,
+      offerCount,
+      userCount,
+      claimedCount,
+      tokenCount,
+      funnelUserCount,
+      funnelLogCount
+    ] = await Promise.all([
+      prisma.partner.count().catch(() => 0),
+      prisma.staffMember.count().catch(() => 0),
+      prisma.voucherOffer.count().catch(() => 0),
+      prisma.user.count().catch(() => 0),
+      prisma.claimedVoucher.count().catch(() => 0),
+      prisma.staffIssuanceToken.count().catch(() => 0),
+      prisma.funnelUser.count().catch(() => 0),
+      prisma.funnelMessageLog.count().catch(() => 0),
+    ]);
+
+    const tables = [
+      { name: 'Partner', label: '🏬 Заведения (Partners)', count: partnerCount, keyField: 'id' },
+      { name: 'StaffMember', label: '👥 Персонал (StaffMembers)', count: staffCount, keyField: 'id' },
+      { name: 'VoucherOffer', label: '🎁 Ваучеры (VoucherOffers)', count: offerCount, keyField: 'id' },
+      { name: 'User', label: '👤 Гости Telegram (Users)', count: userCount, keyField: 'id' },
+      { name: 'ClaimedVoucher', label: '🎟️ Выданные подарки (ClaimedVouchers)', count: claimedCount, keyField: 'id' },
+      { name: 'StaffIssuanceToken', label: '🔑 Токены генерации боксов (Tokens)', count: tokenCount, keyField: 'token' },
+      { name: 'FunnelUser', label: '🚀 Пользователи Воронки (FunnelUsers)', count: funnelUserCount, keyField: 'id' },
+      { name: 'FunnelMessageLog', label: '📜 Логи Рассылок (FunnelLogs)', count: funnelLogCount, keyField: 'id' },
+    ];
+
+    return res.json({ success: true, tables });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Запрос записей из выбранной таблицы БД
+adminRouter.get('/db/table/:tableName', async (req: Request, res: Response) => {
+  try {
+    const { tableName } = req.params;
+    const { search, limit = '50' } = req.query;
+    const maxLimit = Math.min(parseInt(String(limit)) || 50, 100);
+
+    let records: any[] = [];
+    const modelKey = (tableName.charAt(0).toLowerCase() + tableName.slice(1)) as keyof typeof prisma;
+
+    if (prisma[modelKey] && typeof (prisma[modelKey] as any).findMany === 'function') {
+      records = await (prisma[modelKey] as any).findMany({
+        take: maxLimit,
+        orderBy: { id: 'desc' }
+      }).catch(async () => {
+        // Fallback without orderBy id if model has token as primary key
+        return await (prisma[modelKey] as any).findMany({ take: maxLimit });
+      });
+    } else {
+      return res.status(400).json({ success: false, error: `Неизвестная модель БД: ${tableName}` });
+    }
+
+    if (search) {
+      const q = String(search).toLowerCase();
+      records = records.filter((rec) =>
+        JSON.stringify(rec).toLowerCase().includes(q)
+      );
+    }
+
+    return res.json({ success: true, tableName, total: records.length, records });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Создание или Обновление любого объекта таблицы в БД (DB Modeling)
+adminRouter.post('/db/table/:tableName/record', async (req: Request, res: Response) => {
+  try {
+    const { tableName } = req.params;
+    const recordData = req.body;
+    const modelKey = (tableName.charAt(0).toLowerCase() + tableName.slice(1)) as keyof typeof prisma;
+
+    if (!prisma[modelKey] || typeof (prisma[modelKey] as any).upsert !== 'function' && typeof (prisma[modelKey] as any).update !== 'function') {
+      return res.status(400).json({ success: false, error: `Неизвестная модель БД: ${tableName}` });
+    }
+
+    const primaryKey = tableName === 'StaffIssuanceToken' ? 'token' : 'id';
+    const idValue = recordData[primaryKey];
+
+    // Конвертация полей BigInt если имеются в recordData
+    const dataToSave = { ...recordData };
+    ['telegramId', 'ownerTelegramId'].forEach((field) => {
+      if (dataToSave[field] !== undefined && dataToSave[field] !== null) {
+        dataToSave[field] = BigInt(String(dataToSave[field]));
+      }
+    });
+
+    let savedRecord: any;
+    if (idValue) {
+      savedRecord = await (prisma[modelKey] as any).update({
+        where: { [primaryKey]: idValue },
+        data: dataToSave
+      }).catch(async () => {
+        return await (prisma[modelKey] as any).create({
+          data: dataToSave
+        });
+      });
+    } else {
+      savedRecord = await (prisma[modelKey] as any).create({
+        data: dataToSave
+      });
+    }
+
+    return res.json({ success: true, tableName, record: savedRecord, message: 'Запись в БД успешно сохранена' });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Удаление записи из таблицы БД
+adminRouter.delete('/db/table/:tableName/record/:id', async (req: Request, res: Response) => {
+  try {
+    const { tableName, id } = req.params;
+    const modelKey = (tableName.charAt(0).toLowerCase() + tableName.slice(1)) as keyof typeof prisma;
+
+    const primaryKey = tableName === 'StaffIssuanceToken' ? 'token' : 'id';
+
+    if (prisma[modelKey] && typeof (prisma[modelKey] as any).delete === 'function') {
+      await (prisma[modelKey] as any).delete({
+        where: { [primaryKey]: id }
+      });
+      return res.json({ success: true, message: `Запись ${id} удалена из ${tableName}` });
+    } else {
+      return res.status(400).json({ success: false, error: `Неизвестная модель БД: ${tableName}` });
+    }
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 

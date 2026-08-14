@@ -27,9 +27,10 @@ import { triggerHaptic, triggerNotificationHaptic } from '../telegram';
 
 import { DemoBoxOpeningModal } from './DemoBoxOpeningModal';
 import { PlatformAnalyticsScreen } from './PlatformAnalyticsScreen';
+import { SuperAdminDbScreen } from './SuperAdminDbScreen';
 
 export const AdminDashboardScreen: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'VENUES' | 'MODERATION' | 'STAFF' | 'APPLICATIONS' | 'OFFERS' | 'ANALYTICS'>('VENUES');
+  const [activeTab, setActiveTab] = useState<'VENUES' | 'MODERATION' | 'STAFF' | 'APPLICATIONS' | 'OFFERS' | 'ANALYTICS' | 'DATABASE'>('VENUES');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showDemoBoxModal, setShowDemoBoxModal] = useState(false);
@@ -312,10 +313,11 @@ export const AdminDashboardScreen: React.FC = () => {
         {[
           { id: 'VENUES', label: '🏢 Заведения' },
           { id: 'MODERATION', label: `⚖️ Модерация (${partners.filter((p) => p.moderationStatus === 'PENDING').length})` },
-          { id: 'STAFF', label: '👥 Персонал' },
+          { id: 'STAFF', label: '👥 Персонал & Собственники' },
           { id: 'APPLICATIONS', label: `📥 Заявки (${applications.filter((a) => a.status === 'PENDING').length})` },
           { id: 'OFFERS', label: '🎁 Ваучеры' },
           { id: 'ANALYTICS', label: '📊 Аналитика' },
+          { id: 'DATABASE', label: '🗄️ Моделирование БД' },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -821,6 +823,11 @@ export const AdminDashboardScreen: React.FC = () => {
         <PlatformAnalyticsScreen />
       )}
 
+      {/* ВКЛАДКА 5: МОДЕЛИРОВАНИЕ БАЗЫ ДАННЫХ */}
+      {activeTab === 'DATABASE' && (
+        <SuperAdminDbScreen />
+      )}
+
       {/* Модалка обучения перед созданием заведения */}
       {showBusinessOnboardingModal && (
         <BusinessOnboardingModal
@@ -888,16 +895,30 @@ export const AdminDashboardScreen: React.FC = () => {
 
               <div>
                 <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">
+                  Telegram ID (для привязки аккаунта)
+                </label>
+                <input
+                  type="text"
+                  value={(staffForm as any).telegramId || ''}
+                  onChange={(e) => setStaffForm({ ...staffForm, telegramId: e.target.value } as any)}
+                  placeholder="Пример: 99887766"
+                  className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-100 font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">
                   Роль и права доступа
                 </label>
                 <select
                   value={staffForm.role}
                   onChange={(e) => setStaffForm({ ...staffForm, role: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-100"
+                  className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-100 font-bold"
                 >
-                  <option value="WAITER">WAITER (Официант — вызов боксов)</option>
-                  <option value="MANAGER">MANAGER (Управляющий — гашение и отсчет)</option>
-                  <option value="OWNER">OWNER (Владелец — полный доступ)</option>
+                  <option value="WAITER">🍷 WAITER (Официант — вызов боксов)</option>
+                  <option value="MANAGER">📊 MANAGER (Управляющий — гашение и отсчет)</option>
+                  <option value="OWNER">👑 OWNER (Владелец заведения)</option>
+                  <option value="SUPER_ADMIN">⚡ SUPER_ADMIN (Администратор всей платформы)</option>
                 </select>
               </div>
 

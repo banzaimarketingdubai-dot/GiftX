@@ -33,6 +33,7 @@ enum StaffRole {
   WAITER
   MANAGER
   OWNER
+  SUPER_ADMIN
 }
 
 enum ModerationStatus {

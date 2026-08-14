@@ -10,6 +10,10 @@ import { FunnelScheduler } from './services/funnelScheduler.js';
 
 dotenv.config();
 
+(BigInt.prototype as any).toJSON = function () {
+  return this.toString();
+};
+
 export const app = express();
 
 app.use(cors({ origin: '*' }));

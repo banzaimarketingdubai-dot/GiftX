@@ -68,7 +68,7 @@ export interface StaffMember {
   partnerId: string;
   telegramId?: number;
   name: string;
-  role: 'WAITER' | 'MANAGER' | 'OWNER';
+  role: 'WAITER' | 'MANAGER' | 'OWNER' | 'SUPER_ADMIN';
   activeShiftsCount: number;
   boxesIssuedCount: number;
   boxesIssuedToday?: number;

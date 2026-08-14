@@ -74,11 +74,11 @@ export const ManageUserRoleModal: React.FC<ManageUserRoleModalProps> = ({
       };
       localStorage.setItem('giftx_demo_staff', JSON.stringify(demoStaff));
       onRoleChanged('WAITER', demoStaff);
-    } else if (newRole === 'MANAGER' || newRole === 'OWNER') {
+    } else if (newRole === 'MANAGER' || newRole === 'OWNER' || newRole === 'SUPER_ADMIN') {
       const demoStaff = {
         id: currentStaff?.id || 'demo-staff-2',
         partnerId: currentStaff?.partnerId || 'demo-partner-1',
-        name: displayName || 'Анна (Менеджер)',
+        name: displayName || (newRole === 'SUPER_ADMIN' ? 'Super Admin' : 'Анна (Менеджер)'),
         role: newRole,
         boxesIssuedCount: currentStaff?.boxesIssuedCount || 42,
         partner: currentStaff?.partner || {
@@ -268,6 +268,18 @@ export const ManageUserRoleModal: React.FC<ManageUserRoleModalProps> = ({
               >
                 <span>⚡ Администратор</span>
                 <span className="text-[9px] opacity-80 block mt-1">Все заведения сети</span>
+              </button>
+
+              <button
+                onClick={() => handleSelectRole('SUPER_ADMIN')}
+                className={`p-3 rounded-2xl border text-left font-bold transition-all flex flex-col justify-between ${
+                  selectedRole === 'SUPER_ADMIN'
+                    ? 'bg-cyan-500 text-slate-950 border-cyan-400 shadow-md shadow-cyan-500/20'
+                    : 'bg-slate-950 text-slate-300 border-slate-800 hover:border-slate-700'
+                }`}
+              >
+                <span>🗄️ Super Admin</span>
+                <span className="text-[9px] opacity-80 block mt-1">Моделирование всей БД</span>
               </button>
             </div>
 
