@@ -51,13 +51,17 @@ export const AdminDashboardScreen: React.FC = () => {
   const [appSearch, setAppSearch] = useState('');
   const [appStatusFilter, setAppStatusFilter] = useState<'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED'>('ALL');
 
+  // Состояние развернутых секций стаффа и подарков внутри карточки заведения
+  const [expandedVenueId, setExpandedVenueId] = useState<string | null>(null);
+  const [expandedVenueTab, setExpandedVenueTab] = useState<'STAFF' | 'GIFTS'>('STAFF');
+
   // Состояние модалок
   const [showPartnerModal, setShowPartnerModal] = useState(false);
   const [showBusinessOnboardingModal, setShowBusinessOnboardingModal] = useState(false);
   const [editingPartner, setEditingPartner] = useState<any | null>(null);
 
   const [showStaffModal, setShowStaffModal] = useState(false);
-  const [staffForm, setStaffForm] = useState({ id: '', partnerId: '', name: '', role: 'WAITER' });
+  const [staffForm, setStaffForm] = useState({ id: '', partnerId: '', name: '', role: 'WAITER', telegramId: '' });
 
   const [showOfferModal, setShowOfferModal] = useState(false);
   const [offerForm, setOfferForm] = useState({
@@ -357,74 +361,356 @@ export const AdminDashboardScreen: React.FC = () => {
           </div>
 
           <div className="space-y-3">
-            {partners.map((partner) => (
-              <div key={partner.id} className="glass-card p-4 rounded-2xl border border-slate-800 space-y-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center space-x-3">
-                    <img
-                      src={partner.logoUrl}
-                      alt={partner.name}
-                      className="w-12 h-12 rounded-xl object-cover border border-slate-700 shrink-0"
-                    />
-                    <div>
-                      <div className="flex items-center space-x-2">
-                        <span className="text-[9px] uppercase font-bold text-amber-400 px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20">
-                          {partner.category}
-                        </span>
-                        <span
-                          className={`text-[9px] font-bold px-2 py-0.5 rounded ${
-                            partner.activeStatus
-                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                              : 'bg-red-500/10 text-red-400 border border-red-500/20'
-                          }`}
-                        >
-                          {partner.activeStatus ? 'Активно' : 'Отключено'}
-                        </span>
+            {partners.map((partner) => {
+              const isExpanded = expandedVenueId === partner.id;
+              const staffMembers = partner.staffMembers || [];
+              const voucherOffers = partner.voucherOffers || [];
+
+              return (
+                <div key={partner.id} className="glass-card p-4 rounded-2xl border border-slate-800 space-y-3">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center space-x-3">
+                      <img
+                        src={partner.logoUrl}
+                        alt={partner.name}
+                        className="w-12 h-12 rounded-xl object-cover border border-slate-700 shrink-0"
+                      />
+                      <div>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-[9px] uppercase font-bold text-amber-400 px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20">
+                            {partner.category}
+                          </span>
+                          <span
+                            className={`text-[9px] font-bold px-2 py-0.5 rounded ${
+                              partner.activeStatus
+                                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                                : 'bg-red-500/10 text-red-400 border border-red-500/20'
+                            }`}
+                          >
+                            {partner.activeStatus ? 'Активно' : 'Отключено'}
+                          </span>
+                        </div>
+                        <h4 className="font-bold text-slate-100 text-sm mt-1">{partner.name}</h4>
+                        <p className="text-xs text-slate-400 line-clamp-1">{partner.address}</p>
                       </div>
-                      <h4 className="font-bold text-slate-100 text-sm mt-1">{partner.name}</h4>
-                      <p className="text-xs text-slate-400 line-clamp-1">{partner.address}</p>
+                    </div>
+
+                    <div className="flex items-center space-x-1">
+                      <button
+                        onClick={() => {
+                          triggerHaptic('light');
+                          setEditingPartner(partner);
+                          setShowPartnerModal(true);
+                        }}
+                        title="Редактировать заведение и пороги чеков"
+                        className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDeletePartner(partner.id, partner.name)}
+                        title="Удалить заведение"
+                        className="p-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
 
-                  <div className="flex items-center space-x-1">
+                  {/* Пороги выработки чеков */}
+                  <div className="pt-2 border-t border-slate-800/60 grid grid-cols-3 gap-1.5 text-[10px]">
+                    <div className="bg-purple-950/30 p-1.5 rounded-lg border border-purple-500/20 text-center">
+                      <span className="text-purple-300 font-bold block">BASIC</span>
+                      <span className="text-slate-400">до {(partner.silverThreshold / 1000).toFixed(0)}k</span>
+                    </div>
+                    <div className="bg-cyan-950/30 p-1.5 rounded-lg border border-cyan-500/20 text-center">
+                      <span className="text-cyan-300 font-bold block">SILVER</span>
+                      <span className="text-slate-400">{(partner.silverThreshold / 1000).toFixed(0)}k+</span>
+                    </div>
+                    <div className="bg-amber-950/30 p-1.5 rounded-lg border border-amber-500/20 text-center">
+                      <span className="text-amber-300 font-bold block">GOLD</span>
+                      <span className="text-slate-400">{(partner.goldThreshold / 1000).toFixed(0)}k+</span>
+                    </div>
+                  </div>
+
+                  {/* Интерактивные кнопки управления ролями стаффа и подарками заведения */}
+                  <div className="pt-2 border-t border-slate-800/60 flex items-center space-x-2">
                     <button
                       onClick={() => {
                         triggerHaptic('light');
-                        setEditingPartner(partner);
-                        setShowPartnerModal(true);
+                        if (isExpanded && expandedVenueTab === 'STAFF') {
+                          setExpandedVenueId(null);
+                        } else {
+                          setExpandedVenueId(partner.id);
+                          setExpandedVenueTab('STAFF');
+                        }
                       }}
-                      title="Редактировать заведение и пороги чеков"
-                      className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700"
+                      className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 transition-all ${
+                        isExpanded && expandedVenueTab === 'STAFF'
+                          ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/20'
+                          : 'bg-slate-900 hover:bg-slate-800 text-cyan-400 border border-cyan-500/30'
+                      }`}
                     >
-                      <Edit className="w-4 h-4" />
+                      <Users className="w-3.5 h-3.5" />
+                      <span>👥 Роли стафа ({staffMembers.length})</span>
                     </button>
-                    <button
-                      onClick={() => handleDeletePartner(partner.id, partner.name)}
-                      title="Удалить заведение"
-                      className="p-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
 
-                {/* Пороги выработки чеков */}
-                <div className="pt-2 border-t border-slate-800/60 grid grid-cols-3 gap-1.5 text-[10px]">
-                  <div className="bg-purple-950/30 p-1.5 rounded-lg border border-purple-500/20 text-center">
-                    <span className="text-purple-300 font-bold block">BASIC</span>
-                    <span className="text-slate-400">до {(partner.silverThreshold / 1000).toFixed(0)}k</span>
+                    <button
+                      onClick={() => {
+                        triggerHaptic('light');
+                        if (isExpanded && expandedVenueTab === 'GIFTS') {
+                          setExpandedVenueId(null);
+                        } else {
+                          setExpandedVenueId(partner.id);
+                          setExpandedVenueTab('GIFTS');
+                        }
+                      }}
+                      className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 transition-all ${
+                        isExpanded && expandedVenueTab === 'GIFTS'
+                          ? 'bg-purple-500 text-slate-950 shadow-md shadow-purple-500/20'
+                          : 'bg-slate-900 hover:bg-slate-800 text-purple-300 border border-purple-500/30'
+                      }`}
+                    >
+                      <Gift className="w-3.5 h-3.5" />
+                      <span>🎁 Подарки ({voucherOffers.length}/3)</span>
+                    </button>
                   </div>
-                  <div className="bg-cyan-950/30 p-1.5 rounded-lg border border-cyan-500/20 text-center">
-                    <span className="text-cyan-300 font-bold block">SILVER</span>
-                    <span className="text-slate-400">{(partner.silverThreshold / 1000).toFixed(0)}k+</span>
-                  </div>
-                  <div className="bg-amber-950/30 p-1.5 rounded-lg border border-amber-500/20 text-center">
-                    <span className="text-amber-300 font-bold block">GOLD</span>
-                    <span className="text-slate-400">{(partner.goldThreshold / 1000).toFixed(0)}k+</span>
-                  </div>
+
+                  {/* Встроенный блок управления стаффом и подарками для данного заведения */}
+                  {isExpanded && (
+                    <div className="mt-3 p-3.5 rounded-2xl bg-slate-950/90 border border-slate-800 space-y-3">
+                      {/* Переключатель подвкладок внутри заведения */}
+                      <div className="flex items-center justify-between pb-2 border-b border-slate-800/80">
+                        <div className="flex space-x-1">
+                          <button
+                            onClick={() => {
+                              triggerHaptic('light');
+                              setExpandedVenueTab('STAFF');
+                            }}
+                            className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all ${
+                              expandedVenueTab === 'STAFF'
+                                ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40'
+                                : 'text-slate-400 hover:text-slate-200'
+                            }`}
+                          >
+                            👥 Роли стафа ({staffMembers.length})
+                          </button>
+                          <button
+                            onClick={() => {
+                              triggerHaptic('light');
+                              setExpandedVenueTab('GIFTS');
+                            }}
+                            className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all ${
+                              expandedVenueTab === 'GIFTS'
+                                ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40'
+                                : 'text-slate-400 hover:text-slate-200'
+                            }`}
+                          >
+                            🎁 Подарки ({voucherOffers.length}/3)
+                          </button>
+                        </div>
+
+                        <button
+                          onClick={() => setExpandedVenueId(null)}
+                          className="text-slate-500 hover:text-slate-300 p-1"
+                          title="Свернуть"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      {/* СЕКЦИЯ 1: Персонал заведения */}
+                      {expandedVenueTab === 'STAFF' && (
+                        <div className="space-y-2.5">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                              Персонал заведения «{partner.name}»
+                            </span>
+                            <button
+                              onClick={() => {
+                                triggerHaptic('light');
+                                setStaffForm({
+                                  id: '',
+                                  partnerId: partner.id,
+                                  name: '',
+                                  role: 'WAITER',
+                                  telegramId: '',
+                                });
+                                setShowStaffModal(true);
+                              }}
+                              className="py-1 px-2.5 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 font-extrabold text-[11px] border border-cyan-500/40 flex items-center space-x-1 transition-all"
+                            >
+                              <Plus className="w-3.5 h-3.5" />
+                              <span>+ Назначить роль</span>
+                            </button>
+                          </div>
+
+                          {staffMembers.length === 0 ? (
+                            <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 text-center text-slate-500 text-xs">
+                              Сотрудники в данное заведение пока не добавлены
+                            </div>
+                          ) : (
+                            <div className="space-y-2">
+                              {staffMembers.map((staff: any) => (
+                                <div
+                                  key={staff.id}
+                                  className="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/80 border border-slate-800/90 text-xs"
+                                >
+                                  <div>
+                                    <div className="flex items-center space-x-2">
+                                      <span className="font-bold text-slate-100">{staff.name}</span>
+                                      <span
+                                        className={`px-2 py-0.5 rounded text-[9px] font-extrabold ${
+                                          staff.role === 'OWNER'
+                                            ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                                            : staff.role === 'MANAGER'
+                                            ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+                                            : 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                                        }`}
+                                      >
+                                        {staff.role}
+                                      </span>
+                                    </div>
+                                    <span className="text-[10px] text-slate-500 mt-0.5 block">
+                                      Выдано боксов: {staff.boxesIssuedCount || 0} {staff.telegramId ? `| TG: ${staff.telegramId}` : ''}
+                                    </span>
+                                  </div>
+
+                                  <div className="flex items-center space-x-1">
+                                    <button
+                                      onClick={() => {
+                                        triggerHaptic('light');
+                                        setStaffForm({
+                                          id: staff.id,
+                                          partnerId: partner.id,
+                                          name: staff.name,
+                                          role: staff.role,
+                                          telegramId: staff.telegramId ? String(staff.telegramId) : '',
+                                        });
+                                        setShowStaffModal(true);
+                                      }}
+                                      className="p-1.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white border border-slate-700"
+                                      title="Редактировать роль"
+                                    >
+                                      <Edit className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button
+                                      onClick={() => handleDeleteStaff(staff.id)}
+                                      className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/30"
+                                      title="Удалить сотрудника"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* СЕКЦИЯ 2: Подарки заведения */}
+                      {expandedVenueTab === 'GIFTS' && (
+                        <div className="space-y-2.5">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                              Подарки заведения «{partner.name}»
+                            </span>
+                            <button
+                              onClick={() => {
+                                triggerHaptic('light');
+                                setOfferForm({
+                                  id: '',
+                                  partnerId: partner.id,
+                                  title: '',
+                                  description: '',
+                                  category: 'TRAFFIC_MAGNET',
+                                  targetBoxLevel: 'GOLD',
+                                  discountValue: '',
+                                  validityHours: 72,
+                                  totalLimit: 1000,
+                                });
+                                setShowOfferModal(true);
+                              }}
+                              className="py-1 px-2.5 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 font-extrabold text-[11px] border border-purple-500/40 flex items-center space-x-1 transition-all"
+                            >
+                              <Plus className="w-3.5 h-3.5" />
+                              <span>+ Добавить подарок</span>
+                            </button>
+                          </div>
+
+                          {voucherOffers.length === 0 ? (
+                            <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 text-center text-slate-500 text-xs">
+                              Подарки для данного заведения еще не созданы
+                            </div>
+                          ) : (
+                            <div className="space-y-2">
+                              {voucherOffers.map((offer: any) => (
+                                <div
+                                  key={offer.id}
+                                  className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 flex items-start justify-between gap-2"
+                                >
+                                  <div className="flex items-start space-x-2.5 min-w-0">
+                                    <img
+                                      src={offer.imageUrl || 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=200&q=80'}
+                                      alt={offer.title}
+                                      className="w-10 h-10 rounded-lg object-cover border border-slate-800 shrink-0"
+                                    />
+                                    <div className="min-w-0">
+                                      <div className="flex items-center space-x-1.5 flex-wrap gap-y-0.5">
+                                        <span className="text-[9px] font-extrabold uppercase text-purple-400 px-1.5 py-0.5 rounded bg-purple-500/10 border border-purple-500/20">
+                                          {offer.category}
+                                        </span>
+                                        <span className="text-xs font-black text-emerald-400">{offer.discountValue}</span>
+                                      </div>
+                                      <h5 className="font-bold text-slate-100 text-xs mt-0.5 truncate">{offer.title}</h5>
+                                      <span className="text-[10px] text-slate-500 block mt-0.5">
+                                        ⏳ {offer.validityHours}ч | Выдано: {offer.claimedCount || 0}/{offer.totalLimit}
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-center space-x-1 shrink-0">
+                                    <button
+                                      onClick={() => {
+                                        triggerHaptic('light');
+                                        setOfferForm({
+                                          id: offer.id,
+                                          partnerId: partner.id,
+                                          title: offer.title,
+                                          description: offer.description || '',
+                                          category: offer.category,
+                                          targetBoxLevel: offer.targetBoxLevel || 'GOLD',
+                                          discountValue: offer.discountValue,
+                                          validityHours: offer.validityHours,
+                                          totalLimit: offer.totalLimit,
+                                        });
+                                        setShowOfferModal(true);
+                                      }}
+                                      className="p-1.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white border border-slate-700"
+                                      title="Редактировать подарок"
+                                    >
+                                      <Edit className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button
+                                      onClick={() => handleDeleteOffer(offer.id)}
+                                      className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/30"
+                                      title="Удалить подарок"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
@@ -514,7 +800,7 @@ export const AdminDashboardScreen: React.FC = () => {
             <button
               onClick={() => {
                 triggerHaptic('light');
-                setStaffForm({ id: '', partnerId: partners[0]?.id || '', name: '', role: 'WAITER' });
+                setStaffForm({ id: '', partnerId: partners[0]?.id || '', name: '', role: 'WAITER', telegramId: '' });
                 setShowStaffModal(true);
               }}
               className="py-1.5 px-3 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-bold text-xs flex items-center space-x-1 hover:bg-cyan-500/20 transition-all"
@@ -569,6 +855,7 @@ export const AdminDashboardScreen: React.FC = () => {
                               partnerId: partner.id,
                               name: staff.name,
                               role: staff.role,
+                              telegramId: staff.telegramId ? String(staff.telegramId) : '',
                             });
                             setShowStaffModal(true);
                           }}
