@@ -59,6 +59,10 @@ export const PartnerRegistrationModal: React.FC<PartnerRegistrationModalProps> =
   const [googleMapsUrl, setGoogleMapsUrl] = useState(initialPartner?.googleMapsUrl || '');
   const [googleRating, setGoogleRating] = useState<number | ''>(initialPartner?.googleRating ?? '');
   const [googleReviewsCount, setGoogleReviewsCount] = useState<number | ''>(initialPartner?.googleReviewsCount ?? '');
+  const [basicThreshold, setBasicThreshold] = useState<number>(initialPartner?.basicThreshold ?? 0);
+  const [silverThreshold, setSilverThreshold] = useState<number>(initialPartner?.silverThreshold ?? 300000);
+  const [goldThreshold, setGoldThreshold] = useState<number>(initialPartner?.goldThreshold ?? 600000);
+  const [platinumThreshold, setPlatinumThreshold] = useState<number>(initialPartner?.platinumThreshold ?? 1000000);
   const [loading, setLoading] = useState(false);
   const [isParsingUrl, setIsParsingUrl] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -287,6 +291,10 @@ export const PartnerRegistrationModal: React.FC<PartnerRegistrationModalProps> =
           googleMapsUrl,
           googleRating: googleRating !== '' ? Number(googleRating) : undefined,
           googleReviewsCount: googleReviewsCount !== '' ? Number(googleReviewsCount) : undefined,
+          basicThreshold,
+          silverThreshold,
+          goldThreshold,
+          platinumThreshold,
           telegramId: tgUser?.id,
           role
         }),
@@ -715,6 +723,139 @@ export const PartnerRegistrationModal: React.FC<PartnerRegistrationModalProps> =
                 onChange={(e) => setGoogleReviewsCount(e.target.value === '' ? '' : parseInt(e.target.value))}
                 className="w-full py-2 px-3 rounded-xl bg-slate-950 border border-slate-800 text-slate-100 text-xs focus:border-amber-500 outline-none font-mono"
               />
+            </div>
+          </div>
+
+          {/* 🎁 Условия выдачи категорий подарков (Пороги чека заведения) */}
+          <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-500/10 via-slate-950 to-slate-950 border border-amber-500/30 space-y-3 shadow-lg">
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 font-bold text-sm">
+                🎁
+              </div>
+              <div>
+                <h3 className="text-xs font-black text-slate-100 uppercase tracking-wider">
+                  Пороги чека для уровней подарков
+                </h3>
+                <p className="text-[10px] text-slate-400">
+                  Укажите, от какой суммы чека официанты этого заведения выдают Серебряный, Золотой и Платиновый боксы
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-3 pt-1">
+              {/* Silver threshold */}
+              <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-700/60 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-extrabold text-slate-200 flex items-center space-x-1.5">
+                    <span>🥈 Серебряный бокс (Silver)</span>
+                  </label>
+                  <span className="text-[10px] font-mono font-bold text-slate-300 bg-slate-800 px-2 py-0.5 rounded">
+                    от {(silverThreshold / 1000).toFixed(0)}k VND
+                  </span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="number"
+                    step="50000"
+                    min="0"
+                    value={silverThreshold}
+                    onChange={(e) => setSilverThreshold(parseFloat(e.target.value) || 0)}
+                    className="flex-1 py-2 px-3 rounded-xl bg-slate-950 border border-slate-800 text-slate-100 text-xs font-mono font-bold outline-none focus:border-amber-500"
+                    placeholder="300000"
+                  />
+                  <span className="text-xs font-bold text-slate-400 shrink-0">VND</span>
+                </div>
+                <div className="flex space-x-1 overflow-x-auto pt-0.5">
+                  {[200000, 300000, 400000, 500000].map((val) => (
+                    <button
+                      key={val}
+                      type="button"
+                      onClick={() => { triggerHaptic('light'); setSilverThreshold(val); }}
+                      className={`px-2 py-0.5 rounded-lg text-[9px] font-bold border transition-all ${
+                        silverThreshold === val ? 'bg-slate-200 text-slate-950 border-white' : 'bg-slate-950 border-slate-800 text-slate-400'
+                      }`}
+                    >
+                      {(val / 1000).toFixed(0)}k
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Gold threshold */}
+              <div className="p-3 rounded-xl bg-slate-900/90 border border-amber-500/40 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-extrabold text-amber-400 flex items-center space-x-1.5">
+                    <span>🥇 Золотой бокс (Gold)</span>
+                  </label>
+                  <span className="text-[10px] font-mono font-bold text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                    от {(goldThreshold / 1000).toFixed(0)}k VND
+                  </span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="number"
+                    step="50000"
+                    min="0"
+                    value={goldThreshold}
+                    onChange={(e) => setGoldThreshold(parseFloat(e.target.value) || 0)}
+                    className="flex-1 py-2 px-3 rounded-xl bg-slate-950 border border-slate-800 text-slate-100 text-xs font-mono font-bold outline-none focus:border-amber-500"
+                    placeholder="600000"
+                  />
+                  <span className="text-xs font-bold text-slate-400 shrink-0">VND</span>
+                </div>
+                <div className="flex space-x-1 overflow-x-auto pt-0.5">
+                  {[500000, 600000, 700000, 800000, 1000000].map((val) => (
+                    <button
+                      key={val}
+                      type="button"
+                      onClick={() => { triggerHaptic('light'); setGoldThreshold(val); }}
+                      className={`px-2 py-0.5 rounded-lg text-[9px] font-bold border transition-all ${
+                        goldThreshold === val ? 'bg-amber-500 text-slate-950 border-amber-400' : 'bg-slate-950 border-slate-800 text-slate-400'
+                      }`}
+                    >
+                      {val >= 1000000 ? `${(val / 1000000).toFixed(1)}M` : `${(val / 1000).toFixed(0)}k`}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Platinum threshold */}
+              <div className="p-3 rounded-xl bg-slate-900/90 border border-purple-500/40 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-extrabold text-purple-300 flex items-center space-x-1.5">
+                    <span>💎 Платиновый VIP бокс (Platinum)</span>
+                  </label>
+                  <span className="text-[10px] font-mono font-bold text-purple-300 bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20">
+                    от {(platinumThreshold / 1000000).toFixed(1)}M VND
+                  </span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="number"
+                    step="100000"
+                    min="0"
+                    value={platinumThreshold}
+                    onChange={(e) => setPlatinumThreshold(parseFloat(e.target.value) || 0)}
+                    className="flex-1 py-2 px-3 rounded-xl bg-slate-950 border border-slate-800 text-slate-100 text-xs font-mono font-bold outline-none focus:border-amber-500"
+                    placeholder="1000000"
+                  />
+                  <span className="text-xs font-bold text-slate-400 shrink-0">VND</span>
+                </div>
+                <div className="flex space-x-1 overflow-x-auto pt-0.5">
+                  {[1000000, 1200000, 1500000, 2000000].map((val) => (
+                    <button
+                      key={val}
+                      type="button"
+                      onClick={() => { triggerHaptic('light'); setPlatinumThreshold(val); }}
+                      className={`px-2 py-0.5 rounded-lg text-[9px] font-bold border transition-all ${
+                        platinumThreshold === val ? 'bg-purple-500 text-slate-950 border-purple-400' : 'bg-slate-950 border-slate-800 text-slate-400'
+                      }`}
+                    >
+                      {(val / 1000000).toFixed(1)}M
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
 

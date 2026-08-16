@@ -1,6 +1,7 @@
 import { prisma } from '../db.js';
 import { masterFunnelPlan } from './funnelContentPlan.js';
 import { AIContentEngine } from './aiContentEngine.js';
+import { notifyAdmins } from './adminNotifier.js';
 
 export interface InlineButton {
   text: string;
@@ -209,7 +210,7 @@ export class TelegramFunnelBot {
         reply_markup: {
           keyboard: [
             [{ text: '🏢 БИЗНЕС' }, { text: '👥 Сотрудники' }],
-            [{ text: '🎁 ДЕМО (Открытие бокса)' }, { text: '📱 Mini App' }],
+            [{ text: '🎁 ДЕМО (Открытие бокса)', web_app: { url: 'https://bot-lab-21910.web.app/hybrid-v2?id=demo' } }, { text: '📱 Mini App' }],
             [{ text: 'ℹ️ О GiftX' }]
           ],
           resize_keyboard: true,
@@ -231,16 +232,16 @@ export class TelegramFunnelBot {
    * Deliver Demo Box opening message with WebApp button
    */
   public async sendDemoBoxMessage(telegramId: bigint | number | string): Promise<void> {
-    const appUrl = process.env.CLIENT_URL || 'https://gift-x.vercel.app';
+    const hybridDemoUrl = 'https://bot-lab-21910.web.app/hybrid-v2?id=demo';
 
     const text =
-      `🎁 **ДЕМО-РАСПАКОВКА БОКСА GIFTX**\n\n` +
-      `Интерактивный 3D-экран открытия сюрприз-бокса для презентации владельцам заведений, администраторам и клиентам.\n\n` +
-      `👇 Нажмите кнопку ниже, чтобы запустить демо-открытие бокса:`;
+      `🎁 **ДЕМО-РАСПАКОВКА БОКСА REVOO & GIFTX**\n\n` +
+      `Интерактивный экран презентации для владельцев заведений, администраторов и клиентов.\n\n` +
+      `👇 Нажмите кнопку ниже, чтобы запустить демо:`;
 
     const inlineButtons: InlineButton[][] = [
       [
-        { text: '🎁 Открыть ДЕМО-Бокс', url: `${appUrl}?page=demo-box` }
+        { text: '🎁 Открыть ДЕМО (Revoo & GiftX)', url: hybridDemoUrl }
       ]
     ];
 
@@ -618,6 +619,14 @@ export class TelegramFunnelBot {
     );
 
     await this.deliverStaffInviteLinks(telegramId, partner.id, partner.name);
+
+    notifyAdmins({
+      title: 'Новое заведение создано через Telegram Bot',
+      venueName: partner.name,
+      details: `ID: ${partner.id}\nАдрес: ${partner.address}\nСоздатель: ${firstName} (ID: ${telegramId})`,
+      source: 'Telegram Bot',
+      author: `${firstName} (ID: ${telegramId})`
+    }).catch(() => {});
 
     // Send Moderation Notification to GiftX Admins
     await this.sendAdminModerationNotification(partner, firstName);

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Wallet, Clock, MapPin, Gift, CheckCircle, Sparkles, Navigation, ChevronRight, ArrowLeft, Star, ExternalLink, Building2 } from 'lucide-react';
+import { Wallet, Clock, MapPin, Gift, CheckCircle, Sparkles, Navigation, ChevronRight, ArrowLeft, Star, ExternalLink, Building2, Link, Copy, Check } from 'lucide-react';
 import { ClaimedVoucher } from '../types';
 import { VoucherRedeemModal } from './VoucherRedeemModal';
-import { triggerHaptic, getTelegramUserData } from '../telegram';
+import { triggerHaptic, triggerNotificationHaptic, getTelegramUserData } from '../telegram';
 import { useAppStore } from '../store/useAppStore';
 import { getVenueImage, getVoucherImage } from '../utils/stockImages';
 
@@ -19,6 +19,7 @@ export const WalletScreen: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'ACTIVE' | 'ARCHIVE'>('ACTIVE');
   const [selectedVenueId, setSelectedVenueId] = useState<string | null>(null);
   const [selectedVoucher, setSelectedVoucher] = useState<ClaimedVoucher | null>(null);
+  const [copiedVenueId, setCopiedVenueId] = useState<string | null>(null);
 
   const fetchWallet = async () => {
     try {
@@ -220,18 +221,48 @@ export const WalletScreen: React.FC = () => {
             </div>
 
             <div className="p-4 pt-0 space-y-3">
-              {/* Кнопка Построить Маршрут */}
-              <button
-                onClick={() => {
-                  triggerHaptic('medium');
-                  setSelectedMapPartner(currentVenueGroup.partner);
-                  setRole('MAP');
-                }}
-                className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold text-xs flex items-center justify-center space-x-2 shadow-lg shadow-blue-500/20 transition-all active:scale-95"
-              >
-                <Navigation className="w-4 h-4 text-white" />
-                <span>🧭 Построить маршрут на карте</span>
-              </button>
+              {/* Кнопки Маршрута и Прямой ссылки на карточку заведения */}
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => {
+                    triggerHaptic('medium');
+                    setSelectedMapPartner(currentVenueGroup.partner);
+                    setRole('MAP');
+                  }}
+                  className="py-2.5 px-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold text-xs flex items-center justify-center space-x-1.5 shadow-lg shadow-blue-500/20 transition-all active:scale-95"
+                >
+                  <Navigation className="w-4 h-4 text-white" />
+                  <span>🧭 Маршрут</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    triggerHaptic('light');
+                    triggerNotificationHaptic('success');
+                    const origin = typeof window !== 'undefined' && window.location?.origin
+                      ? window.location.origin
+                      : 'https://gift-x.vercel.app';
+                    const venueId = currentVenueGroup.partner.id || currentVenueGroup.partnerId;
+                    const url = `${origin}/?venue=${venueId}`;
+                    navigator.clipboard.writeText(url);
+                    setCopiedVenueId(currentVenueGroup.partnerId);
+                    setTimeout(() => setCopiedVenueId(null), 2500);
+                  }}
+                  className="py-2.5 px-3 rounded-2xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-extrabold text-xs flex items-center justify-center space-x-1.5 transition-all active:scale-95 shadow-md"
+                >
+                  {copiedVenueId === currentVenueGroup.partnerId ? (
+                    <>
+                      <Check className="w-4 h-4 text-emerald-400 animate-pulse" />
+                      <span className="text-emerald-400">Скопировано!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Link className="w-4 h-4 text-amber-400" />
+                      <span>Прямая ссылка</span>
+                    </>
+                  )}
+                </button>
+              </div>
 
               <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
                 <span>Доступных подарков:</span>

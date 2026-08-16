@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MapPin, Star, ExternalLink, MessageSquare, Compass, Search, ChevronRight, Gift, Navigation, PlusCircle, CheckCircle, ShieldCheck } from 'lucide-react';
+import { MapPin, Star, ExternalLink, MessageSquare, Compass, Search, ChevronRight, Gift, Navigation, PlusCircle, CheckCircle, ShieldCheck, Link, Copy, Check, Share2 } from 'lucide-react';
 import L from 'leaflet';
 import { Partner, ClaimedVoucher } from '../types';
 import { GoogleReviewsModal } from './GoogleReviewsModal';
 import { PartnerRegistrationModal } from './PartnerRegistrationModal';
 import { VenueGuestModal } from './VenueGuestModal';
-import { triggerHaptic, getTelegramUserData } from '../telegram';
+import { triggerHaptic, triggerNotificationHaptic, getTelegramUserData } from '../telegram';
 import { useAppStore } from '../store/useAppStore';
 
 export const PartnerMapScreen: React.FC = () => {
@@ -20,6 +20,20 @@ export const PartnerMapScreen: React.FC = () => {
   const [showReviewsModal, setShowReviewsModal] = useState(false);
   const [showRegistrationModal, setShowRegistrationModal] = useState(false);
   const [showVenueModal, setShowVenueModal] = useState(false);
+  const [mapCopiedVenueId, setMapCopiedVenueId] = useState<string | null>(null);
+
+  const handleCopyMapVenueLink = (partner: Partner, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    triggerHaptic('light');
+    triggerNotificationHaptic('success');
+    const origin = typeof window !== 'undefined' && window.location?.origin
+      ? window.location.origin
+      : 'https://gift-x.vercel.app';
+    const url = `${origin}/?venue=${partner.id}`;
+    navigator.clipboard.writeText(url);
+    setMapCopiedVenueId(partner.id);
+    setTimeout(() => setMapCopiedVenueId(null), 2500);
+  };
 
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const leafletMapRef = useRef<L.Map | null>(null);
@@ -434,12 +448,32 @@ export const PartnerMapScreen: React.FC = () => {
                 </div>
               </div>
 
-              <button
-                onClick={() => setSelectedPartner(null)}
-                className="text-slate-500 hover:text-slate-300 p-1"
-              >
-                ✕
-              </button>
+              <div className="flex items-center space-x-1.5 shrink-0">
+                <button
+                  onClick={() => handleCopyMapVenueLink(selectedPartner)}
+                  title="Скопировать прямую ссылку на карточку заведения (Web App)"
+                  className="p-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-400 hover:text-amber-300 transition-all flex items-center space-x-1 shadow-sm"
+                >
+                  {mapCopiedVenueId === selectedPartner.id ? (
+                    <>
+                      <Check className="w-4 h-4 text-emerald-400 animate-pulse" />
+                      <span className="text-[10px] font-black text-emerald-400">Скопировано</span>
+                    </>
+                  ) : (
+                    <>
+                      <Link className="w-4 h-4 text-amber-400" />
+                      <span className="text-[10px] font-black text-amber-300">URL</span>
+                    </>
+                  )}
+                </button>
+
+                <button
+                  onClick={() => setSelectedPartner(null)}
+                  className="text-slate-500 hover:text-slate-300 p-1.5 rounded-xl hover:bg-slate-800 transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
             </div>
 
             {/* Рейтинг Google Maps и кнопка отзывов */}

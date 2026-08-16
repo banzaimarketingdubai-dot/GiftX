@@ -155,7 +155,12 @@ export const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 relative pb-16">
       {/* Верхний брендовый хэдер */}
-      <div className="sticky top-0 z-40 bg-slate-950/90 backdrop-blur-xl border-b border-slate-800/80 px-4 py-2.5 flex items-center justify-between max-w-md mx-auto">
+      <div 
+        className="sticky top-0 z-40 bg-slate-950/95 backdrop-blur-xl border-b border-slate-800/80 px-4 pb-2.5 flex items-center justify-between max-w-md mx-auto transition-all"
+        style={{
+          paddingTop: 'max(env(safe-area-inset-top, 0px), var(--tg-safe-area-inset-top, 0px), var(--tg-content-safe-area-inset-top, 0px), 52px)'
+        }}
+      >
         <div className="flex items-center space-x-2 shrink-0">
           <button
             onClick={() => {
@@ -363,7 +368,12 @@ export const App: React.FC = () => {
       )}
 
       {/* Нижняя навигация */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 p-2 bg-slate-950/90 backdrop-blur-xl border-t border-slate-800 flex justify-center space-x-2 max-w-md mx-auto">
+      <div 
+        className="fixed bottom-0 left-0 right-0 z-40 px-2 pt-2 bg-slate-950/90 backdrop-blur-xl border-t border-slate-800 flex justify-center space-x-2 max-w-md mx-auto"
+        style={{
+          paddingBottom: 'max(env(safe-area-inset-bottom, 0px), var(--tg-safe-area-inset-bottom, 0px), 10px)'
+        }}
+      >
         <button
           onClick={() => {
             triggerHaptic('light');

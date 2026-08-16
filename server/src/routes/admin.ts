@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { prisma } from '../db.js';
 import { DEMO_APPLICATIONS } from './staff.js';
+import { notifyAdmins } from '../services/adminNotifier.js';
 
 export const adminRouter = Router();
 
@@ -352,6 +353,12 @@ adminRouter.post('/partner', async (req: Request, res: Response) => {
           ...(googleMapsUrl && { googleMapsUrl })
         }
       });
+      notifyAdmins({
+        title: 'Обновлены данные заведения',
+        venueName: updated.name,
+        details: `ID: ${updated.id}\nКатегория: ${updated.category}\nАдрес: ${updated.address}\nАктивно: ${updated.activeStatus ? 'Да' : 'Нет'}`,
+        source: (req.headers['x-client-source'] as any) || 'Revoo UI'
+      }).catch(() => {});
       return res.json({ success: true, partner: updated, message: 'Заведение успешно обновлено' });
     } else {
       if (!name || !category) {
@@ -382,6 +389,14 @@ adminRouter.post('/partner', async (req: Request, res: Response) => {
           googleMapsUrl: googleMapsUrl || `https://maps.google.com/?q=${encodeURIComponent(name + ' ' + finalAddress)}`
         }
       });
+
+      notifyAdmins({
+        title: 'Создано новое заведение',
+        venueName: created.name,
+        details: `ID: ${created.id}\nКатегория: ${created.category}\nАдрес: ${created.address}\nСтатус модерации: ${created.moderationStatus}`,
+        source: (req.headers['x-client-source'] as any) || 'Revoo UI'
+      }).catch(() => {});
+
       return res.json({ success: true, partner: created, message: 'Заведение успешно создано' });
     }
   } catch (error: any) {
@@ -419,6 +434,12 @@ adminRouter.post('/staff', async (req: Request, res: Response) => {
         }).catch(() => {});
       }
 
+      notifyAdmins({
+        title: 'Изменение роли персонала',
+        details: `Сотрудник: ${updated.name}\nНовая роль: ${updated.role}\nPartner ID: ${updated.partnerId}\nTelegram ID: ${updated.telegramId || 'не привязан'}`,
+        source: (req.headers['x-client-source'] as any) || 'Revoo UI'
+      }).catch(() => {});
+
       return res.json({ success: true, staff: updated, message: 'Сотрудник успешно обновлен' });
     } else {
       const created = await prisma.staffMember.create({
@@ -437,6 +458,12 @@ adminRouter.post('/staff', async (req: Request, res: Response) => {
         }).catch(() => {});
       }
 
+      notifyAdmins({
+        title: 'Добавлен новый сотрудник',
+        details: `Сотрудник: ${created.name}\nРоль: ${created.role}\nPartner ID: ${created.partnerId}\nTelegram ID: ${created.telegramId || 'не привязан'}`,
+        source: (req.headers['x-client-source'] as any) || 'Revoo UI'
+      }).catch(() => {});
+
       return res.json({ success: true, staff: created, message: 'Сотрудник успешно добавлен' });
     }
   } catch (error: any) {
@@ -448,7 +475,15 @@ adminRouter.post('/staff', async (req: Request, res: Response) => {
 adminRouter.delete('/staff/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+    const staff = await prisma.staffMember.findUnique({ where: { id } }).catch(() => null);
     await prisma.staffMember.delete({ where: { id } });
+
+    notifyAdmins({
+      title: 'Удален сотрудник',
+      details: `Имя: ${staff?.name || 'Неизвестно'}\nРоль: ${staff?.role || '—'}\nPartner ID: ${staff?.partnerId || '—'}`,
+      source: (req.headers['x-client-source'] as any) || 'Revoo UI'
+    }).catch(() => {});
+
     return res.json({ success: true, message: 'Сотрудник удален' });
   } catch (error: any) {
     return res.status(500).json({ success: false, error: error.message });
@@ -470,9 +505,13 @@ adminRouter.post('/offer', async (req: Request, res: Response) => {
       totalLimit
     } = req.body;
 
-    if (!partnerId || !title || !category || !discountValue) {
-      return res.status(400).json({ success: false, error: 'Обязательные поля: partnerId, title, category, discountValue' });
+    const finalDiscount = discountValue || 'ПОДАРОК';
+
+    if (!partnerId || !title || !category) {
+      return res.status(400).json({ success: false, error: 'Обязательные поля: partnerId, title, category' });
     }
+
+    const partner = await prisma.partner.findUnique({ where: { id: partnerId } }).catch(() => null);
 
     if (id) {
       const updated = await prisma.voucherOffer.update({
@@ -481,12 +520,20 @@ adminRouter.post('/offer', async (req: Request, res: Response) => {
           title,
           description: description || '',
           category,
-          discountValue,
+          discountValue: finalDiscount,
           imageUrl: imageUrl || 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=500&q=80',
           validityHours: validityHours ? parseInt(validityHours) : 72,
           totalLimit: totalLimit ? parseInt(totalLimit) : 1000
         }
       });
+
+      notifyAdmins({
+        title: 'Обновлен ваучер GiftX',
+        venueName: partner?.name || partnerId,
+        details: `Название: ${updated.title}\nСкидка: ${updated.discountValue}\nКатегория: ${updated.category}\nЛимит: ${updated.totalLimit}`,
+        source: 'GiftX UI'
+      }).catch(() => {});
+
       return res.json({ success: true, offer: updated, message: 'Ваучер успешно обновлен' });
     } else {
       // Проверка лимита: максимум 3 вида подарков на заведение
@@ -507,12 +554,20 @@ adminRouter.post('/offer', async (req: Request, res: Response) => {
           title,
           description: description || '',
           category,
-          discountValue,
+          discountValue: finalDiscount,
           imageUrl: imageUrl || 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=500&q=80',
           validityHours: validityHours ? parseInt(validityHours) : 72,
           totalLimit: totalLimit ? parseInt(totalLimit) : 1000
         }
       });
+
+      notifyAdmins({
+        title: 'Создан новый ваучер GiftX',
+        venueName: partner?.name || partnerId,
+        details: `Название: ${created.title}\nСкидка: ${created.discountValue}\nКатегория: ${created.category}\nЛимит: ${created.totalLimit}`,
+        source: 'GiftX UI'
+      }).catch(() => {});
+
       return res.json({ success: true, offer: created, message: 'Ваучер успешно создан' });
     }
   } catch (error: any) {
@@ -524,7 +579,16 @@ adminRouter.post('/offer', async (req: Request, res: Response) => {
 adminRouter.delete('/offer/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+    const offer = await prisma.voucherOffer.findUnique({ where: { id }, include: { partner: true } }).catch(() => null);
     await prisma.voucherOffer.delete({ where: { id } });
+
+    notifyAdmins({
+      title: 'Удален ваучер GiftX',
+      venueName: offer?.partner?.name || offer?.partnerId,
+      details: `Название: ${offer?.title || id}\nСкидка: ${offer?.discountValue || '—'}`,
+      source: 'GiftX UI'
+    }).catch(() => {});
+
     return res.json({ success: true, message: 'Ваучер удален' });
   } catch (error: any) {
     return res.status(500).json({ success: false, error: error.message });
@@ -625,7 +689,16 @@ adminRouter.post('/applications/:id/reject', async (req: Request, res: Response)
 adminRouter.delete('/partner/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+    const partner = await prisma.partner.findUnique({ where: { id } }).catch(() => null);
     await prisma.partner.delete({ where: { id } });
+
+    notifyAdmins({
+      title: 'Удалено заведение',
+      venueName: partner?.name || id,
+      details: `ID: ${id}\nКатегория: ${partner?.category || '—'}\nАдрес: ${partner?.address || '—'}`,
+      source: (req.headers['x-client-source'] as any) || 'Revoo UI'
+    }).catch(() => {});
+
     return res.json({ success: true, message: 'Заведение и его данные успешно удалены' });
   } catch (error: any) {
     return res.status(500).json({ success: false, error: error.message });
@@ -649,6 +722,13 @@ adminRouter.post('/partner/:id/moderate', async (req: Request, res: Response) =>
         ...(reason && { rejectionReason: reason })
       }
     });
+
+    notifyAdmins({
+      title: 'Изменен статус модерации заведения',
+      venueName: updated.name,
+      details: `Новый статус: ${status}\nПричина: ${reason || '—'}\nOwner ID: ${updated.ownerTelegramId || 'не указан'}`,
+      source: 'Telegram Bot'
+    }).catch(() => {});
 
     // Send Telegram notification to venue creator/owner
     if (updated.ownerTelegramId) {
@@ -795,6 +875,12 @@ adminRouter.post('/db/table/:tableName/record', async (req: Request, res: Respon
       });
     }
 
+    notifyAdmins({
+      title: `Прямое редактирование БД (${tableName})`,
+      details: `Таблица: ${tableName}\nID Записи: ${savedRecord[primaryKey] || 'новое'}\nПоля: ${Object.keys(recordData).join(', ')}`,
+      source: 'GiftX UI'
+    }).catch(() => {});
+
     return res.json({ success: true, tableName, record: savedRecord, message: 'Запись в БД успешно сохранена' });
   } catch (error: any) {
     return res.status(500).json({ success: false, error: error.message });
@@ -813,6 +899,13 @@ adminRouter.delete('/db/table/:tableName/record/:id', async (req: Request, res: 
       await (prisma[modelKey] as any).delete({
         where: { [primaryKey]: id }
       });
+
+      notifyAdmins({
+        title: `Прямое удаление из БД (${tableName})`,
+        details: `Таблица: ${tableName}\nID Записи: ${id}`,
+        source: 'GiftX UI'
+      }).catch(() => {});
+
       return res.json({ success: true, message: `Запись ${id} удалена из ${tableName}` });
     } else {
       return res.status(400).json({ success: false, error: `Неизвестная модель БД: ${tableName}` });

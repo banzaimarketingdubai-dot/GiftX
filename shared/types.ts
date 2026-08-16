@@ -61,6 +61,8 @@ export interface Partner {
     GOLD: number;
     PLATINUM: number;
   };
+  voucherOffers?: VoucherOffer[];
+  staffMembers?: StaffMember[];
 }
 
 export interface StaffMember {

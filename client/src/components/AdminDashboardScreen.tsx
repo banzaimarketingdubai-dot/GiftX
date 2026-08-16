@@ -18,7 +18,9 @@ import {
   FileText,
   Check,
   XCircle,
-  UserCheck
+  UserCheck,
+  Link,
+  Copy
 } from 'lucide-react';
 import { Partner, StaffMember, VoucherOffer, PartnerCategory, VoucherCategory, BoxLevel } from '../types';
 import { PartnerRegistrationModal } from './PartnerRegistrationModal';
@@ -59,6 +61,19 @@ export const AdminDashboardScreen: React.FC = () => {
   const [showPartnerModal, setShowPartnerModal] = useState(false);
   const [showBusinessOnboardingModal, setShowBusinessOnboardingModal] = useState(false);
   const [editingPartner, setEditingPartner] = useState<any | null>(null);
+  const [copiedPartnerId, setCopiedPartnerId] = useState<string | null>(null);
+
+  const handleCopyPartnerWebUrl = (partnerId: string) => {
+    triggerHaptic('light');
+    triggerNotificationHaptic('success');
+    const origin = typeof window !== 'undefined' && window.location?.origin
+      ? window.location.origin
+      : 'https://gift-x.vercel.app';
+    const url = `${origin}/?venue=${partnerId}`;
+    navigator.clipboard.writeText(url);
+    setCopiedPartnerId(partnerId);
+    setTimeout(() => setCopiedPartnerId(null), 2500);
+  };
 
   const [showStaffModal, setShowStaffModal] = useState(false);
   const [staffForm, setStaffForm] = useState({ id: '', partnerId: '', name: '', role: 'WAITER', telegramId: '' });
@@ -69,9 +84,8 @@ export const AdminDashboardScreen: React.FC = () => {
     partnerId: '',
     title: '',
     description: '',
+    imageUrl: '',
     category: 'TRAFFIC_MAGNET' as VoucherCategory,
-    targetBoxLevel: 'GOLD' as BoxLevel,
-    discountValue: '',
     validityHours: 72,
     totalLimit: 1000,
   });
@@ -220,10 +234,14 @@ export const AdminDashboardScreen: React.FC = () => {
   const handleSaveOffer = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const payload = {
+        ...offerForm,
+        discountValue: (offerForm as any).discountValue || 'ПОДАРОК'
+      };
       const res = await fetch('/api/admin/offer', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(offerForm),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (data.success) {
@@ -396,6 +414,17 @@ export const AdminDashboardScreen: React.FC = () => {
                     </div>
 
                     <div className="flex items-center space-x-1">
+                      <button
+                        onClick={() => handleCopyPartnerWebUrl(partner.id)}
+                        title="Скопировать прямую Web App ссылку на карточку заведения"
+                        className="p-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-400 border border-amber-500/30 transition-all flex items-center space-x-1"
+                      >
+                        {copiedPartnerId === partner.id ? (
+                          <Check className="w-4 h-4 text-emerald-400 animate-pulse" />
+                        ) : (
+                          <Link className="w-4 h-4" />
+                        )}
+                      </button>
                       <button
                         onClick={() => {
                           triggerHaptic('light');
@@ -624,9 +653,8 @@ export const AdminDashboardScreen: React.FC = () => {
                                   partnerId: partner.id,
                                   title: '',
                                   description: '',
+                                  imageUrl: '',
                                   category: 'TRAFFIC_MAGNET',
-                                  targetBoxLevel: 'GOLD',
-                                  discountValue: '',
                                   validityHours: 72,
                                   totalLimit: 1000,
                                 });
@@ -661,7 +689,6 @@ export const AdminDashboardScreen: React.FC = () => {
                                         <span className="text-[9px] font-extrabold uppercase text-purple-400 px-1.5 py-0.5 rounded bg-purple-500/10 border border-purple-500/20">
                                           {offer.category}
                                         </span>
-                                        <span className="text-xs font-black text-emerald-400">{offer.discountValue}</span>
                                       </div>
                                       <h5 className="font-bold text-slate-100 text-xs mt-0.5 truncate">{offer.title}</h5>
                                       <span className="text-[10px] text-slate-500 block mt-0.5">
@@ -679,9 +706,8 @@ export const AdminDashboardScreen: React.FC = () => {
                                           partnerId: partner.id,
                                           title: offer.title,
                                           description: offer.description || '',
+                                          imageUrl: offer.imageUrl || '',
                                           category: offer.category,
-                                          targetBoxLevel: offer.targetBoxLevel || 'GOLD',
-                                          discountValue: offer.discountValue,
                                           validityHours: offer.validityHours,
                                           totalLimit: offer.totalLimit,
                                         });
@@ -1016,9 +1042,8 @@ export const AdminDashboardScreen: React.FC = () => {
                   partnerId: partners[0]?.id || '',
                   title: '',
                   description: '',
+                  imageUrl: '',
                   category: 'TRAFFIC_MAGNET',
-                  targetBoxLevel: 'GOLD',
-                  discountValue: '',
                   validityHours: 72,
                   totalLimit: 1000,
                 });
@@ -1027,7 +1052,7 @@ export const AdminDashboardScreen: React.FC = () => {
               className="py-1.5 px-3 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-300 font-bold text-xs flex items-center space-x-1 hover:bg-purple-500/20 transition-all"
             >
               <PlusCircle className="w-3.5 h-3.5" />
-              <span>+ Создать акцию</span>
+              <span>+ Создать подарок</span>
             </button>
           </div>
 
@@ -1037,7 +1062,7 @@ export const AdminDashboardScreen: React.FC = () => {
                 <div className="flex items-center justify-between text-xs font-bold text-amber-400 border-b border-slate-800 pb-2">
                   <span>🏢 {partner.name}</span>
                   <span className="text-slate-400 font-normal">
-                    {partner.voucherOffers?.length || 0} ваучеров
+                    {partner.voucherOffers?.length || 0} подарков
                   </span>
                 </div>
 
@@ -1049,7 +1074,7 @@ export const AdminDashboardScreen: React.FC = () => {
                     >
                       <div className="flex items-start space-x-3">
                         <img
-                          src={offer.imageUrl}
+                          src={offer.imageUrl || 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=200&q=80'}
                           alt={offer.title}
                           className="w-12 h-12 rounded-xl object-cover border border-slate-800 shrink-0"
                         />
@@ -1058,12 +1083,11 @@ export const AdminDashboardScreen: React.FC = () => {
                             <span className="text-[9px] font-bold uppercase text-purple-400 px-1.5 py-0.5 rounded bg-purple-500/10 border border-purple-500/20">
                               {offer.category}
                             </span>
-                            <span className="text-xs font-black text-emerald-400">{offer.discountValue}</span>
                           </div>
                           <h5 className="font-bold text-slate-100 text-xs mt-1">{offer.title}</h5>
                           <p className="text-[10px] text-slate-400 mt-0.5">{offer.description}</p>
                           <span className="text-[10px] text-slate-500 mt-1 block">
-                            ⏳ {offer.validityHours}ч | Выдано: {offer.claimedCount}/{offer.totalLimit}
+                            ⏳ {offer.validityHours}ч | Выдано: {offer.claimedCount || 0}/{offer.totalLimit}
                           </span>
                         </div>
                       </div>
@@ -1076,10 +1100,9 @@ export const AdminDashboardScreen: React.FC = () => {
                               id: offer.id,
                               partnerId: partner.id,
                               title: offer.title,
-                              description: offer.description,
+                              description: offer.description || '',
+                              imageUrl: offer.imageUrl || '',
                               category: offer.category,
-                              targetBoxLevel: offer.targetBoxLevel || 'GOLD',
-                              discountValue: offer.discountValue,
                               validityHours: offer.validityHours,
                               totalLimit: offer.totalLimit,
                             });
@@ -1220,23 +1243,36 @@ export const AdminDashboardScreen: React.FC = () => {
         </div>
       )}
 
-      {/* Модалка создания/редактирования ваучера */}
+      {/* Модалка создания/редактирования подарка */}
       {showOfferModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
           <div className="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
-              <h3 className="font-bold text-slate-100 text-sm">
-                {offerForm.id ? 'Редактировать ваучер' : 'Создать новый ваучер'}
-              </h3>
-              <button onClick={() => setShowOfferModal(false)} className="text-slate-400">
+              <div>
+                <h3 className="font-bold text-slate-100 text-sm">
+                  {offerForm.id ? 'Редактировать подарок' : 'Создать подарок заведения'}
+                </h3>
+                <p className="text-[10px] text-slate-400">Подарок для кросс-маркетинговой сети GiftX</p>
+              </div>
+              <button onClick={() => setShowOfferModal(false)} className="text-slate-400 hover:text-white">
                 <X className="w-4 h-4" />
               </button>
+            </div>
+
+            {/* Информационная подсказка о кросс-маркетинге */}
+            <div className="mb-3 p-2.5 rounded-xl bg-purple-950/40 border border-purple-500/30 text-[10px] text-purple-200 space-y-1">
+              <span className="font-bold flex items-center space-x-1 text-purple-300">
+                <span>✨ Кросс-маркетинговый подарок</span>
+              </span>
+              <p className="leading-relaxed text-slate-300">
+                Этот подарок выдается гостям других заведений-партнеров в сети GiftX. Пороги чеков для получения боксов настраиваются индивидуально в карточке заведения.
+              </p>
             </div>
 
             <form onSubmit={handleSaveOffer} className="space-y-3 text-xs">
               <div>
                 <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">
-                  Заведение
+                  Заведение-партнер
                 </label>
                 <select
                   value={offerForm.partnerId}
@@ -1253,71 +1289,55 @@ export const AdminDashboardScreen: React.FC = () => {
 
               <div>
                 <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">
-                  Категория ваучера
-                </label>
-                <select
-                  value={offerForm.category}
-                  onChange={(e) => setOfferForm({ ...offerForm, category: e.target.value as any })}
-                  className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-100"
-                >
-                  <option value="TRAFFIC_MAGNET">TRAFFIC_MAGNET (Частая услуга/Напиток)</option>
-                  <option value="LIFESTYLE">LIFESTYLE (Скидка 15-30%)</option>
-                  <option value="ANCHOR">ANCHOR (Якорь / Фиксированный сертификат)</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-[10px] uppercase font-bold text-amber-400 mb-1">
-                  📦 Уровень бокса для впадения (Номинал)
-                </label>
-                <select
-                  value={(offerForm as any).targetBoxLevel || 'GOLD'}
-                  onChange={(e) => setOfferForm({ ...offerForm, targetBoxLevel: e.target.value as any })}
-                  className="w-full p-2.5 rounded-xl bg-slate-950 border border-amber-500/40 text-slate-100 text-xs font-bold"
-                >
-                  <option value="SILVER">🥈 Серебряный бокс (Чек от 300k VND)</option>
-                  <option value="GOLD">🥇 Золотой бокс (Чек от 600k VND)</option>
-                  <option value="PLATINUM">💎 Платиновый VIP бокс (Чек от 1.0M VND)</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">
-                  Заголовок акции
+                  Название подарка / акции
                 </label>
                 <input
                   type="text"
                   required
                   value={offerForm.title}
                   onChange={(e) => setOfferForm({ ...offerForm, title: e.target.value })}
-                  placeholder="Бесплатный массаж / Скидка 25%"
+                  placeholder="Например: Фирменный коктейль от шефа"
                   className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-100"
                 />
               </div>
 
               <div>
                 <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">
-                  Размер выгоды
+                  Ссылка на фото/изображение подарка <span className="text-[9px] text-slate-500 font-normal">(опционально)</span>
                 </label>
                 <input
-                  type="text"
-                  required
-                  value={offerForm.discountValue}
-                  onChange={(e) => setOfferForm({ ...offerForm, discountValue: e.target.value })}
-                  placeholder="FREE (100%) / -25% / 300,000 VND"
-                  className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-100"
+                  type="url"
+                  value={offerForm.imageUrl}
+                  onChange={(e) => setOfferForm({ ...offerForm, imageUrl: e.target.value })}
+                  placeholder="https://images.unsplash.com/..."
+                  className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-100 font-mono text-[11px]"
                 />
               </div>
 
               <div>
                 <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">
-                  Условия получения
+                  Категория подарка
+                </label>
+                <select
+                  value={offerForm.category}
+                  onChange={(e) => setOfferForm({ ...offerForm, category: e.target.value as any })}
+                  className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-100"
+                >
+                  <option value="TRAFFIC_MAGNET">TRAFFIC_MAGNET (Частая услуга / Напиток / Десерт)</option>
+                  <option value="LIFESTYLE">LIFESTYLE (Скидка / Впечатление)</option>
+                  <option value="ANCHOR">ANCHOR (Якорь / Фирменный сертификат)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">
+                  Условия получения и описание
                 </label>
                 <textarea
                   rows={2}
                   value={offerForm.description}
                   onChange={(e) => setOfferForm({ ...offerForm, description: e.target.value })}
-                  placeholder="При заказе от 100k VND..."
+                  placeholder="Например: Действует при заказе любого блюда в заведении. Покажите QR-код официанту..."
                   className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-100"
                 />
               </div>
@@ -1325,24 +1345,24 @@ export const AdminDashboardScreen: React.FC = () => {
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">
-                    Срок (часы)
+                    Срок действия (часы)
                   </label>
                   <input
                     type="number"
                     value={offerForm.validityHours}
-                    onChange={(e) => setOfferForm({ ...offerForm, validityHours: parseInt(e.target.value) })}
+                    onChange={(e) => setOfferForm({ ...offerForm, validityHours: parseInt(e.target.value) || 72 })}
                     className="w-full p-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-100 font-mono"
                   />
                 </div>
 
                 <div>
                   <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">
-                    Лимит выдач
+                    Лимит выдач (шт.)
                   </label>
                   <input
                     type="number"
                     value={offerForm.totalLimit}
-                    onChange={(e) => setOfferForm({ ...offerForm, totalLimit: parseInt(e.target.value) })}
+                    onChange={(e) => setOfferForm({ ...offerForm, totalLimit: parseInt(e.target.value) || 1000 })}
                     className="w-full p-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-100 font-mono"
                   />
                 </div>
@@ -1350,9 +1370,9 @@ export const AdminDashboardScreen: React.FC = () => {
 
               <button
                 type="submit"
-                className="w-full py-3 mt-2 rounded-xl bg-purple-500 hover:bg-purple-400 text-slate-950 font-bold text-sm"
+                className="w-full py-3 mt-2 rounded-xl bg-purple-500 hover:bg-purple-400 text-slate-950 font-bold text-sm shadow-lg shadow-purple-500/20 active:scale-95 transition-all"
               >
-                Сохранить ваучер
+                {offerForm.id ? 'Сохранить изменения' : 'Создать подарок'}
               </button>
             </form>
           </div>

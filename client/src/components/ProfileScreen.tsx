@@ -260,7 +260,12 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
   if (viewMode === 'ANALYTICS') {
     return (
       <div className="relative min-h-screen bg-slate-950">
-        <div className="bg-slate-900/90 border-b border-slate-800 p-3 max-w-md mx-auto flex items-center justify-between sticky top-0 z-50 backdrop-blur-md">
+        <div 
+          className="bg-slate-900/95 border-b border-slate-800 px-3 pb-3 max-w-md mx-auto flex items-center justify-between sticky top-0 z-50 backdrop-blur-md"
+          style={{
+            paddingTop: 'max(env(safe-area-inset-top, 0px), var(--tg-safe-area-inset-top, 0px), var(--tg-content-safe-area-inset-top, 0px), 52px)'
+          }}
+        >
           <button
             onClick={() => {
               triggerHaptic('light');
@@ -283,7 +288,12 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
   if (viewMode === 'ADMIN') {
     return (
       <div className="relative">
-        <div className="bg-slate-900 border-b border-slate-800 p-3 max-w-md mx-auto flex items-center justify-between">
+        <div 
+          className="bg-slate-900/95 border-b border-slate-800 px-3 pb-3 max-w-md mx-auto flex items-center justify-between sticky top-0 z-50 backdrop-blur-md"
+          style={{
+            paddingTop: 'max(env(safe-area-inset-top, 0px), var(--tg-safe-area-inset-top, 0px), var(--tg-content-safe-area-inset-top, 0px), 52px)'
+          }}
+        >
           <button
             onClick={() => {
               triggerHaptic('light');
@@ -306,7 +316,12 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
   if (viewMode === 'WAITER') {
     return (
       <div className="relative">
-        <div className="bg-slate-900 border-b border-slate-800 p-3 max-w-md mx-auto flex items-center justify-between">
+        <div 
+          className="bg-slate-900/95 border-b border-slate-800 px-3 pb-3 max-w-md mx-auto flex items-center justify-between sticky top-0 z-50 backdrop-blur-md"
+          style={{
+            paddingTop: 'max(env(safe-area-inset-top, 0px), var(--tg-safe-area-inset-top, 0px), var(--tg-content-safe-area-inset-top, 0px), 52px)'
+          }}
+        >
           <button
             onClick={() => {
               triggerHaptic('light');

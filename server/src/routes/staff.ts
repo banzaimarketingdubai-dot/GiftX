@@ -255,7 +255,11 @@ staffRouter.post('/partner/location', async (req: Request, res: Response) => {
       googleRating,
       googleReviewsCount,
       telegramId,
-      role
+      role,
+      basicThreshold,
+      silverThreshold,
+      goldThreshold,
+      platinumThreshold
     } = req.body;
 
     let finalLat = lat ? parseFloat(lat) : undefined;
@@ -285,7 +289,11 @@ staffRouter.post('/partner/location', async (req: Request, res: Response) => {
           ...(finalLng !== undefined && { lng: finalLng }),
           ...(googleMapsUrl && { googleMapsUrl }),
           ...(googleRating !== undefined && { googleRating: parseFloat(googleRating) }),
-          ...(googleReviewsCount !== undefined && { googleReviewsCount: parseInt(googleReviewsCount) })
+          ...(googleReviewsCount !== undefined && { googleReviewsCount: parseInt(googleReviewsCount) }),
+          ...(basicThreshold !== undefined && { basicThreshold: parseFloat(basicThreshold) }),
+          ...(silverThreshold !== undefined && { silverThreshold: parseFloat(silverThreshold) }),
+          ...(goldThreshold !== undefined && { goldThreshold: parseFloat(goldThreshold) }),
+          ...(platinumThreshold !== undefined && { platinumThreshold: parseFloat(platinumThreshold) })
         }
       });
       return res.json({ success: true, partner: updated, message: 'Локация заведения обновлена' });
@@ -310,6 +318,10 @@ staffRouter.post('/partner/location', async (req: Request, res: Response) => {
           googleMapsUrl: googleMapsUrl || `https://maps.google.com/?q=${encodeURIComponent(name + ' ' + finalAddress)}`,
           googleRating: googleRating ? parseFloat(googleRating) : 4.8,
           googleReviewsCount: googleReviewsCount ? parseInt(googleReviewsCount) : 100,
+          basicThreshold: basicThreshold ? parseFloat(basicThreshold) : 0,
+          silverThreshold: silverThreshold ? parseFloat(silverThreshold) : 300000,
+          goldThreshold: goldThreshold ? parseFloat(goldThreshold) : 600000,
+          platinumThreshold: platinumThreshold ? parseFloat(platinumThreshold) : 1000000,
           activeStatus: true,
           moderationStatus: 'PENDING',
           ...(telegramId && { ownerTelegramId: BigInt(telegramId) })

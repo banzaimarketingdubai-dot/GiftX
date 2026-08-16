@@ -13,9 +13,14 @@ import {
   ChevronRight,
   Info,
   Building2,
-  Clock
+  Clock,
+  Link,
+  Copy,
+  ExternalLink,
+  Share2,
+  ChevronDown
 } from 'lucide-react';
-import { triggerHaptic } from '../telegram';
+import { triggerHaptic, triggerNotificationHaptic } from '../telegram';
 import { Partner } from '../types';
 
 interface VenueGuestModalProps {
@@ -33,6 +38,9 @@ export const VenueGuestModal: React.FC<VenueGuestModalProps> = ({
 }) => {
   const [partner, setPartner] = useState<Partner | null>(initialPartner || null);
   const [loading, setLoading] = useState(!initialPartner && !!partnerId);
+  const [showLinkDetails, setShowLinkDetails] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
+  const [copiedTgLink, setCopiedTgLink] = useState(false);
 
   useEffect(() => {
     if (!initialPartner && partnerId) {
@@ -75,6 +83,52 @@ export const VenueGuestModal: React.FC<VenueGuestModalProps> = ({
   const reviewsCount = partner?.googleReviewsCount || 150;
   const workingHours = partner?.workingHours || '10:00 - 23:00';
 
+  const effectivePartnerId = partner?.id || partnerId || 'demo-partner-1';
+  const origin = typeof window !== 'undefined' && window.location?.origin
+    ? window.location.origin
+    : 'https://gift-x.vercel.app';
+  const webAppUrl = `${origin}/?venue=${effectivePartnerId}`;
+  const botUsername = (import.meta as any).env?.VITE_TELEGRAM_BOT_USERNAME || 'giftx2025_bot';
+  const tgLink = `https://t.me/${botUsername}?start=venue_${effectivePartnerId}`;
+
+  const handleCopyLink = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    triggerHaptic('light');
+    triggerNotificationHaptic('success');
+    navigator.clipboard.writeText(webAppUrl);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2500);
+  };
+
+  const handleCopyTgLink = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    triggerHaptic('light');
+    triggerNotificationHaptic('success');
+    navigator.clipboard.writeText(tgLink);
+    setCopiedTgLink(true);
+    setTimeout(() => setCopiedTgLink(false), 2500);
+  };
+
+  const handleShare = async (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    triggerHaptic('light');
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `GiftX — ${venueName}`,
+          text: `Посетите заведение «${venueName}» и получите подарки GiftX!`,
+          url: webAppUrl,
+        });
+        return;
+      } catch (err) {
+        // fallback to Telegram share
+      }
+    }
+    const shareText = `Карточка заведения «${venueName}» в GiftX:`;
+    const tgShareUrl = `https://t.me/share/url?url=${encodeURIComponent(webAppUrl)}&text=${encodeURIComponent(shareText)}`;
+    window.open(tgShareUrl, '_blank');
+  };
+
   const formatVnd = (num?: number) => {
     if (num === undefined || num === 0) return 'Любая сумма';
     if (num >= 1000000) return `${(num / 1000000).toFixed(1).replace('.0', '')}M ₫`;
@@ -87,15 +141,27 @@ export const VenueGuestModal: React.FC<VenueGuestModalProps> = ({
         {/* Верхняя визуальная плашка */}
         <div className="relative h-32 bg-gradient-to-r from-amber-500/20 via-purple-500/10 to-slate-900 overflow-hidden shrink-0">
           <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/15 blur-3xl rounded-full pointer-events-none" />
-          <button
-            onClick={() => {
-              triggerHaptic('light');
-              onClose();
-            }}
-            className="absolute top-3 right-3 w-8 h-8 rounded-full bg-slate-950/70 hover:bg-slate-950 text-slate-400 hover:text-white flex items-center justify-center backdrop-blur-md transition-all z-20 border border-slate-800"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          
+          <div className="absolute top-3 right-3 flex items-center space-x-2 z-20">
+            {/* Кнопка быстрого шеринга ссылки */}
+            <button
+              onClick={handleShare}
+              title="Поделиться ссылкой на заведение"
+              className="w-8 h-8 rounded-full bg-slate-950/70 hover:bg-slate-950 text-amber-400 hover:text-amber-300 flex items-center justify-center backdrop-blur-md transition-all border border-slate-800"
+            >
+              <Share2 className="w-3.5 h-3.5" />
+            </button>
+
+            <button
+              onClick={() => {
+                triggerHaptic('light');
+                onClose();
+              }}
+              className="w-8 h-8 rounded-full bg-slate-950/70 hover:bg-slate-950 text-slate-400 hover:text-white flex items-center justify-center backdrop-blur-md transition-all border border-slate-800"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* Профиль заведения */}
@@ -134,6 +200,136 @@ export const VenueGuestModal: React.FC<VenueGuestModalProps> = ({
             <span className="ml-auto text-[10px] font-extrabold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
               ✓ Партнер GiftX
             </span>
+          </div>
+
+          {/* ============================================================== */}
+          {/* 🌟 ПРЯМАЯ ССЫЛКА НА WEB APP ЗАВЕДЕНИЯ (СПРЯТАНА ПОД КНОПКОЙ)  */}
+          {/* ============================================================== */}
+          <div className="space-y-2">
+            <button
+              id="venue-card-webapp-link-btn"
+              onClick={() => {
+                triggerHaptic('medium');
+                setShowLinkDetails(!showLinkDetails);
+              }}
+              className="w-full py-2.5 px-3.5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-slate-950 to-amber-500/10 hover:from-amber-500/25 hover:to-amber-500/20 border border-amber-500/40 text-amber-300 font-extrabold text-xs flex items-center justify-between transition-all shadow-md shadow-amber-500/10 active:scale-[0.99] group"
+            >
+              <div className="flex items-center space-x-2.5 min-w-0">
+                <div className="w-7 h-7 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 group-hover:scale-110 transition-transform shrink-0">
+                  <Link className="w-3.5 h-3.5 text-amber-400" />
+                </div>
+                <div className="text-left min-w-0">
+                  <div className="flex items-center space-x-1.5">
+                    <span className="text-xs font-black text-slate-100 truncate">Прямая ссылка на Web App</span>
+                    <span className="text-[9px] px-1.5 py-0.2 rounded bg-amber-400/20 text-amber-300 font-bold uppercase shrink-0 border border-amber-400/30">
+                      URL
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-slate-400 font-medium truncate">
+                    Прямой доступ непосредственно на карточку
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-1.5 shrink-0 ml-2">
+                <button
+                  type="button"
+                  onClick={handleCopyLink}
+                  title="Скопировать ссылку"
+                  className="py-1 px-2.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 transition-all flex items-center space-x-1 active:scale-95"
+                >
+                  {copiedLink ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+                      <span className="text-[10px] font-black text-emerald-400">Скопировано!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5 text-amber-400" />
+                      <span className="text-[10px] font-black text-amber-300">Копия</span>
+                    </>
+                  )}
+                </button>
+                <ChevronDown
+                  className={`w-4 h-4 text-amber-400 transition-transform duration-200 ${
+                    showLinkDetails ? 'rotate-180 text-amber-300' : ''
+                  }`}
+                />
+              </div>
+            </button>
+
+            {/* Разворачиваемый блок с подробной ссылкой URL Web App и кнопками действий */}
+            {showLinkDetails && (
+              <div className="p-3.5 rounded-2xl bg-slate-950/95 border border-amber-500/30 space-y-2.5 shadow-xl animate-fadeIn">
+                <div className="flex items-center justify-between text-[10px]">
+                  <span className="font-bold text-amber-400 uppercase tracking-wider flex items-center space-x-1">
+                    <Link className="w-3 h-3 text-amber-400" />
+                    <span>Прямой URL адрес карточки:</span>
+                  </span>
+                  <span className="text-slate-500 font-medium">Для браузера и шеринга</span>
+                </div>
+
+                {/* Поле с URL адресом */}
+                <div className="flex items-center space-x-2 bg-slate-900/90 rounded-xl px-3 py-2 border border-slate-800">
+                  <span className="text-[11px] text-amber-200 font-mono truncate flex-1 select-all">
+                    {webAppUrl}
+                  </span>
+                  <button
+                    onClick={handleCopyLink}
+                    className="text-amber-400 hover:text-amber-300 p-1 transition-colors shrink-0"
+                    title="Копировать"
+                  >
+                    {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
+
+                {/* Кнопки быстрых действий */}
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    onClick={handleCopyLink}
+                    className={`py-2 px-2 rounded-xl text-[11px] font-black flex items-center justify-center space-x-1.5 transition-all active:scale-95 shadow-md ${
+                      copiedLink
+                        ? 'bg-emerald-500 text-slate-950 shadow-emerald-500/20'
+                        : 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/20'
+                    }`}
+                  >
+                    {copiedLink ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>{copiedLink ? 'Скопировано!' : 'Скопировать'}</span>
+                  </button>
+
+                  <a
+                    href={webAppUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => triggerHaptic('light')}
+                    className="py-2 px-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold text-[11px] flex items-center justify-center space-x-1.5 transition-all active:scale-95"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5 text-slate-300" />
+                    <span>Открыть</span>
+                  </a>
+
+                  <button
+                    onClick={handleShare}
+                    className="py-2 px-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-amber-300 font-bold text-[11px] flex items-center justify-center space-x-1.5 transition-all active:scale-95"
+                  >
+                    <Share2 className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Поделиться</span>
+                  </button>
+                </div>
+
+                {/* Вторичный вариант: Ссылка для Telegram Mini App */}
+                <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[10px]">
+                  <span className="text-slate-400 font-medium">Ссылка для Telegram Bot:</span>
+                  <button
+                    onClick={handleCopyTgLink}
+                    className="text-amber-400 hover:text-amber-300 font-bold flex items-center space-x-1 underline"
+                  >
+                    <Copy className="w-3 h-3" />
+                    <span>{copiedTgLink ? 'Скопировано!' : 'Скопировать TMA'}</span>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* ============================================================== */}
@@ -229,6 +425,46 @@ export const VenueGuestModal: React.FC<VenueGuestModalProps> = ({
               </div>
             </div>
           </div>
+
+          {/* СЕКЦИЯ: Подарки этого заведения в сети GiftX */}
+          {partner?.voucherOffers && partner.voucherOffers.length > 0 && (
+            <div className="space-y-2 pt-1">
+              <div className="flex items-center space-x-2">
+                <div className="w-6 h-6 rounded-lg bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-400 font-bold text-xs">
+                  ✨
+                </div>
+                <h4 className="text-xs font-black uppercase text-slate-200 tracking-wider">
+                  Подарки от этого заведения в сети
+                </h4>
+              </div>
+
+              <div className="space-y-2">
+                {partner.voucherOffers.map((offer: any) => (
+                  <div
+                    key={offer.id}
+                    className="p-2.5 rounded-2xl bg-slate-950/80 border border-slate-800 flex items-start space-x-2.5"
+                  >
+                    <img
+                      src={offer.imageUrl || 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=200&q=80'}
+                      alt={offer.title}
+                      className="w-10 h-10 rounded-xl object-cover border border-slate-800 shrink-0"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center space-x-1.5">
+                        <span className="text-[8px] font-extrabold uppercase text-purple-400 px-1.5 py-0.2 rounded bg-purple-500/10 border border-purple-500/20">
+                          {offer.category}
+                        </span>
+                      </div>
+                      <h5 className="font-bold text-slate-100 text-xs mt-0.5">{offer.title}</h5>
+                      {offer.description && (
+                        <p className="text-[10px] text-slate-400 mt-0.5 line-clamp-1">{offer.description}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* ============================================================== */}
           {/* 🌟 СЕКЦИЯ 2: КРАТКАЯ ИНСТРУКЦИЯ СКАНИРОВАТЬ QR У СОТРУДНИКА */}
