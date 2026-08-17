@@ -346,12 +346,17 @@ export const PartnerRegistrationModal: React.FC<PartnerRegistrationModalProps> =
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
-      <div className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden max-h-[92vh] flex flex-col">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#0e1621]/85 backdrop-blur-md animate-fadeIn overflow-y-auto font-sans"
+      style={{
+        paddingTop: 'calc(max(env(safe-area-inset-top, 0px), var(--tg-safe-area-inset-top, 0px), var(--tg-content-safe-area-inset-top, 0px), 0px) + 68px)'
+      }}
+    >
+      <div className="w-full max-w-lg bg-[#17212b] border border-white/10 rounded-2xl shadow-2xl overflow-hidden max-h-[92vh] flex flex-col my-auto">
         {/* Шапка */}
-        <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/90 backdrop-blur-xl">
+        <div className="p-4 border-b border-white/10 flex items-center justify-between bg-[#17212b]">
           <div className="flex items-center space-x-2.5">
-            <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+            <div className="w-9 h-9 rounded-xl bg-[#2aabee]/15 border border-[#2aabee]/30 flex items-center justify-center text-[#2aabee]">
               <Building2 className="w-5 h-5" />
             </div>
             <div>

@@ -36,6 +36,49 @@ export const App: React.FC = () => {
   const [staffInfo, setStaffInfo] = useState<any | null>(null);
   const [activeLanding, setActiveLanding] = useState<'GUEST' | 'BUSINESS' | null>(null);
 
+  const [activeVouchersCount, setActiveVouchersCount] = useState<number>(0);
+
+  const updateVouchersBadge = () => {
+    try {
+      const localStr = localStorage.getItem('giftx_saved_vouchers');
+      const localVouchers = localStr ? JSON.parse(localStr) : [];
+      if (Array.isArray(localVouchers)) {
+        const activeCount = localVouchers.filter((v: any) => v.status === 'ACTIVE' || !v.status).length;
+        setActiveVouchersCount(activeCount);
+      } else {
+        setActiveVouchersCount(0);
+      }
+    } catch (e) {
+      setActiveVouchersCount(0);
+    }
+  };
+
+  useEffect(() => {
+    updateVouchersBadge();
+
+    const tgUser = getTelegramUserData();
+    if (tgUser?.id) {
+      fetch(`/api/guest/vouchers?telegramId=${tgUser.id}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && Array.isArray(data.wallet)) {
+            const activeVouchers = data.wallet.filter((v: any) => v.status === 'ACTIVE');
+            setActiveVouchersCount(activeVouchers.length);
+          }
+        })
+        .catch(() => {});
+    }
+
+    const handleUpdate = () => updateVouchersBadge();
+    window.addEventListener('giftx_vouchers_updated', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+
+    return () => {
+      window.removeEventListener('giftx_vouchers_updated', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
+  }, []);
+
   useEffect(() => {
     initTelegramApp();
 
@@ -486,9 +529,11 @@ export const App: React.FC = () => {
         >
           <div className="relative">
             <Gift className="w-4 h-4" />
-            <span className="absolute -top-1 -right-2 bg-red-500 text-white font-black text-[9px] px-1 rounded-full border border-[#17212b]">
-              5
-            </span>
+            {activeVouchersCount > 0 && (
+              <span className="absolute -top-1.5 -right-2 bg-red-500 text-white font-black text-[9px] px-1 min-w-[15px] h-3.5 flex items-center justify-center rounded-full border border-[#17212b] shadow-sm animate-pulse">
+                {activeVouchersCount}
+              </span>
+            )}
           </div>
           <span>Подарки</span>
         </button>

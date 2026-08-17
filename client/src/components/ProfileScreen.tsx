@@ -260,26 +260,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
   // Экран Детальной Аналитики и Монетизации
   if (viewMode === 'ANALYTICS') {
     return (
-      <div className="relative min-h-screen bg-slate-950">
-        <div 
-          className="bg-slate-900/95 border-b border-slate-800 px-3 pb-3 max-w-md mx-auto flex items-center justify-between sticky top-0 z-50 backdrop-blur-md"
-          style={{
-            paddingTop: 'max(env(safe-area-inset-top, 0px), var(--tg-safe-area-inset-top, 0px), var(--tg-content-safe-area-inset-top, 0px), 52px)'
-          }}
-        >
-          <button
-            onClick={() => {
-              triggerHaptic('light');
-              setViewMode('PROFILE');
-            }}
-            className="text-xs font-bold text-amber-400 flex items-center space-x-1 hover:underline"
-          >
-            <span>← Назад в Мой Профиль</span>
-          </button>
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2 py-0.5 rounded bg-slate-950 border border-slate-800">
-            Аналитика & Биллинг
-          </span>
-        </div>
+      <div className="relative min-h-screen bg-[#0e1621]">
         <PlatformAnalyticsScreen onClose={() => setViewMode('PROFILE')} />
       </div>
     );
