@@ -61,6 +61,15 @@ export const VenueGuestModal: React.FC<VenueGuestModalProps> = ({
     }
   };
 
+  // 🔒 Блокировка скролла заднего фона при открытии экрана заведения
+  useEffect(() => {
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, []);
+
   // 🔄 Автоматический свайп слайдов инструкции каждые 4 секунды (4000 мс)
   useEffect(() => {
     const timer = setInterval(() => {
@@ -150,12 +159,12 @@ export const VenueGuestModal: React.FC<VenueGuestModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-[#0e1621]/95 backdrop-blur-md animate-fadeIn overflow-y-auto font-sans">
-      <div className="w-full max-w-md bg-[#17212b] border border-white/10 rounded-2xl shadow-2xl overflow-hidden max-h-[95vh] flex flex-col relative my-auto">
+    <div className="fixed inset-0 z-[100] flex justify-center bg-[#0e1621] animate-fadeIn font-sans overflow-hidden">
+      <div className="w-full max-w-4xl bg-[#17212b] h-full flex flex-col relative overflow-hidden shadow-2xl">
         {/* ============================================================== */}
-        {/* 📸 ШАПКА: ФОТО ЗАВЕДЕНИЯ НА ВСЮ ШИРИНУ ЭКРАНА                 */}
+        {/* 📸 ШАПКА: ФОТО ЗАВЕДЕНИЯ НА ВСЮ ШИРИНУ                         */}
         {/* ============================================================== */}
-        <div className="relative h-44 sm:h-48 w-full shrink-0 bg-[#0e1621]">
+        <div className="relative h-36 sm:h-48 md:h-56 w-full shrink-0 bg-[#0e1621]">
           <div className="w-full h-full overflow-hidden">
             <img
               src={coverPhoto}
@@ -166,13 +175,13 @@ export const VenueGuestModal: React.FC<VenueGuestModalProps> = ({
           </div>
           
           {/* Верхние кнопки управления (Шеринг и Закрыть) */}
-          <div className="absolute top-3 right-3 flex items-center space-x-2 z-20">
+          <div className="absolute top-3.5 right-3.5 flex items-center space-x-2 z-20">
             <button
               onClick={handleShare}
               title="Поделиться заведением"
-              className="w-8 h-8 rounded-full bg-[#17212b]/80 hover:bg-[#17212b] text-[#2aabee] flex items-center justify-center backdrop-blur-md transition-all border border-white/10 shadow-md cursor-pointer"
+              className="w-9 h-9 rounded-full bg-[#17212b]/80 hover:bg-[#17212b] text-[#2aabee] flex items-center justify-center backdrop-blur-md transition-all border border-white/10 shadow-md cursor-pointer"
             >
-              <Share2 className="w-3.5 h-3.5" />
+              <Share2 className="w-4 h-4" />
             </button>
 
             <button
@@ -180,13 +189,13 @@ export const VenueGuestModal: React.FC<VenueGuestModalProps> = ({
                 triggerHaptic('light');
                 onClose();
               }}
-              className="w-8 h-8 rounded-full bg-[#17212b]/80 hover:bg-[#17212b] text-slate-300 hover:text-white flex items-center justify-center backdrop-blur-md transition-all border border-white/10 shadow-md cursor-pointer"
+              className="w-9 h-9 rounded-full bg-[#17212b]/80 hover:bg-[#17212b] text-slate-300 hover:text-white flex items-center justify-center backdrop-blur-md transition-all border border-white/10 shadow-md cursor-pointer"
             >
-              <X className="w-4 h-4" />
+              <X className="w-4.5 h-4.5" />
             </button>
           </div>
 
-          {/* 👤 ЛОГОТИП В ЦЕНТРЕ НА ГРАНИЦЕ (100% ВИДИМОСТЬ БЕЗ ОБРЕЗАНИЯ) */}
+          {/* 👤 ЛОГОТИП В ЦЕНТРЕ НА ГРАНИЦЕ */}
           <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 z-20">
             <VenueAvatar
               logoUrl={partner?.logoUrl}
@@ -198,21 +207,21 @@ export const VenueGuestModal: React.FC<VenueGuestModalProps> = ({
         </div>
 
         {/* ============================================================== */}
-        {/* 👤 ПРИВЕТСТВИЕ ГОСТЯ + ВЫДЕЛЕННАЯ ИНСТРУКЦИЯ                   */}
+        {/* 👤 ПРИВЕТСТВИЕ ГОСТЯ + КОМПАКТНАЯ ИНСТРУКЦИЯ                    */}
         {/* ============================================================== */}
-        <div className="px-5 pt-12 pb-5 relative z-10 space-y-4 overflow-y-auto flex-1 custom-scrollbar">
+        <div className="px-4 sm:px-8 pt-12 pb-6 relative z-10 space-y-4 overflow-y-auto flex-1 custom-scrollbar">
           {/* Приветствие гостя */}
           <div className="flex flex-col items-center text-center space-y-2">
-            <div className="space-y-1">
-              <span className="text-[10px] font-bold uppercase text-[#2aabee] bg-[#2aabee]/15 border border-[#2aabee]/30 px-2.5 py-0.5 rounded-full tracking-wider inline-flex items-center space-x-1">
+            <div className="space-y-1 max-w-lg">
+              <span className="text-[10px] font-bold uppercase text-[#2aabee] bg-[#2aabee]/15 border border-[#2aabee]/30 px-3 py-0.5 rounded-full tracking-wider inline-flex items-center space-x-1">
                 <Sparkles className="w-3 h-3 text-[#2aabee] inline" />
                 <span>Добро пожаловать!</span>
               </span>
-              <h2 className="text-xl font-extrabold text-slate-100 leading-tight">{venueName}</h2>
-              <div className="flex items-center justify-center space-x-2 text-xs text-slate-400 font-medium">
+              <h2 className="text-xl sm:text-2xl font-extrabold text-slate-100 leading-tight">{venueName}</h2>
+              <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-slate-400 font-medium">
                 <span className="flex items-center space-x-1">
                   <MapPin className="w-3.5 h-3.5 text-[#2aabee] shrink-0" />
-                  <span className="truncate max-w-[180px]">{address}</span>
+                  <span>{address}</span>
                 </span>
                 <span>•</span>
                 <span className="flex items-center space-x-1 text-slate-400">
@@ -236,22 +245,21 @@ export const VenueGuestModal: React.FC<VenueGuestModalProps> = ({
           </div>
 
           {/* ============================================================== */}
-          {/* ⚡ ИНТЕРАКТИВНЫЙ ГОРИЗОНТАЛЬНЫЙ СЛАЙДЕР ИНСТРУКЦИИ (3 ШАГА)    */}
+          {/* ⚡ ИНТЕРАКТИВНЫЙ ГОРИЗОНТАЛЬНЫЙ СЛАЙДЕР ИНСТРУКЦИИ (КОМПАКТНЫЙ) */}
           {/* ============================================================== */}
-          <div className="p-4 rounded-2xl bg-gradient-to-br from-[#1e2c3a] via-[#17212b] to-[#121922] border-2 border-[#2aabee]/50 space-y-3 shadow-xl shadow-[#2aabee]/10 relative overflow-hidden">
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-[#1e2c3a] via-[#17212b] to-[#121922] border-2 border-[#2aabee]/50 space-y-2.5 shadow-xl shadow-[#2aabee]/10 relative overflow-hidden">
             <div className="absolute -right-6 -top-6 w-20 h-20 bg-[#2aabee]/20 rounded-full blur-xl pointer-events-none" />
 
             {/* Шапка блока слайдера */}
             <div className="flex items-center justify-between relative z-10">
               <div className="flex items-center space-x-2">
-                <div className="w-7 h-7 rounded-xl bg-[#2aabee]/20 border border-[#2aabee]/40 flex items-center justify-center text-[#2aabee] shrink-0">
-                  <Zap className="w-4 h-4 text-[#2aabee] animate-pulse" />
+                <div className="w-6 h-6 rounded-lg bg-[#2aabee]/20 border border-[#2aabee]/40 flex items-center justify-center text-[#2aabee] shrink-0">
+                  <Zap className="w-3.5 h-3.5 text-[#2aabee] animate-pulse" />
                 </div>
                 <div>
                   <h4 className="text-xs font-black uppercase tracking-wider text-slate-100">
                     Как получить подарок
                   </h4>
-                  <p className="text-[10px] text-slate-400 font-medium">Листайте шаги вправо ➔</p>
                 </div>
               </div>
 
@@ -261,7 +269,7 @@ export const VenueGuestModal: React.FC<VenueGuestModalProps> = ({
               </span>
             </div>
 
-            {/* Контейнер слайдов с горизонтальным скроллом */}
+            {/* Контейнер слайдов с уменьшенной высотой */}
             <div
               ref={instructionSliderRef}
               onScroll={(e) => {
@@ -271,112 +279,71 @@ export const VenueGuestModal: React.FC<VenueGuestModalProps> = ({
                   if (idx !== activeInstructionSlide) setActiveInstructionSlide(idx);
                 }
               }}
-              className="flex space-x-3 overflow-x-auto snap-x snap-mandatory no-scrollbar relative z-10 pt-1 pb-1"
+              className="flex space-x-3 overflow-x-auto snap-x snap-mandatory no-scrollbar relative z-10"
             >
               {/* SLIDE 1 */}
-              <div className="w-full shrink-0 snap-center space-y-3">
+              <div className="w-full shrink-0 snap-center">
                 <div className="p-3 rounded-xl bg-[#17212b]/95 border border-white/10 space-y-2 shadow-sm">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-[#2aabee] to-[#229ed9] text-white font-black text-xs flex items-center justify-center shrink-0 shadow-md shadow-[#2aabee]/30">
-                      1
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-[#2aabee] to-[#229ed9] text-white font-black text-xs flex items-center justify-center shrink-0 shadow-md shadow-[#2aabee]/30">
+                        1
+                      </div>
+                      <span className="text-xs font-bold text-slate-200">Скажите официанту при заказе/оплате:</span>
                     </div>
-                    <span className="text-xs font-bold text-slate-200">Шаг 1: Скажите официанту</span>
+                    <div className="flex space-x-1.5 text-sm select-none">
+                      <span className="p-1 rounded-md bg-[#242f3d] border border-white/5 shadow-xs">🍹</span>
+                      <span className="p-1 rounded-md bg-[#242f3d] border border-white/5 shadow-xs">💬</span>
+                      <span className="p-1 rounded-md bg-[#242f3d] border border-white/5 shadow-xs">💆‍♀️</span>
+                    </div>
                   </div>
 
-                  <p className="text-xs text-slate-300 leading-snug">
-                    При вызове официанта или оплате чека произнесите:
-                  </p>
-
-                  <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-center font-extrabold text-sm shadow-inner">
+                  <div className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-center font-extrabold text-xs sm:text-sm shadow-inner">
                     «Я гость GiftX!»
-                  </div>
-                </div>
-
-                {/* Графика под текстом для Шага 1 */}
-                <div className="p-3 rounded-xl bg-[#17212b]/60 border border-white/5 space-y-2 text-center">
-                  <div className="flex justify-center space-x-3 text-2xl select-none">
-                    <span className="p-2 rounded-xl bg-[#242f3d] border border-white/10 shadow-sm animate-bounce" style={{ animationDuration: '2s' }}>🍹</span>
-                    <span className="p-2 rounded-xl bg-[#242f3d] border border-white/10 shadow-sm animate-bounce" style={{ animationDuration: '2.4s' }}>💬</span>
-                    <span className="p-2 rounded-xl bg-[#242f3d] border border-white/10 shadow-sm animate-bounce" style={{ animationDuration: '2.8s' }}>💆‍♀️</span>
-                  </div>
-                  <div className="text-[11px] text-slate-400 font-medium">
-                    Официант подготовят QR-код нужного уровня бокса
                   </div>
                 </div>
               </div>
 
               {/* SLIDE 2 */}
-              <div className="w-full shrink-0 snap-center space-y-3">
+              <div className="w-full shrink-0 snap-center">
                 <div className="p-3 rounded-xl bg-[#17212b]/95 border border-white/10 space-y-2 shadow-sm">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-[#2aabee] to-[#229ed9] text-white font-black text-xs flex items-center justify-center shrink-0 shadow-md shadow-[#2aabee]/30">
-                      2
-                    </div>
-                    <span className="text-xs font-bold text-slate-200">Шаг 2: Сканируйте QR</span>
-                  </div>
-
-                  <p className="text-xs text-slate-300 leading-snug">
-                    Официант покажет вам на смартфоне:
-                  </p>
-
-                  <div className="p-2.5 rounded-xl bg-[#2aabee]/15 border border-[#2aabee]/40 text-[#2aabee] text-center font-extrabold text-xs shadow-inner">
-                    QR-код уровня бокса (Silver / Gold / VIP)
-                  </div>
-                </div>
-
-                {/* Графика под текстом для Шага 2 */}
-                <div className="p-3 rounded-xl bg-[#17212b]/60 border border-white/5 space-y-2 text-center">
-                  <div className="flex items-center justify-center space-x-3 text-2xl select-none">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-[#2aabee] to-cyan-400 p-0.5 shadow-lg shadow-[#2aabee]/30 flex items-center justify-center">
-                      <div className="w-full h-full bg-[#17212b] rounded-[10px] flex items-center justify-center">
-                        <Camera className="w-6 h-6 text-[#2aabee] animate-pulse" />
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-[#2aabee] to-[#229ed9] text-white font-black text-xs flex items-center justify-center shrink-0 shadow-md shadow-[#2aabee]/30">
+                        2
                       </div>
+                      <span className="text-xs font-bold text-slate-200">Отсканируйте QR у официанта:</span>
                     </div>
-                    <span className="text-slate-500 font-black text-base">➔</span>
-                    <div className="w-12 h-12 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 font-bold text-xs shadow-md">
-                      QR 📷
+                    <div className="flex items-center space-x-1 text-[11px] text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">
+                      <Camera className="w-3.5 h-3.5 text-[#2aabee]" />
+                      <span>Сканер</span>
                     </div>
                   </div>
-                  <div className="text-[11px] text-slate-400 font-medium">
-                    Наведите камеру сканера на экран официанта
+
+                  <div className="p-2 rounded-lg bg-[#2aabee]/15 border border-[#2aabee]/40 text-[#2aabee] text-center font-extrabold text-xs sm:text-sm shadow-inner">
+                    QR-код уровня бокса (Silver / Gold / VIP)
                   </div>
                 </div>
               </div>
 
               {/* SLIDE 3 */}
-              <div className="w-full shrink-0 snap-center space-y-3">
+              <div className="w-full shrink-0 snap-center">
                 <div className="p-3 rounded-xl bg-[#17212b]/95 border border-white/10 space-y-2 shadow-sm">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 text-white font-black text-xs flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/30">
-                      3
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 text-white font-black text-xs flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/30">
+                        3
+                      </div>
+                      <span className="text-xs font-bold text-slate-200">Откройте 3D-бокс и заберите:</span>
                     </div>
-                    <span className="text-xs font-bold text-slate-200">Шаг 3: Заберите 5 Подарков</span>
-                  </div>
-
-                  <p className="text-xs text-slate-300 leading-snug">
-                    После сканирования раскроется 3D-бокс:
-                  </p>
-
-                  <div className="p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 text-center font-extrabold text-xs shadow-inner">
-                    Веер из 5 подарочных карт! 🎁
-                  </div>
-                </div>
-
-                {/* Графика под текстом для Шага 3 */}
-                <div className="p-3 rounded-xl bg-[#17212b]/60 border border-white/5 space-y-2 text-center">
-                  <div className="flex justify-center space-x-2 text-xl select-none">
-                    <div className="px-2.5 py-1 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-300 font-bold text-[10px] shadow-sm transform -rotate-6">
-                      🍹 Коктейль
-                    </div>
-                    <div className="px-2.5 py-1 rounded-lg bg-purple-500/20 border border-purple-500/40 text-purple-300 font-bold text-[10px] shadow-sm">
-                      💆‍♀️ СПА
-                    </div>
-                    <div className="px-2.5 py-1 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-bold text-[10px] shadow-sm transform rotate-6">
-                      🍕 Скидка
+                    <div className="flex space-x-1 text-xs select-none">
+                      <span className="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold text-[10px]">🍹 Напиток</span>
+                      <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold text-[10px]">🎁 СПА</span>
                     </div>
                   </div>
-                  <div className="text-[11px] text-slate-400 font-medium">
-                    Все карточки сохранятся в ваш Кошелек
+
+                  <div className="p-2 rounded-lg bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 text-center font-extrabold text-xs sm:text-sm shadow-inner">
+                    Веер из 5 подарочных карт в ваш Кошелек! 🎁
                   </div>
                 </div>
               </div>
@@ -444,7 +411,7 @@ export const VenueGuestModal: React.FC<VenueGuestModalProps> = ({
               <span>🎁 Виды боксов и состав выпадающих карт:</span>
             </h3>
 
-            <div className="space-y-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
               {/* SILVER BOX */}
               <div className="p-3 rounded-xl bg-[#242f3d] border border-white/5 space-y-1.5 shadow-sm">
                 <div className="flex items-center justify-between">
@@ -456,9 +423,9 @@ export const VenueGuestModal: React.FC<VenueGuestModalProps> = ({
                   </span>
                 </div>
                 <div className="p-2 rounded-lg bg-[#17212b] text-[11px] text-slate-300 space-y-0.5">
-                  <div className="font-bold text-slate-200">🎴 Содержимое бокса (всего 3 карты):</div>
+                  <div className="font-bold text-slate-200">🎴 Содержимое (3 карты):</div>
                   <div className="text-[10px] text-slate-400">
-                    • 2 карточки <strong className="text-slate-300">Серебряного</strong> номинала + 1 <strong className="text-amber-400">Золотая</strong>
+                    • 2 <strong className="text-slate-300">Серебряные</strong> + 1 <strong className="text-amber-400">Золотая</strong>
                   </div>
                 </div>
               </div>
@@ -474,7 +441,7 @@ export const VenueGuestModal: React.FC<VenueGuestModalProps> = ({
                   </span>
                 </div>
                 <div className="p-2 rounded-lg bg-[#17212b] text-[11px] text-amber-200/90 space-y-0.5">
-                  <div className="font-bold text-amber-300">🎴 Содержимое бокса (всего 4 карты):</div>
+                  <div className="font-bold text-amber-300">🎴 Содержимое (4 карты):</div>
                   <div className="text-[10px] text-slate-300">
                     • 1 <strong className="text-slate-300">Серебряная</strong> + 2 <strong className="text-amber-400">Золотые</strong> + 1 <strong className="text-purple-400">Платиновая</strong>
                   </div>
@@ -492,7 +459,7 @@ export const VenueGuestModal: React.FC<VenueGuestModalProps> = ({
                   </span>
                 </div>
                 <div className="p-2 rounded-lg bg-[#17212b] text-[11px] text-purple-200/90 space-y-0.5">
-                  <div className="font-bold text-purple-300">🎴 Содержимое бокса (всего 5 карт):</div>
+                  <div className="font-bold text-purple-300">🎴 Содержимое (5 карт):</div>
                   <div className="text-[10px] text-slate-300">
                     • 1 <strong className="text-slate-300">Серебряная</strong> + 2 <strong className="text-amber-400">Золотые</strong> + 2 <strong className="text-purple-400">Платиновые VIP</strong>
                   </div>
@@ -510,7 +477,7 @@ export const VenueGuestModal: React.FC<VenueGuestModalProps> = ({
               onClose();
               onOpenScanner();
             }}
-            className="w-full py-3 rounded-xl bg-[#2aabee] hover:bg-[#229ed9] text-white font-extrabold text-xs flex items-center justify-center space-x-2 transition-all shadow-md shadow-[#2aabee]/30 active:scale-[0.98] mt-2 cursor-pointer"
+            className="w-full py-3.5 rounded-xl bg-[#2aabee] hover:bg-[#229ed9] text-white font-extrabold text-xs sm:text-sm flex items-center justify-center space-x-2 transition-all shadow-lg shadow-[#2aabee]/30 active:scale-[0.98] mt-2 cursor-pointer"
           >
             <Camera className="w-4 h-4 text-white" />
             <span>Сканировать QR-код официанта</span>
