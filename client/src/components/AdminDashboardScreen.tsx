@@ -20,7 +20,9 @@ import {
   XCircle,
   UserCheck,
   Link,
-  Copy
+  Copy,
+  Globe,
+  ExternalLink
 } from 'lucide-react';
 import { Partner, StaffMember, VoucherOffer, PartnerCategory, VoucherCategory, BoxLevel } from '../types';
 import { PartnerRegistrationModal } from './PartnerRegistrationModal';
@@ -453,6 +455,46 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ defa
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
+                    </div>
+                  </div>
+
+                  {/* Прямая Web App ссылка и быстрый переход на карточку заведения */}
+                  <div className="p-2.5 rounded-xl bg-[#242f3d] border border-white/5 flex items-center justify-between gap-2 text-xs">
+                    <div className="flex items-center space-x-2 min-w-0 flex-1">
+                      <Globe className="w-3.5 h-3.5 text-[#2aabee] shrink-0" />
+                      <span className="text-[10px] text-slate-200 font-mono truncate select-all">
+                        {typeof window !== 'undefined' ? window.location.origin : 'https://gift-x.vercel.app'}/?venue={partner.id}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center space-x-1.5 shrink-0">
+                      <button
+                        onClick={() => handleCopyPartnerWebUrl(partner.id)}
+                        className="px-2.5 py-1 rounded-lg bg-[#17212b] hover:bg-[#1f2c3a] text-[#2aabee] border border-[#2aabee]/30 font-extrabold text-[10px] flex items-center space-x-1 cursor-pointer transition-all active:scale-95"
+                      >
+                        {copiedPartnerId === partner.id ? (
+                          <>
+                            <Check className="w-3 h-3 text-emerald-400" />
+                            <span className="text-emerald-400">Скопировано!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3 h-3 text-[#2aabee]" />
+                            <span>Копировать</span>
+                          </>
+                        )}
+                      </button>
+
+                      <a
+                        href={`${typeof window !== 'undefined' ? window.location.origin : 'https://gift-x.vercel.app'}/?venue=${partner.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => triggerHaptic('light')}
+                        className="px-2.5 py-1 rounded-lg bg-[#2aabee] hover:bg-[#229ed9] text-white font-extrabold text-[10px] flex items-center space-x-1 cursor-pointer transition-all active:scale-95 shadow-sm"
+                      >
+                        <span>Открыть</span>
+                        <ExternalLink className="w-3 h-3 text-white" />
+                      </a>
                     </div>
                   </div>
 
