@@ -57,6 +57,17 @@ const PlayingCardsDeck: React.FC<PlayingCardsDeckProps> = ({ vouchers: initialVo
     setActionFeedback({ id: voucher.id, type: 'SAVED' });
     setSavedCount((prev) => prev + 1);
 
+    // Сохраняем ваучер в локальное хранилище для мгновенного доступа в Кошельке
+    try {
+      const existingStr = localStorage.getItem('giftx_saved_vouchers');
+      const existing: ClaimedVoucher[] = existingStr ? JSON.parse(existingStr) : [];
+      if (!existing.some((v) => v.id === voucher.id)) {
+        localStorage.setItem('giftx_saved_vouchers', JSON.stringify([voucher, ...existing]));
+      }
+    } catch (e) {
+      console.warn('Save to localStorage error:', e);
+    }
+
     // Подтверждающее всплывающее уведомление на экран
     setSavedToast({
       title: voucher.voucherOffer?.title || 'Подарочный ваучер',

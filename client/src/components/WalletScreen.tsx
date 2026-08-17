@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Wallet, Clock, MapPin, Gift, CheckCircle, Sparkles, Navigation, ChevronRight, ArrowLeft, Star, ExternalLink, Building2, Link, Copy, Check } from 'lucide-react';
 import { ClaimedVoucher } from '../types';
 import { VoucherRedeemModal } from './VoucherRedeemModal';
+import { DemoBoxOpeningModal } from './DemoBoxOpeningModal';
 import { triggerHaptic, triggerNotificationHaptic, getTelegramUserData } from '../telegram';
 import { useAppStore } from '../store/useAppStore';
 import { getVenueImage, getVoucherImage, getVenueCoverImage } from '../utils/stockImages';
@@ -22,14 +23,33 @@ export const WalletScreen: React.FC = () => {
   const [selectedVoucher, setSelectedVoucher] = useState<ClaimedVoucher | null>(null);
   const [copiedVenueId, setCopiedVenueId] = useState<string | null>(null);
 
+  const [showDemoBoxModal, setShowDemoBoxModal] = useState(false);
+
   const fetchWallet = async () => {
     try {
       setLoading(true);
       const tgUser = getTelegramUserData();
       const res = await fetch(`/api/guest/wallet/${tgUser.id}`);
       const data = await res.json();
-      if (data.success) {
-        setWallet(data.wallet);
+      let apiWallet: ClaimedVoucher[] = data.success && Array.isArray(data.wallet) ? data.wallet : [];
+
+      // Загрузка локально сохраненных ваучеров из распакованных боксов
+      try {
+        const localStr = localStorage.getItem('giftx_saved_vouchers');
+        const localVouchers: ClaimedVoucher[] = localStr ? JSON.parse(localStr) : [];
+
+        const combined = [...apiWallet];
+        for (const lv of localVouchers) {
+          const idx = combined.findIndex((v) => v.id === lv.id);
+          if (idx === -1) {
+            combined.push(lv);
+          } else {
+            combined[idx] = lv;
+          }
+        }
+        setWallet(combined);
+      } catch (e) {
+        setWallet(apiWallet);
       }
     } catch (e) {
       console.error('Wallet fetch error', e);
@@ -169,11 +189,14 @@ export const WalletScreen: React.FC = () => {
         </div>
 
         <button
-          onClick={handleCreateDemoVoucher}
-          className="z-10 px-3 py-1.5 rounded-xl bg-[#2aabee]/15 border border-[#2aabee]/30 text-[#2aabee] font-bold text-[11px] hover:bg-[#2aabee]/25 transition-all cursor-pointer flex items-center space-x-1"
+          onClick={() => {
+            triggerHaptic('medium');
+            setShowDemoBoxModal(true);
+          }}
+          className="z-10 px-3.5 py-1.5 rounded-xl bg-[#2aabee]/15 border border-[#2aabee]/30 text-[#2aabee] font-bold text-[11px] hover:bg-[#2aabee]/25 transition-all cursor-pointer flex items-center space-x-1.5 shadow-sm"
         >
-          <Gift className="w-3.5 h-3.5" />
-          <span>+ Тестовый подарок</span>
+          <Sparkles className="w-3.5 h-3.5 text-[#2aabee]" />
+          <span>🎁 Открыть 3D-Бокс</span>
         </button>
       </div>
 
@@ -374,10 +397,22 @@ export const WalletScreen: React.FC = () => {
         /* СПИСОК ЗАВЕДЕНИЙ С ДОСТУПНЫМИ ПОДАРКАМИ */
         /* ========================================= */
         groupedActiveVenues.length === 0 ? (
-          <div className="bg-[#17212b] p-8 rounded-2xl text-center border border-white/5 my-8 space-y-3 shadow-md">
-            <Gift className="w-12 h-12 text-slate-600 mx-auto" />
-            <h3 className="text-sm font-bold text-slate-300">У вас пока нет активных заведений с подарками</h3>
-            <p className="text-xs text-slate-400">Отсканируйте QR-код в заведении-партнере, чтобы открыть первый GiftX Box!</p>
+          <div className="bg-[#17212b] p-6 rounded-2xl text-center border border-white/5 my-6 space-y-3 shadow-md">
+            <Gift className="w-12 h-12 text-[#2aabee] mx-auto animate-bounce" />
+            <h3 className="text-sm font-extrabold text-slate-100">У вас пока нет активных заведений с подарками</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Отсканируйте QR-код официанта в заведении или нажмите кнопку ниже, чтобы открыть интерактивный 3D-Бокс и получить первые подарки!
+            </p>
+            <button
+              onClick={() => {
+                triggerHaptic('medium');
+                setShowDemoBoxModal(true);
+              }}
+              className="w-full py-3.5 px-4 rounded-xl bg-[#2aabee] hover:bg-[#229ed9] text-white font-extrabold text-xs shadow-md shadow-[#2aabee]/30 transition-all cursor-pointer active:scale-95 flex items-center justify-center space-x-2"
+            >
+              <Sparkles className="w-4 h-4 text-white" />
+              <span>🎁 Открыть 3D-Бокс и получить подарки</span>
+            </button>
           </div>
         ) : (
           <div className="space-y-3">
@@ -542,6 +577,26 @@ export const WalletScreen: React.FC = () => {
           voucher={selectedVoucher}
           onClose={() => setSelectedVoucher(null)}
           onRedeemedSuccess={() => {
+            try {
+              const localStr = localStorage.getItem('giftx_saved_vouchers');
+              const localVouchers: ClaimedVoucher[] = localStr ? JSON.parse(localStr) : [];
+              const updatedLocal = localVouchers.map((v) =>
+                v.id === selectedVoucher.id
+                  ? { ...v, status: 'REDEEMED' as const, redeemedAt: new Date() }
+                  : v
+              );
+              localStorage.setItem('giftx_saved_vouchers', JSON.stringify(updatedLocal));
+            } catch (e) {}
+            fetchWallet();
+          }}
+        />
+      )}
+
+      {/* Модальное окно открытия 3D-Бокса */}
+      {showDemoBoxModal && (
+        <DemoBoxOpeningModal
+          onClose={() => {
+            setShowDemoBoxModal(false);
             fetchWallet();
           }}
         />
