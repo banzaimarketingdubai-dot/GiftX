@@ -207,6 +207,52 @@ export const App: React.FC = () => {
     }
   }, []);
 
+  const handleCloseVenue = () => {
+    triggerHaptic('light');
+
+    // 1. В Telegram WebApp закрываем сам Mini App
+    const tgWebApp = (window as any).Telegram?.WebApp;
+    if (tgWebApp?.close) {
+      try {
+        tgWebApp.close();
+      } catch (e) {}
+    }
+
+    // 2. В веб-версии (браузере) возвращаемся назад по истории браузера
+    if (typeof window !== 'undefined' && window.history && window.history.length > 1) {
+      window.history.back();
+    }
+
+    // 3. Пробуем закрыть вкладку браузера
+    if (typeof window !== 'undefined') {
+      try {
+        window.close();
+      } catch (e) {}
+    }
+
+    // 4. Запасной вариант: если браузер заблокировал закрытие (например, прямая ссылка в новой пустой вкладке)
+    setTimeout(() => {
+      setVenueModalPartnerId(null);
+    }, 300);
+  };
+
+  useEffect(() => {
+    if (!venueModalPartnerId) return;
+
+    const tgWebApp = (window as any).Telegram?.WebApp;
+    if (tgWebApp?.BackButton) {
+      tgWebApp.BackButton.show();
+      const onBackClick = () => {
+        handleCloseVenue();
+      };
+      tgWebApp.BackButton.onClick(onBackClick);
+      return () => {
+        tgWebApp.BackButton.offClick(onBackClick);
+        tgWebApp.BackButton.hide();
+      };
+    }
+  }, [venueModalPartnerId]);
+
   const isMainScreen = !activeLanding && !claimToken && !venueModalPartnerId && (role === 'GUEST' || !role);
 
   return (
@@ -500,7 +546,7 @@ export const App: React.FC = () => {
       {venueModalPartnerId && (
         <VenueGuestModal
           partnerId={venueModalPartnerId}
-          onClose={() => setVenueModalPartnerId(null)}
+          onClose={handleCloseVenue}
           onOpenScanner={() => {
             setVenueModalPartnerId(null);
             setShowScannerModal(true);
