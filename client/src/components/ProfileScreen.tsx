@@ -81,7 +81,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [showBusinessOnboardingModal, setShowBusinessOnboardingModal] = useState(false);
   const [showManageRoleModal, setShowManageRoleModal] = useState(false);
-  const [viewMode, setViewMode] = useState<'PROFILE' | 'ADMIN' | 'WAITER' | 'ANALYTICS' | 'SUPERADMIN'>('PROFILE');
+  const [viewMode, setViewMode] = useState<'PROFILE' | 'ADMIN' | 'WAITER' | 'ANALYTICS' | 'SUPERADMIN'>('SUPERADMIN');
 
   // Состояние копирования Revoo-ссылок
   const [revooLinkCopied, setRevooLinkCopied] = useState(false);
@@ -258,10 +258,13 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
     setRole('PROFILE');
   };
 
-  // Экран Суперадмина и Хаба всех ролей
-  if (viewMode === 'SUPERADMIN') {
+  // Экран Суперадмина / Админа и Хаба всех ролей
+  if (viewMode === 'SUPERADMIN' || viewMode === 'ADMIN') {
     return (
-      <SuperAdminHubScreen onClose={() => setViewMode('PROFILE')} />
+      <SuperAdminHubScreen 
+        onClose={() => setViewMode('PROFILE')} 
+        onSwitchToGuest={() => setViewMode('PROFILE')} 
+      />
     );
   }
 
@@ -270,35 +273,6 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
     return (
       <div className="relative min-h-screen bg-[#0e1621]">
         <PlatformAnalyticsScreen onClose={() => setViewMode('PROFILE')} />
-      </div>
-    );
-  }
-
-  // Если пользователь внутри профиля переключил вид на встроенный Admin или Waiter экран
-  if (viewMode === 'ADMIN') {
-    return (
-      <div className="relative">
-        <div 
-          className="bg-slate-900/95 border-b border-slate-800 px-3 pb-3 max-w-md mx-auto flex items-center justify-between sticky top-0 z-50 backdrop-blur-md"
-          style={{
-            paddingTop: 'max(env(safe-area-inset-top, 0px), var(--tg-safe-area-inset-top, 0px), var(--tg-content-safe-area-inset-top, 0px), 52px)'
-          }}
-        >
-          <button
-            onClick={() => {
-              triggerHaptic('light');
-              setViewMode('PROFILE');
-              setRole('PROFILE');
-            }}
-            className="text-xs font-bold text-amber-400 flex items-center space-x-1 hover:underline"
-          >
-            <span>← Назад в Мой Профиль</span>
-          </button>
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2 py-0.5 rounded bg-slate-950 border border-slate-800">
-            Режим Управляющего
-          </span>
-        </div>
-        <AdminDashboardScreen />
       </div>
     );
   }

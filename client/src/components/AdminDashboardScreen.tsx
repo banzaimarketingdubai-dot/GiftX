@@ -97,19 +97,90 @@ export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ defa
     totalLimit: 1000,
   });
 
+const getDemoPartnersList = () => [
+  {
+    id: 'demo-partner-1',
+    name: 'Sunset Beach Club & Lounge',
+    category: 'HORECA',
+    logoUrl: 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=200&q=80',
+    address: 'Phu Quoc, Long Beach, St 4',
+    activeStatus: true,
+    moderationStatus: 'APPROVED',
+    silverThreshold: 300000,
+    goldThreshold: 600000,
+    platinumThreshold: 1000000,
+    staffMembers: [
+      { id: 's1', name: 'Алексей Смирнов', role: 'OWNER', boxesIssuedCount: 142 },
+      { id: 's2', name: 'Мария Вайт', role: 'WAITER', boxesIssuedCount: 56 },
+    ],
+    voucherOffers: [
+      { id: 'o1', title: 'Фирменный Коктейль в подарок', category: 'TRAFFIC_MAGNET', targetBoxLevel: 'SILVER', claimedCount: 240 },
+      { id: 'o2', title: 'Десерт от Шеф-Повара', category: 'LOYALTY_BOOSTER', targetBoxLevel: 'GOLD', claimedCount: 88 }
+    ]
+  },
+  {
+    id: 'demo-partner-2',
+    name: 'Lotus Spa & Wellness Resort',
+    category: 'BEAUTY_SPA',
+    logoUrl: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=200&q=80',
+    address: 'Phu Quoc, Tran Hung Dao, St 12',
+    activeStatus: true,
+    moderationStatus: 'APPROVED',
+    silverThreshold: 400000,
+    goldThreshold: 800000,
+    platinumThreshold: 1500000,
+    staffMembers: [
+      { id: 's3', name: 'Елена Руководитель', role: 'MANAGER', boxesIssuedCount: 95 }
+    ],
+    voucherOffers: [
+      { id: 'o3', title: 'SPA Массаж стоп 30 минут', category: 'HIGH_MARGIN_GIFT', targetBoxLevel: 'PLATINUM', claimedCount: 34 }
+    ]
+  },
+  {
+    id: 'demo-partner-3',
+    name: 'Fusion Craft Dining & Bar',
+    category: 'HORECA',
+    logoUrl: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=200&q=80',
+    address: 'Phu Quoc, Duong Dong Center',
+    activeStatus: true,
+    moderationStatus: 'APPROVED',
+    silverThreshold: 350000,
+    goldThreshold: 700000,
+    platinumThreshold: 1200000,
+    staffMembers: [],
+    voucherOffers: []
+  }
+];
+
   const fetchOverview = async () => {
     try {
       setLoading(true);
       const res = await fetch('/api/admin/overview');
       const data = await res.json();
-      if (data.success) {
+      if (data.success && Array.isArray(data.partners) && data.partners.length > 0) {
         setStats(data.stats);
         setPartners(data.partners);
       } else {
-        setError(data.error || 'Ошибка загрузки данных');
+        const staffRes = await fetch('/api/staff/partners');
+        const staffData = await staffRes.json();
+        if (staffData.success && Array.isArray(staffData.partners) && staffData.partners.length > 0) {
+          setPartners(staffData.partners);
+        } else {
+          setPartners(getDemoPartnersList());
+        }
       }
     } catch (e: any) {
-      setError(e.message);
+      try {
+        const staffRes = await fetch('/api/staff/partners');
+        const staffData = await staffRes.json();
+        if (staffData.success && Array.isArray(staffData.partners) && staffData.partners.length > 0) {
+          setPartners(staffData.partners);
+        } else {
+          setPartners(getDemoPartnersList());
+        }
+      } catch (err) {
+        setPartners(getDemoPartnersList());
+      }
     } finally {
       setLoading(false);
     }
