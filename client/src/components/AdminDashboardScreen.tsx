@@ -273,15 +273,15 @@ export const AdminDashboardScreen: React.FC = () => {
   };
 
   return (
-    <div className="p-4 max-w-md mx-auto min-h-screen pb-24 text-slate-100 space-y-5">
-      {/* Шапка админ-панели */}
-      <div className="glass-card p-5 rounded-3xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-slate-900 to-slate-900 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+    <div className="p-4 max-w-md mx-auto min-h-screen pb-24 text-slate-100 space-y-4 font-sans">
+      {/* Шапка админ-панели (ТЕЛЕГРАМ СТИЛЬ) */}
+      <div className="bg-[#17212b] p-4.5 rounded-2xl border border-white/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-md">
         <div>
-          <div className="flex items-center space-x-2 text-xs font-bold text-amber-400 uppercase tracking-wider mb-1">
+          <div className="flex items-center space-x-2 text-[10px] font-bold text-[#2aabee] uppercase tracking-wider mb-1">
             <ShieldAlert className="w-4 h-4" />
             <span>Панель Управляющего</span>
           </div>
-          <h1 className="text-xl font-black text-slate-100">GiftX Admin Center</h1>
+          <h1 className="text-lg font-extrabold text-slate-100">GiftX Admin Center</h1>
         </div>
         
         <button
@@ -289,50 +289,50 @@ export const AdminDashboardScreen: React.FC = () => {
             triggerHaptic('medium');
             setShowDemoBoxModal(true);
           }}
-          className="w-full sm:w-auto px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shadow-md shadow-amber-500/20 flex items-center justify-center space-x-1.5 active:scale-95 transition-all"
+          className="w-full sm:w-auto px-3.5 py-2 rounded-xl bg-[#2aabee] hover:bg-[#229ed9] text-white font-bold text-xs shadow-md shadow-[#2aabee]/30 flex items-center justify-center space-x-1.5 active:scale-95 transition-all cursor-pointer"
         >
-          <Gift className="w-4 h-4 text-slate-950" />
+          <Gift className="w-4 h-4 text-white" />
           <span>🎁 Демо-открытие бокса</span>
         </button>
       </div>
 
-      {/* Метрики KPI */}
+      {/* Метрики KPI (ТЕЛЕГРАМ СТИЛЬ) */}
       <div className="grid grid-cols-2 gap-2.5">
-        <div className="glass-card p-3.5 rounded-2xl border border-slate-800 bg-slate-900/80">
+        <div className="bg-[#17212b] p-3.5 rounded-2xl border border-white/5 shadow-sm">
           <div className="text-[10px] uppercase font-bold text-slate-400 flex items-center space-x-1">
-            <Building2 className="w-3.5 h-3.5 text-amber-400" />
+            <Building2 className="w-3.5 h-3.5 text-[#2aabee]" />
             <span>Заведений</span>
           </div>
-          <div className="text-2xl font-black text-slate-100 mt-1">{stats.totalPartners}</div>
+          <div className="text-xl font-extrabold text-slate-100 mt-1">{stats.totalPartners}</div>
         </div>
 
-        <div className="glass-card p-3.5 rounded-2xl border border-slate-800 bg-slate-900/80">
+        <div className="bg-[#17212b] p-3.5 rounded-2xl border border-white/5 shadow-sm">
           <div className="text-[10px] uppercase font-bold text-slate-400 flex items-center space-x-1">
             <Users className="w-3.5 h-3.5 text-cyan-400" />
             <span>Персонал</span>
           </div>
-          <div className="text-2xl font-black text-slate-100 mt-1">{stats.totalStaff}</div>
+          <div className="text-xl font-extrabold text-slate-100 mt-1">{stats.totalStaff}</div>
         </div>
 
-        <div className="glass-card p-3.5 rounded-2xl border border-slate-800 bg-slate-900/80">
+        <div className="bg-[#17212b] p-3.5 rounded-2xl border border-white/5 shadow-sm">
           <div className="text-[10px] uppercase font-bold text-slate-400 flex items-center space-x-1">
             <Gift className="w-3.5 h-3.5 text-purple-400" />
             <span>Выдано подарков</span>
           </div>
-          <div className="text-2xl font-black text-slate-100 mt-1">{stats.totalClaimed}</div>
+          <div className="text-xl font-extrabold text-slate-100 mt-1">{stats.totalClaimed}</div>
         </div>
 
-        <div className="glass-card p-3.5 rounded-2xl border border-slate-800 bg-slate-900/80">
+        <div className="bg-[#17212b] p-3.5 rounded-2xl border border-white/5 shadow-sm">
           <div className="text-[10px] uppercase font-bold text-slate-400 flex items-center space-x-1">
             <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
             <span>Гашений</span>
           </div>
-          <div className="text-2xl font-black text-emerald-400 mt-1">{stats.redemptionRate}%</div>
+          <div className="text-xl font-extrabold text-emerald-400 mt-1">{stats.redemptionRate}%</div>
         </div>
       </div>
 
-      {/* Переключатель вкладок админки */}
-      <div className="flex space-x-1 bg-slate-900/90 p-1.5 rounded-2xl border border-slate-800 overflow-x-auto no-scrollbar">
+      {/* Переключатель вкладок админки (ТЕЛЕГРАМ СТИЛЬ) */}
+      <div className="flex space-x-1 bg-[#17212b] p-1.5 rounded-2xl border border-white/5 overflow-x-auto no-scrollbar shadow-md">
         {[
           { id: 'VENUES', label: '🏢 Заведения' },
           { id: 'MODERATION', label: `⚖️ Модерация (${partners.filter((p) => p.moderationStatus === 'PENDING').length})` },
@@ -348,9 +348,9 @@ export const AdminDashboardScreen: React.FC = () => {
               triggerHaptic('light');
               setActiveTab(tab.id as any);
             }}
-            className={`flex-1 py-2 px-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+            className={`flex-1 py-1.5 px-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
               activeTab === tab.id
-                ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
+                ? 'bg-[#2aabee] text-white shadow-md shadow-[#2aabee]/30'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
