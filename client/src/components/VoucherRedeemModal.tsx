@@ -3,6 +3,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { X, CheckCircle2, AlertCircle, Lock, Building2, MapPin, Navigation } from 'lucide-react';
 import { ClaimedVoucher } from '../types';
 import { triggerHaptic, triggerNotificationHaptic } from '../telegram';
+import { getVoucherTier, getTierTheme } from '../utils/tierThemes';
 
 interface VoucherRedeemModalProps {
   voucher: ClaimedVoucher;
@@ -22,6 +23,8 @@ export const VoucherRedeemModal: React.FC<VoucherRedeemModalProps> = ({
 
   const offer = voucher.voucherOffer;
   const partner = offer?.partner;
+  const tier = getVoucherTier(voucher);
+  const theme = getTierTheme(tier);
 
   // Polling проверки статуса гашения в реальном времени (каждые 2 секунды)
   React.useEffect(() => {
@@ -166,18 +169,24 @@ export const VoucherRedeemModal: React.FC<VoucherRedeemModalProps> = ({
               </a>
             </div>
 
-            {/* ПЛОТНАЯ ВЫДЕЛЕННАЯ КАРТОЧКА ПОДАРКА */}
-            <div className="bg-[#242f3d] p-3.5 rounded-xl border border-white/10 text-left space-y-2.5 shadow-lg">
+            {/* ВЫДЕЛЕННАЯ КАРТОЧКА ПОДАРКА (В СТИЛЕ КЛАССА SILVER / GOLD / PLATINUM) */}
+            <div className={`${theme.cardBg} p-3.5 rounded-xl border-2 ${theme.border} text-left space-y-2.5 shadow-lg relative overflow-hidden`}>
+              <div className={`absolute top-0 inset-x-0 h-1.5 ${theme.topBar}`} />
+              <div className="flex items-center justify-between z-10 pt-1">
+                <span className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full ${theme.badgeBg}`}>
+                  {theme.badgeLabel}
+                </span>
+                <span className={`font-extrabold text-sm ${theme.accentText}`}>{offer?.discountValue}</span>
+              </div>
               <img
                 src={offer?.imageUrl}
                 alt={offer?.title}
-                className="w-full h-32 object-cover rounded-lg border border-white/10"
+                className="w-full h-32 object-cover rounded-lg border border-white/10 shadow-md"
               />
 
               <div>
                 <h3 className="font-extrabold text-slate-100 text-sm">{offer?.title}</h3>
                 <p className="text-xs text-slate-300 mt-1">{offer?.description}</p>
-                <div className="mt-2 text-emerald-400 font-extrabold text-sm">{offer?.discountValue}</div>
               </div>
             </div>
 

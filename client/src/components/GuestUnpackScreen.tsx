@@ -5,6 +5,7 @@ import { Gift, Sparkles, AlertTriangle, ShieldCheck, ArrowRight, MapPin, Chevron
 import { triggerHaptic, triggerNotificationHaptic, getTelegramUserData } from '../telegram';
 import { ClaimedVoucher } from '../types';
 import { useAppStore } from '../store/useAppStore';
+import { getVoucherTier, getTierTheme } from '../utils/tierThemes';
 
 interface GuestUnpackScreenProps {
   claimToken: string;
@@ -233,6 +234,8 @@ const PlayingCardsDeck: React.FC<PlayingCardsDeckProps> = ({ vouchers: initialVo
           const isSelected = index === activeIndex;
           const isFlipped = !!flippedCards[v.id];
           const isAnimatingFeedback = actionFeedback?.id === v.id;
+          const tier = getVoucherTier(v);
+          const theme = getTierTheme(tier);
 
           // Расчет 3D-позиционирования карточек в колоде
           const rotateZ = offset * 6;
@@ -285,7 +288,7 @@ const PlayingCardsDeck: React.FC<PlayingCardsDeckProps> = ({ vouchers: initialVo
               }}
               className="absolute w-80 h-48 rounded-3xl cursor-pointer select-none shadow-2xl touch-none"
             >
-              {/* ЛИЦЕВАЯ СТОРОНА КАРТОЧКИ ПОДАРКА (ПЛОТНЫЙ ВЫДЕЛЕННЫЙ ФОН В СТИЛЕ ТГ) */}
+              {/* ЛИЦЕВАЯ СТОРОНА КАРТОЧКИ ПОДАРКА (В СТИЛЕ ТИРА SILVER / GOLD / PLATINUM) */}
               <div
                 style={{
                   backfaceVisibility: 'hidden',
@@ -295,21 +298,21 @@ const PlayingCardsDeck: React.FC<PlayingCardsDeckProps> = ({ vouchers: initialVo
                   pointerEvents: isFlipped ? 'none' : 'auto',
                   transition: 'opacity 0.15s ease-in-out',
                 }}
-                className={`absolute inset-0 w-full h-full rounded-2xl p-4 bg-[#242f3d] border-2 ${
-                  isSelected ? 'border-[#2aabee] shadow-[0_0_30px_rgba(42,171,238,0.4)] scale-[1.02]' : 'border-white/10'
+                className={`absolute inset-0 w-full h-full rounded-2xl p-4 ${theme.cardBg} border-2 ${
+                  isSelected ? theme.selectedBorder : theme.border
                 } flex flex-col justify-between overflow-hidden shadow-2xl`}
               >
-                {/* Синий неоновый акцент ТГ */}
-                <div className="absolute top-0 inset-x-0 h-1.5 bg-[#2aabee]" />
+                {/* Неоновый акцент тира */}
+                <div className={`absolute top-0 inset-x-0 h-1.5 ${theme.topBar}`} />
 
                 {/* Шапка карточки */}
                 <div className="flex justify-between items-center z-10">
-                  <div className="flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full bg-[#17212b] border border-white/10 text-[#2aabee] text-[10px] font-bold uppercase tracking-wider">
-                    <Sparkles className="w-3 h-3 text-[#2aabee]" />
-                    <span>GiftX #{index + 1}</span>
+                  <div className={`flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full ${theme.badgeBg} text-[10px] font-black uppercase tracking-wider`}>
+                    <Sparkles className="w-3 h-3 text-current" />
+                    <span>{theme.badgeLabel}</span>
                   </div>
 
-                  <span className="text-base font-extrabold text-emerald-400 drop-shadow-md">
+                  <span className={`text-base font-extrabold ${theme.accentText} drop-shadow-md`}>
                     {offer?.discountValue}
                   </span>
                 </div>
@@ -322,7 +325,7 @@ const PlayingCardsDeck: React.FC<PlayingCardsDeckProps> = ({ vouchers: initialVo
                     className="w-14 h-14 rounded-xl object-cover border border-white/10 shadow-md shrink-0"
                   />
                   <div className="min-w-0 flex-1">
-                    <span className="text-[10px] uppercase font-bold text-[#2aabee] block truncate">
+                    <span className={`text-[10px] uppercase font-bold ${theme.accentIcon} block truncate`}>
                       {partner?.name}
                     </span>
                     <h4 className="text-xs font-extrabold text-slate-100 leading-tight truncate mt-0.5">
@@ -337,7 +340,7 @@ const PlayingCardsDeck: React.FC<PlayingCardsDeckProps> = ({ vouchers: initialVo
                 {/* Нижняя панель карточки */}
                 <div className="pt-2 border-t border-white/10 flex justify-between items-center text-[10px] z-10">
                   <span className="flex items-center space-x-1 text-slate-300 truncate max-w-[130px]">
-                    <MapPin className="w-3.5 h-3.5 text-[#2aabee] shrink-0" />
+                    <MapPin className={`w-3.5 h-3.5 ${theme.accentIcon} shrink-0`} />
                     <span className="truncate">{partner?.address}</span>
                   </span>
 
@@ -351,14 +354,14 @@ const PlayingCardsDeck: React.FC<PlayingCardsDeckProps> = ({ vouchers: initialVo
                           setRole('MAP');
                         }}
                         title="Маршрут на карте"
-                        className="py-0.5 px-2 rounded-lg bg-[#17212b] border border-white/10 text-[#2aabee] font-bold flex items-center space-x-1 text-[9px] cursor-pointer"
+                        className={`py-0.5 px-2 rounded-lg ${theme.badgeBg} font-bold flex items-center space-x-1 text-[9px] cursor-pointer`}
                       >
-                        <Navigation className="w-2.5 h-2.5 text-[#2aabee]" />
+                        <Navigation className={`w-2.5 h-2.5 ${theme.accentIcon}`} />
                         <span>Маршрут</span>
                       </button>
                     )}
 
-                    <span className="text-[#2aabee] font-mono font-bold flex items-center space-x-0.5 bg-[#17212b] px-2 py-0.5 rounded-lg border border-white/10 text-[9px]">
+                    <span className={`${theme.badgeBg} font-mono font-bold flex items-center space-x-0.5 px-2 py-0.5 rounded-lg text-[9px]`}>
                       <RotateCw className="w-2.5 h-2.5" />
                       <span>3D 🔄</span>
                     </span>
@@ -377,17 +380,17 @@ const PlayingCardsDeck: React.FC<PlayingCardsDeckProps> = ({ vouchers: initialVo
                   pointerEvents: isFlipped ? 'auto' : 'none',
                   transition: 'opacity 0.15s ease-in-out',
                 }}
-                className="absolute inset-0 w-full h-full rounded-3xl p-4 bg-slate-950 bg-gradient-to-br from-amber-950 via-slate-950 to-slate-950 border-2 border-amber-400/80 shadow-[0_0_35px_rgba(245,158,11,0.5)] flex flex-col justify-between items-center text-center overflow-hidden"
+                className={`absolute inset-0 w-full h-full rounded-3xl p-4 ${theme.backBg} border-2 flex flex-col justify-between items-center text-center overflow-hidden`}
               >
                 {/* Геометрический паттерн рубашки игральной карты */}
-                <div className="absolute inset-2 border border-amber-500/30 rounded-2xl pointer-events-none flex items-center justify-center bg-[radial-gradient(#f59e0b_1px,transparent_1px)] [background-size:12px_12px] opacity-20" />
+                <div className="absolute inset-2 border border-white/10 rounded-2xl pointer-events-none flex items-center justify-center bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:12px_12px] opacity-15" />
 
                 <div className="z-10 space-y-1 pt-1">
-                  <div className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center font-black text-amber-400 text-lg mx-auto shadow-lg">
+                  <div className={`w-10 h-10 rounded-2xl ${theme.backBoxIcon} flex items-center justify-center font-black text-lg mx-auto shadow-lg`}>
                     X
                   </div>
-                  <h5 className="text-xs font-black text-amber-300 uppercase tracking-widest">
-                    Условия активации
+                  <h5 className={`text-xs font-black uppercase tracking-widest ${theme.accentText}`}>
+                    {theme.badgeLabel} • Условия
                   </h5>
                 </div>
 

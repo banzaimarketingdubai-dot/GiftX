@@ -7,6 +7,7 @@ import { triggerHaptic, triggerNotificationHaptic, getTelegramUserData } from '.
 import { useAppStore } from '../store/useAppStore';
 import { getVenueImage, getVoucherImage, getVenueCoverImage } from '../utils/stockImages';
 import { VenueAvatar } from './VenueAvatar';
+import { getVoucherTier, getTierTheme } from '../utils/tierThemes';
 
 interface GroupedVenue {
   partnerId: string;
@@ -343,10 +344,13 @@ export const WalletScreen: React.FC = () => {
             <h3 className="font-bold text-slate-200 text-xs">Доступные подарки в этом заведении:</h3>
           </div>
 
-          {/* Список доступных подарков заведения (ПЛОТНЫЕ ВЫДЕЛЕННЫЕ КАРТОЧКИ ПОДАРКОВ В СТИЛЕ ТГ) */}
+          {/* Список доступных подарков заведения (ОКРАШЕННЫЕ В ЦВЕТА КЛАССОВ SILVER, GOLD, PLATINUM) */}
           <div className="space-y-3">
             {currentVenueGroup.vouchers.map((v) => {
               const offer = v.voucherOffer;
+              const tier = getVoucherTier(v);
+              const theme = getTierTheme(tier);
+
               return (
                 <div
                   key={v.id}
@@ -354,8 +358,11 @@ export const WalletScreen: React.FC = () => {
                     triggerHaptic('medium');
                     setSelectedVoucher(v);
                   }}
-                  className="bg-[#242f3d] hover:bg-[#2b394a] p-4.5 rounded-2xl border border-white/10 cursor-pointer shadow-xl shadow-black/30 transition-all active:scale-[0.99] group space-y-3 relative overflow-hidden"
+                  className={`${theme.cardBg} p-4.5 rounded-2xl border-2 ${theme.border} cursor-pointer shadow-xl transition-all active:scale-[0.99] group space-y-3 relative overflow-hidden`}
                 >
+                  {/* Верхняя светящаяся полоса тира */}
+                  <div className={`absolute top-0 inset-x-0 h-1.5 ${theme.topBar}`} />
+
                   <div className="flex items-start space-x-3.5">
                     <img
                       src={getVoucherImage(offer?.imageUrl, offer?.category)}
@@ -364,11 +371,11 @@ export const WalletScreen: React.FC = () => {
                     />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] uppercase font-bold text-[#2aabee] px-2.5 py-0.5 rounded-full bg-[#17212b] border border-white/10 truncate">
-                          {offer?.category || 'GIFT'}
+                        <span className={`text-[10px] uppercase font-black px-2.5 py-0.5 rounded-full ${theme.badgeBg} truncate`}>
+                          {theme.badgeLabel}
                         </span>
                         
-                        <span className="text-[#2aabee] flex items-center space-x-1 font-mono font-bold text-xs bg-[#17212b] px-2.5 py-0.5 rounded-full border border-white/10">
+                        <span className="text-slate-300 flex items-center space-x-1 font-mono font-bold text-xs bg-slate-900/80 px-2.5 py-0.5 rounded-full border border-white/10">
                           <Clock className="w-3 h-3 text-[#2aabee] animate-pulse" />
                           <span>{formatRemainingTime(v.expiresAt)}</span>
                         </span>
@@ -380,9 +387,9 @@ export const WalletScreen: React.FC = () => {
                   </div>
 
                   <div className="pt-2.5 border-t border-white/10 flex items-center justify-between">
-                    <span className="font-extrabold text-emerald-400 text-sm">{offer?.discountValue}</span>
+                    <span className={`font-extrabold text-sm ${theme.accentText}`}>{offer?.discountValue}</span>
                     
-                    <button className="py-2 px-3.5 rounded-xl bg-[#2aabee] hover:bg-[#229ed9] text-white text-xs font-bold flex items-center space-x-1 shadow-md shadow-[#2aabee]/30 transition-all cursor-pointer">
+                    <button className="py-2 px-3.5 rounded-xl bg-[#2aabee] hover:bg-[#229ed9] text-white text-xs font-black flex items-center space-x-1 shadow-md shadow-[#2aabee]/30 transition-all cursor-pointer">
                       <span>Забрать / Показать QR</span>
                       <ChevronRight className="w-3.5 h-3.5 text-white" />
                     </button>
