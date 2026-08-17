@@ -81,36 +81,36 @@ export const VoucherRedeemModal: React.FC<VoucherRedeemModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
-      <div className="glass-card w-full max-w-sm rounded-3xl border border-slate-800 p-6 relative shadow-2xl text-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0e1621]/85 backdrop-blur-md animate-fadeIn font-sans">
+      <div className="w-full max-w-sm bg-[#17212b] border border-white/10 rounded-2xl p-5 shadow-2xl relative text-center text-slate-100 space-y-4">
         {/* Кнопка закрытия */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 rounded-full bg-slate-900 text-slate-400 hover:text-white"
+          className="absolute top-4 right-4 p-2 rounded-full bg-[#242f3d] text-slate-400 hover:text-white transition-all cursor-pointer"
         >
-          <X className="w-5 h-5" />
+          <X className="w-4 h-4" />
         </button>
 
         {redeemed ? (
-          <div className="py-6 space-y-4">
-            <div className="w-16 h-16 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mx-auto border border-emerald-500/40">
+          <div className="py-4 space-y-3.5">
+            <div className="w-16 h-16 bg-emerald-500/20 text-emerald-400 rounded-2xl flex items-center justify-center mx-auto border border-emerald-500/40 shadow-md">
               <CheckCircle2 className="w-10 h-10" />
             </div>
-            <h3 className="text-xl font-bold text-emerald-400">Подарок Погашен!</h3>
+            <h3 className="text-lg font-extrabold text-emerald-400">Подарок Погашен!</h3>
             <p className="text-xs text-slate-300">
               Администратор {partner?.name} подтвердил списание. Пользуйтесь с удовольствием!
             </p>
             <button
               onClick={onClose}
-              className="w-full py-3 bg-emerald-500 text-slate-950 font-bold rounded-2xl mt-4"
+              className="w-full py-3 bg-[#2aabee] text-white font-extrabold rounded-xl shadow-md shadow-[#2aabee]/30 cursor-pointer"
             >
               Закрыть
             </button>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3.5">
             {/* Заголовок заведения */}
-            <div className="flex items-center justify-center space-x-2 text-xs text-amber-400 font-semibold uppercase tracking-wider">
+            <div className="flex items-center justify-center space-x-2 text-xs text-[#2aabee] font-bold uppercase tracking-wider">
               <Building2 className="w-4 h-4" />
               <span>{partner?.name}</span>
             </div>
@@ -121,9 +121,9 @@ export const VoucherRedeemModal: React.FC<VoucherRedeemModalProps> = ({
                 href={partner?.googleMapsUrl || `https://maps.google.com/?q=${encodeURIComponent(partner?.name + ' ' + partner?.address)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center space-x-1.5 text-xs text-amber-400 font-semibold bg-amber-500/10 border border-amber-500/20 py-1.5 px-3 rounded-xl hover:bg-amber-500/20 transition-all truncate max-w-[65%]"
+                className="inline-flex items-center space-x-1.5 text-[11px] text-[#2aabee] font-bold bg-[#242f3d] border border-white/5 py-1.5 px-3 rounded-xl hover:bg-[#2b394a] transition-all truncate max-w-[65%]"
               >
-                <MapPin className="w-3.5 h-3.5 shrink-0" />
+                <MapPin className="w-3.5 h-3.5 shrink-0 text-[#2aabee]" />
                 <span className="truncate">{partner?.address}</span>
               </a>
 
@@ -132,33 +132,36 @@ export const VoucherRedeemModal: React.FC<VoucherRedeemModalProps> = ({
                 target="_blank"
                 rel="noopener noreferrer"
                 title="Маршрут в навигаторе устройства"
-                className="inline-flex items-center space-x-1 text-xs text-slate-950 font-black bg-amber-500 hover:bg-amber-400 py-1.5 px-3 rounded-xl shadow-md transition-all shrink-0 active:scale-95"
+                className="inline-flex items-center space-x-1 text-xs text-white font-extrabold bg-[#2aabee] hover:bg-[#229ed9] py-1.5 px-3 rounded-xl shadow-md transition-all shrink-0 active:scale-95 cursor-pointer"
               >
-                <Navigation className="w-3.5 h-3.5" />
+                <Navigation className="w-3.5 h-3.5 text-white" />
                 <span>Маршрут</span>
               </a>
             </div>
 
-            <img
-              src={offer?.imageUrl}
-              alt={offer?.title}
-              className="w-full h-32 object-cover rounded-2xl border border-slate-800"
-            />
+            {/* ПЛОТНАЯ ВЫДЕЛЕННАЯ КАРТОЧКА ПОДАРКА (С ПЛОТНЫМ ФОНОМ #242f3d) */}
+            <div className="bg-[#242f3d] p-3.5 rounded-xl border border-white/10 text-left space-y-2.5 shadow-lg">
+              <img
+                src={offer?.imageUrl}
+                alt={offer?.title}
+                className="w-full h-32 object-cover rounded-lg border border-white/10"
+              />
 
-            <div>
-              <h3 className="font-bold text-slate-100 text-base">{offer?.title}</h3>
-              <p className="text-xs text-slate-400 mt-1">{offer?.description}</p>
-              <div className="mt-2 text-emerald-400 font-extrabold text-sm">{offer?.discountValue}</div>
+              <div>
+                <h3 className="font-extrabold text-slate-100 text-sm">{offer?.title}</h3>
+                <p className="text-xs text-slate-300 mt-1">{offer?.description}</p>
+                <div className="mt-2 text-emerald-400 font-extrabold text-sm">{offer?.discountValue}</div>
+              </div>
             </div>
 
             {/* Уникальный QR secret код для показа администратору */}
-            <div className="p-3 bg-white rounded-2xl inline-block my-2">
-              <QRCodeSVG value={voucher.qrCodeSecret} size={150} />
+            <div className="p-3 bg-white rounded-xl inline-block shadow-md">
+              <QRCodeSVG value={voucher.qrCodeSecret} size={140} />
             </div>
             <p className="text-[11px] text-slate-400">Покажите QR администратору или введите PIN заведения</p>
 
             {/* Форма ввода PIN-кода администратора (демо PIN: 1234) */}
-            <div className="pt-2">
+            <div className="pt-1">
               <div className="relative">
                 <input
                   type="password"
@@ -166,9 +169,9 @@ export const VoucherRedeemModal: React.FC<VoucherRedeemModalProps> = ({
                   placeholder="PIN администратора (1234)"
                   value={pin}
                   onChange={(e) => setPin(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-center font-mono text-lg text-white focus:outline-none focus:border-amber-500 tracking-widest placeholder:text-xs placeholder:font-sans placeholder:tracking-normal"
+                  className="w-full px-4 py-2.5 bg-[#242f3d] border border-white/10 rounded-xl text-center font-mono text-base text-white focus:outline-none focus:border-[#2aabee] tracking-widest placeholder:text-xs placeholder:font-sans placeholder:tracking-normal"
                 />
-                <Lock className="w-4 h-4 text-slate-500 absolute left-3 top-3.5" />
+                <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
               </div>
 
               {errorMsg && (
@@ -181,7 +184,7 @@ export const VoucherRedeemModal: React.FC<VoucherRedeemModalProps> = ({
               <button
                 disabled={loading}
                 onClick={handleRedeem}
-                className="mt-3 w-full py-3.5 bg-amber-500 hover:bg-amber-600 font-bold text-slate-950 rounded-xl transition-all shadow-lg shadow-amber-500/20 text-sm"
+                className="mt-3 w-full py-3 bg-[#2aabee] hover:bg-[#229ed9] font-extrabold text-white rounded-xl transition-all shadow-md shadow-[#2aabee]/30 text-xs cursor-pointer active:scale-95"
               >
                 {loading ? 'Проверка...' : 'Подтвердить списание'}
               </button>

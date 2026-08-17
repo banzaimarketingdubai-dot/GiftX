@@ -277,7 +277,7 @@ export const WalletScreen: React.FC = () => {
             <h3 className="font-bold text-slate-200 text-xs">Доступные подарки в этом заведении:</h3>
           </div>
 
-          {/* Список доступных подарков заведения */}
+          {/* Список доступных подарков заведения (ПЛОТНЫЕ ВЫДЕЛЕННЫЕ КАРТОЧКИ ПОДАРКОВ В СТИЛЕ ТГ) */}
           <div className="space-y-3">
             {currentVenueGroup.vouchers.map((v) => {
               const offer = v.voucherOffer;
@@ -288,7 +288,7 @@ export const WalletScreen: React.FC = () => {
                     triggerHaptic('medium');
                     setSelectedVoucher(v);
                   }}
-                  className="bg-[#17212b] hover:bg-[#1f2c3a] p-4 rounded-2xl border border-white/5 cursor-pointer shadow-md transition-all active:scale-[0.99] group space-y-3"
+                  className="bg-[#242f3d] hover:bg-[#2b394a] p-4.5 rounded-2xl border border-white/10 cursor-pointer shadow-xl shadow-black/30 transition-all active:scale-[0.99] group space-y-3 relative overflow-hidden"
                 >
                   <div className="flex items-start space-x-3.5">
                     <img
@@ -298,27 +298,27 @@ export const WalletScreen: React.FC = () => {
                     />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] uppercase font-bold text-[#2aabee] px-2 py-0.5 rounded-full bg-[#2aabee]/10 border border-[#2aabee]/20 truncate">
+                        <span className="text-[10px] uppercase font-bold text-[#2aabee] px-2.5 py-0.5 rounded-full bg-[#17212b] border border-white/10 truncate">
                           {offer?.category || 'GIFT'}
                         </span>
                         
-                        <span className="text-[#2aabee] flex items-center space-x-1 font-mono font-bold text-xs bg-[#2aabee]/10 px-2 py-0.5 rounded-full border border-[#2aabee]/20">
-                          <Clock className="w-3 h-3 animate-pulse" />
+                        <span className="text-[#2aabee] flex items-center space-x-1 font-mono font-bold text-xs bg-[#17212b] px-2.5 py-0.5 rounded-full border border-white/10">
+                          <Clock className="w-3 h-3 text-[#2aabee] animate-pulse" />
                           <span>{formatRemainingTime(v.expiresAt)}</span>
                         </span>
                       </div>
 
-                      <h4 className="font-bold text-slate-100 text-sm mt-1.5 leading-snug">{offer?.title}</h4>
-                      <p className="text-xs text-slate-400 line-clamp-2 mt-1">{offer?.description}</p>
+                      <h4 className="font-extrabold text-slate-100 text-sm mt-1.5 leading-snug">{offer?.title}</h4>
+                      <p className="text-xs text-slate-300 line-clamp-2 mt-1">{offer?.description}</p>
                     </div>
                   </div>
 
-                  <div className="pt-2 border-t border-white/5 flex items-center justify-between">
+                  <div className="pt-2.5 border-t border-white/10 flex items-center justify-between">
                     <span className="font-extrabold text-emerald-400 text-sm">{offer?.discountValue}</span>
                     
-                    <button className="py-2 px-3 rounded-xl bg-[#2aabee] hover:bg-[#229ed9] text-white text-xs font-bold flex items-center space-x-1 shadow-md shadow-[#2aabee]/30 transition-all cursor-pointer">
+                    <button className="py-2 px-3.5 rounded-xl bg-[#2aabee] hover:bg-[#229ed9] text-white text-xs font-bold flex items-center space-x-1 shadow-md shadow-[#2aabee]/30 transition-all cursor-pointer">
                       <span>Забрать / Показать QR</span>
-                      <ChevronRight className="w-3.5 h-3.5" />
+                      <ChevronRight className="w-3.5 h-3.5 text-white" />
                     </button>
                   </div>
                 </div>

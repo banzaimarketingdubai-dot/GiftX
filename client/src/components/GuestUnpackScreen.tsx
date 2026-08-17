@@ -268,7 +268,7 @@ const PlayingCardsDeck: React.FC<PlayingCardsDeckProps> = ({ vouchers: initialVo
               }}
               className="absolute w-80 h-48 rounded-3xl cursor-pointer select-none shadow-2xl touch-none"
             >
-              {/* ЛИЦЕВАЯ СТОРОНА КАРТОЧКИ */}
+              {/* ЛИЦЕВАЯ СТОРОНА КАРТОЧКИ ПОДАРКА (ПЛОТНЫЙ ВЫДЕЛЕННЫЙ ФОН В СТИЛЕ ТГ) */}
               <div
                 style={{
                   backfaceVisibility: 'hidden',
@@ -278,22 +278,21 @@ const PlayingCardsDeck: React.FC<PlayingCardsDeckProps> = ({ vouchers: initialVo
                   pointerEvents: isFlipped ? 'none' : 'auto',
                   transition: 'opacity 0.15s ease-in-out',
                 }}
-                className={`absolute inset-0 w-full h-full rounded-3xl p-4 bg-slate-950 bg-gradient-to-br from-slate-900 via-slate-950 to-black border-2 ${
-                  isSelected ? 'border-amber-400 shadow-[0_0_35px_rgba(245,158,11,0.45)]' : 'border-amber-500/30'
-                } flex flex-col justify-between overflow-hidden`}
+                className={`absolute inset-0 w-full h-full rounded-2xl p-4 bg-[#242f3d] border-2 ${
+                  isSelected ? 'border-[#2aabee] shadow-[0_0_30px_rgba(42,171,238,0.4)] scale-[1.02]' : 'border-white/10'
+                } flex flex-col justify-between overflow-hidden shadow-2xl`}
               >
-                {/* Золотой неоновый акцент */}
-                <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-amber-500 via-amber-300 to-amber-600" />
-                <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-amber-500/10 blur-2xl rounded-full pointer-events-none" />
+                {/* Синий неоновый акцент ТГ */}
+                <div className="absolute top-0 inset-x-0 h-1.5 bg-[#2aabee]" />
 
                 {/* Шапка карточки */}
                 <div className="flex justify-between items-center z-10">
-                  <div className="flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] font-black uppercase tracking-wider">
-                    <Sparkles className="w-3 h-3 text-amber-400" />
+                  <div className="flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full bg-[#17212b] border border-white/10 text-[#2aabee] text-[10px] font-bold uppercase tracking-wider">
+                    <Sparkles className="w-3 h-3 text-[#2aabee]" />
                     <span>GiftX #{index + 1}</span>
                   </div>
 
-                  <span className="text-base font-black text-emerald-400 drop-shadow-md">
+                  <span className="text-base font-extrabold text-emerald-400 drop-shadow-md">
                     {offer?.discountValue}
                   </span>
                 </div>
@@ -303,25 +302,25 @@ const PlayingCardsDeck: React.FC<PlayingCardsDeckProps> = ({ vouchers: initialVo
                   <img
                     src={offer?.imageUrl}
                     alt={offer?.title}
-                    className="w-14 h-14 rounded-2xl object-cover border border-amber-500/30 shadow-lg shrink-0"
+                    className="w-14 h-14 rounded-xl object-cover border border-white/10 shadow-md shrink-0"
                   />
                   <div className="min-w-0 flex-1">
-                    <span className="text-[10px] uppercase font-extrabold text-amber-400 block truncate">
+                    <span className="text-[10px] uppercase font-bold text-[#2aabee] block truncate">
                       {partner?.name}
                     </span>
-                    <h4 className="text-xs font-black text-slate-100 leading-tight truncate mt-0.5">
+                    <h4 className="text-xs font-extrabold text-slate-100 leading-tight truncate mt-0.5">
                       {offer?.title}
                     </h4>
-                    <p className="text-[10px] text-slate-400 line-clamp-1 mt-0.5">
+                    <p className="text-[10px] text-slate-300 line-clamp-1 mt-0.5">
                       {offer?.description}
                     </p>
                   </div>
                 </div>
 
                 {/* Нижняя панель карточки */}
-                <div className="pt-2 border-t border-slate-800/80 flex justify-between items-center text-[10px] z-10">
-                  <span className="flex items-center space-x-1 text-slate-400 truncate max-w-[130px]">
-                    <MapPin className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                <div className="pt-2 border-t border-white/10 flex justify-between items-center text-[10px] z-10">
+                  <span className="flex items-center space-x-1 text-slate-300 truncate max-w-[130px]">
+                    <MapPin className="w-3.5 h-3.5 text-[#2aabee] shrink-0" />
                     <span className="truncate">{partner?.address}</span>
                   </span>
 
@@ -335,14 +334,14 @@ const PlayingCardsDeck: React.FC<PlayingCardsDeckProps> = ({ vouchers: initialVo
                           setRole('MAP');
                         }}
                         title="Маршрут на карте"
-                        className="py-0.5 px-1.5 rounded-md bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/40 text-blue-300 font-extrabold flex items-center space-x-1 text-[9px]"
+                        className="py-0.5 px-2 rounded-lg bg-[#17212b] border border-white/10 text-[#2aabee] font-bold flex items-center space-x-1 text-[9px] cursor-pointer"
                       >
-                        <Navigation className="w-2.5 h-2.5 text-blue-300" />
+                        <Navigation className="w-2.5 h-2.5 text-[#2aabee]" />
                         <span>Маршрут</span>
                       </button>
                     )}
 
-                    <span className="text-amber-400 font-mono font-bold flex items-center space-x-0.5 bg-amber-500/10 px-1.5 py-0.5 rounded-lg border border-amber-500/20 text-[9px]">
+                    <span className="text-[#2aabee] font-mono font-bold flex items-center space-x-0.5 bg-[#17212b] px-2 py-0.5 rounded-lg border border-white/10 text-[9px]">
                       <RotateCw className="w-2.5 h-2.5" />
                       <span>3D 🔄</span>
                     </span>
