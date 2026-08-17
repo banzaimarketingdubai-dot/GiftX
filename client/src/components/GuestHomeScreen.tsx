@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Camera, 
   QrCode, 
@@ -12,8 +12,8 @@ import {
   Compass, 
   Zap, 
   ArrowRight,
-  Building2,
-  Award
+  Info,
+  X
 } from 'lucide-react';
 import L from 'leaflet';
 import { getTelegramUserData, triggerHaptic } from '../telegram';
@@ -34,7 +34,9 @@ export const GuestHomeScreen: React.FC<GuestHomeScreenProps> = ({
 }) => {
   const tgUser = getTelegramUserData();
   const [activeVouchersCount, setActiveVouchersCount] = useState<number>(0);
+  const [userVouchers, setUserVouchers] = useState<ClaimedVoucher[]>([]);
   const [partners, setPartners] = useState<Partner[]>([]);
+  const [showInfoModal, setShowInfoModal] = useState<boolean>(false);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number }>({
     lat: 10.1982,
     lng: 103.9634,
@@ -61,12 +63,12 @@ export const GuestHomeScreen: React.FC<GuestHomeScreenProps> = ({
 
   // 2. Загрузка данных для статистики и карты
   useEffect(() => {
-    // Получение кошелька пользователя
     if (tgUser?.id) {
       fetch(`/api/guest/wallet/${tgUser.id}`)
         .then((res) => res.json())
         .then((data) => {
           if (data.success && data.wallet) {
+            setUserVouchers(data.wallet);
             const activeCount = data.wallet.filter((v: any) => v.status === 'ACTIVE').length;
             setActiveVouchersCount(activeCount);
           }
@@ -74,7 +76,6 @@ export const GuestHomeScreen: React.FC<GuestHomeScreenProps> = ({
         .catch((err) => console.error('Wallet fetch error', err));
     }
 
-    // Получение заведений для превью карты
     fetch('/api/staff/partners')
       .then((res) => res.json())
       .then((data) => {
@@ -85,7 +86,7 @@ export const GuestHomeScreen: React.FC<GuestHomeScreenProps> = ({
       .catch((err) => console.error('Partners map fetch error', err));
   }, [tgUser?.id]);
 
-  // 3. Инициализация Leaflet Map Preview
+  // 3. Инициализация Leaflet Map Preview с акцентным пульсирующим фоном для заведений с подарками
   useEffect(() => {
     if (!mapRef.current || leafletMap.current) return;
 
@@ -103,49 +104,76 @@ export const GuestHomeScreen: React.FC<GuestHomeScreenProps> = ({
       subdomains: 'abcd',
     }).addTo(map);
 
-    // Маркер местоположения пользователя (синий пульсирующий пин)
+    // Маркер местоположения пользователя
     const userIcon = L.divIcon({
       className: 'custom-user-location-pin',
       html: `
         <div style="
-          width: 28px;
-          height: 28px;
-          background: #3b82f6;
+          width: 24px;
+          height: 24px;
+          background: #2aabee;
           border: 3px solid #ffffff;
           border-radius: 50%;
-          box-shadow: 0 0 20px #3b82f6;
+          box-shadow: 0 0 15px #2aabee;
           animation: pulse 2s infinite;
         "></div>
       `,
-      iconSize: [28, 28],
-      iconAnchor: [14, 14],
+      iconSize: [24, 24],
+      iconAnchor: [12, 12],
     });
 
     L.marker([userLocation.lat, userLocation.lng], { icon: userIcon }).addTo(map);
 
-    // Маркеры заведений-партнеров (золотые пины)
-    partners.slice(0, 5).forEach((p) => {
+    // Маркеры заведений:
+    // Доступные заведения -> неакцентный цвет (#242f3d)
+    // Заведения с ожидающими подарками -> акцентный яркий цвет (#2aabee / #10b981) + светимость и пульсация!
+    partners.slice(0, 7).forEach((p) => {
       if (p.lat && p.lng) {
-        const partnerIcon = L.divIcon({
-          className: 'custom-partner-pin',
-          html: `
+        const hasVoucherInVenue = userVouchers.some(
+          (v) => v.status === 'ACTIVE' && v.voucherOffer?.partnerId === p.id
+        );
+
+        const pinHtml = hasVoucherInVenue
+          ? `
+            <div style="
+              width: 38px;
+              height: 38px;
+              background: linear-gradient(135deg, #10b981, #059669);
+              border: 2px solid #ffffff;
+              border-radius: 14px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              box-shadow: 0 0 25px rgba(16, 185, 129, 0.9), 0 0 10px rgba(52, 211, 153, 0.6);
+              animation: pulse 1.5s infinite;
+              font-size: 18px;
+            ">
+              🎁
+            </div>
+          `
+          : `
             <div style="
               width: 32px;
               height: 32px;
-              background: #f59e0b;
-              border: 2px solid #0f172a;
+              background: #242f3d;
+              border: 1.5px solid #475569;
               border-radius: 12px;
               display: flex;
               align-items: center;
               justify-content: center;
-              box-shadow: 0 4px 12px rgba(245, 158, 11, 0.5);
+              box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
               font-size: 14px;
+              opacity: 0.85;
             ">
               📍
             </div>
-          `,
-          iconSize: [32, 32],
-          iconAnchor: [16, 16],
+          `;
+
+        const partnerIcon = L.divIcon({
+          className: 'custom-partner-pin',
+          html: pinHtml,
+          iconSize: [38, 38],
+          iconAnchor: [19, 19],
         });
 
         L.marker([p.lat, p.lng], { icon: partnerIcon }).addTo(map);
@@ -158,105 +186,44 @@ export const GuestHomeScreen: React.FC<GuestHomeScreenProps> = ({
       map.remove();
       leafletMap.current = null;
     };
-  }, [userLocation, partners]);
+  }, [userLocation, partners, userVouchers]);
 
   return (
     <div className="p-4 max-w-md mx-auto min-h-screen pb-24 text-slate-100 space-y-4 font-sans">
-      {/* 1. ХЭДЕР / ПРИВЕТСТВИЕ ГОСТЯ (ТЕЛЕГРАМ СТИЛЬ) */}
+      {/* 1. БЛОК ПРИВЕТСТВИЯ + КНОПКА ИНФОРМАЦИИ (i) */}
       <div className="bg-[#17212b] p-4.5 rounded-2xl border border-white/5 shadow-md flex items-center justify-between">
-        <div className="space-y-1">
-          <div className="inline-flex items-center space-x-1.5 px-2 py-0.5 rounded-full bg-[#2aabee]/15 border border-[#2aabee]/30 text-[#2aabee] text-[10px] font-bold">
-            <Sparkles className="w-3 h-3 text-[#2aabee]" />
-            <span>Сеть взаимоподарков</span>
+        <div className="flex items-center space-x-3.5">
+          <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-[#2aabee] to-[#229ed9] flex items-center justify-center font-bold text-xl text-white shrink-0 shadow-lg shadow-[#2aabee]/30">
+            {tgUser?.first_name ? tgUser.first_name[0].toUpperCase() : <Gift className="w-6 h-6 text-white" />}
           </div>
-          <h1 className="text-lg font-extrabold text-slate-100 tracking-tight">
-            Привет, {tgUser?.first_name || 'Гость'} 👋
-          </h1>
-          <p className="text-xs text-slate-400">
-            Получайте бесплатные подарки в лучших заведениях
-          </p>
-        </div>
-
-        <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-[#2aabee] to-[#229ed9] flex items-center justify-center font-bold text-xl text-white shrink-0 shadow-lg shadow-[#2aabee]/30">
-          {tgUser?.first_name ? tgUser.first_name[0].toUpperCase() : <Gift className="w-6 h-6 text-white" />}
-        </div>
-      </div>
-
-      {/* 2. ИНТЕРАКТИВНЫЙ БЛОК-ИНСТРУКЦИЯ: 💡 КАК ЭТО РАБОТАЕТ */}
-      <div className="bg-[#17212b] p-4 rounded-2xl border border-white/5 space-y-3 shadow-md">
-        <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center space-x-1.5">
-          <ShieldCheck className="w-4 h-4 text-[#2aabee]" />
-          <span>Как получать подарки в 3 шага:</span>
-        </h4>
-
-        <div className="grid grid-cols-3 gap-2 text-center text-[10px]">
-          <div className="p-2.5 rounded-xl bg-[#242f3d] border border-white/5 space-y-1">
-            <div className="w-6 h-6 mx-auto rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-xs">
-              1
+          <div className="space-y-0.5">
+            <div className="inline-flex items-center space-x-1.5 px-2 py-0.5 rounded-full bg-[#2aabee]/15 border border-[#2aabee]/30 text-[#2aabee] text-[10px] font-bold">
+              <Sparkles className="w-3 h-3 text-[#2aabee]" />
+              <span>GiftX Кросс-маркетинг</span>
             </div>
-            <div className="font-bold text-slate-200">Отдыхайте</div>
-            <div className="text-slate-400 leading-tight text-[9px]">Делайте заказы в заведениях</div>
-          </div>
-
-          <div className="p-2.5 rounded-xl bg-[#242f3d] border border-white/5 space-y-1">
-            <div className="w-6 h-6 mx-auto rounded-full bg-[#2aabee]/20 text-[#2aabee] flex items-center justify-center font-bold text-xs">
-              2
-            </div>
-            <div className="font-bold text-slate-200">Сканируйте</div>
-            <div className="text-slate-400 leading-tight text-[9px]">QR-код у официанта</div>
-          </div>
-
-          <div className="p-2.5 rounded-xl bg-[#242f3d] border border-white/5 space-y-1">
-            <div className="w-6 h-6 mx-auto rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs">
-              3
-            </div>
-            <div className="font-bold text-slate-200">Забирайте</div>
-            <div className="text-slate-400 leading-tight text-[9px]">5 эксклюзивных подарков</div>
-          </div>
-        </div>
-      </div>
-
-      {/* 3. ГЛАВНАЯ КНОПКА-ГЕРОЙ: 📸 СКАНИРОВАТЬ QR-КОД ОФИЦИАНТА */}
-      <motion.div
-        whileHover={{ scale: 1.01 }}
-        whileTap={{ scale: 0.99 }}
-        onClick={() => {
-          triggerHaptic('heavy');
-          onOpenScanner();
-        }}
-        className="cursor-pointer p-5 rounded-2xl bg-gradient-to-br from-[#17212b] via-[#1f2c3a] to-[#242f3d] border border-[#2aabee]/40 shadow-xl relative overflow-hidden group transition-all"
-      >
-        <div className="flex items-center space-x-4 relative z-10">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#2aabee] to-[#229ed9] p-0.5 shadow-lg shadow-[#2aabee]/30 shrink-0 group-hover:scale-105 transition-transform">
-            <div className="w-full h-full bg-[#17212b] rounded-[14px] flex items-center justify-center">
-              <Camera className="w-7 h-7 text-[#2aabee] animate-pulse" />
-            </div>
-          </div>
-
-          <div className="space-y-1 flex-1">
-            <div className="inline-flex items-center space-x-1 text-[10px] font-extrabold text-[#2aabee] uppercase tracking-widest px-2 py-0.5 rounded-full bg-[#2aabee]/10 border border-[#2aabee]/20">
-              <Zap className="w-3 h-3 text-[#2aabee]" />
-              <span>Главное действие</span>
-            </div>
-            <h2 className="text-base font-extrabold text-white leading-tight">
-              Сканировать QR Официанта
-            </h2>
-            <p className="text-xs text-slate-300 font-medium line-clamp-2">
-              Наведите камеру при оплате счёта и заберите 5 подарков!
+            <h1 className="text-lg font-extrabold text-slate-100 tracking-tight">
+              Привет, {tgUser?.first_name || 'Гость'} 👋
+            </h1>
+            <p className="text-xs text-slate-400">
+              Бесплатные подарки в ресторанах и СПА
             </p>
           </div>
         </div>
 
-        <div className="mt-3.5 pt-2.5 border-t border-white/10 flex items-center justify-between text-xs font-bold text-slate-300">
-          <span>Нажмите для открытия сканера</span>
-          <div className="flex items-center space-x-1 px-3 py-1.5 rounded-xl bg-[#2aabee] text-white font-extrabold shadow-md shadow-[#2aabee]/30 group-hover:translate-x-1 transition-transform">
-            <span>Сканер</span>
-            <ArrowRight className="w-4 h-4 text-white" />
-          </div>
-        </div>
-      </motion.div>
+        {/* Кружок с буквой I (Info) для вызова попапа с инструкцией */}
+        <button
+          onClick={() => {
+            triggerHaptic('light');
+            setShowInfoModal(true);
+          }}
+          title="Как получать подарки"
+          className="w-9 h-9 rounded-full bg-[#242f3d] hover:bg-[#2aabee] hover:text-white border border-white/10 text-[#2aabee] flex items-center justify-center transition-all shadow-md active:scale-95 shrink-0 cursor-pointer"
+        >
+          <Info className="w-5 h-5" />
+        </button>
+      </div>
 
-      {/* 4. КАРТОЧКА МОИ ПОДАРКИ (КОШЕЛЕК - ЧАТ ТЕЛЕГРАМ СТИЛЬ) */}
+      {/* 2. БЛОК МОИ ПОДАРКИ (КОШЕЛЕК - ЧАТ ТЕЛЕГРАМ СТИЛЬ) */}
       <div
         onClick={() => {
           triggerHaptic('medium');
@@ -291,7 +258,45 @@ export const GuestHomeScreen: React.FC<GuestHomeScreenProps> = ({
         </div>
       </div>
 
-      {/* 5. КАРТА ЗАВЕДЕНИЙ (ТЕЛЕГРАМ СТИЛЬ) */}
+      {/* 3. БЛОК СКАНИРОВАТЬ КУАР ОФИЦИАНТА (ОДНА БОЛЬШАЯ ВЫДЕЛЕННАЯ КНОПКА-ГЕРОЙ) */}
+      <motion.button
+        whileHover={{ scale: 1.01 }}
+        whileTap={{ scale: 0.99 }}
+        onClick={() => {
+          triggerHaptic('heavy');
+          onOpenScanner();
+        }}
+        className="w-full cursor-pointer p-6 rounded-2xl bg-gradient-to-r from-[#2aabee] via-[#229ed9] to-[#0088cc] text-white shadow-xl shadow-[#2aabee]/30 relative overflow-hidden group transition-all text-left border border-white/10"
+      >
+        <div className="flex items-center space-x-4 relative z-10">
+          <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-md p-0.5 shadow-lg shrink-0 group-hover:scale-105 transition-transform flex items-center justify-center">
+            <Camera className="w-8 h-8 text-white animate-pulse" />
+          </div>
+
+          <div className="space-y-1 flex-1">
+            <div className="inline-flex items-center space-x-1 text-[10px] font-extrabold text-white uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-white/20 border border-white/30 backdrop-blur-sm">
+              <Zap className="w-3 h-3 text-amber-300" />
+              <span>Главное действие</span>
+            </div>
+            <h2 className="text-lg font-black text-white leading-tight">
+              СКАНИРОВАТЬ QR ОФИЦИАНТА
+            </h2>
+            <p className="text-xs text-blue-100 font-medium line-clamp-2">
+              Наведите камеру при оплате счёта и заберите 5 подарков!
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-4 pt-3 border-t border-white/20 flex items-center justify-between text-xs font-black text-white">
+          <span>Нажмите для открытия сканера</span>
+          <div className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-white text-[#2aabee] font-black shadow-md group-hover:translate-x-1 transition-transform">
+            <span>Открыть сканер</span>
+            <ArrowRight className="w-4 h-4 text-[#2aabee]" />
+          </div>
+        </div>
+      </motion.button>
+
+      {/* 4. БЛОК КАРТЫ (УВЕЛИЧЕННАЯ В 2 РАЗА ВЫСОТА ЗА СЧЕТ КВАДРАТНЫХ ПРОПОРЦИЙ 1:1) */}
       <div className="bg-[#17212b] p-4 rounded-2xl border border-white/5 space-y-3 shadow-md">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
@@ -300,7 +305,7 @@ export const GuestHomeScreen: React.FC<GuestHomeScreenProps> = ({
             </div>
             <div>
               <h3 className="font-bold text-slate-100 text-sm">Заведения Рядом С Вами</h3>
-              <p className="text-[10px] text-slate-400">Партнеры сети на интерактивной карте</p>
+              <p className="text-[10px] text-slate-400">Зеленые с подарками • Серые в программе</p>
             </div>
           </div>
 
@@ -310,10 +315,10 @@ export const GuestHomeScreen: React.FC<GuestHomeScreenProps> = ({
           </span>
         </div>
 
-        {/* Контейнер интерактивного превью карты */}
-        <div className="relative rounded-xl overflow-hidden border border-white/5 shadow-inner">
-          <div ref={mapRef} className="w-full h-36 z-0" />
-          <div className="absolute bottom-2 left-2 z-10 px-2.5 py-1 rounded-full bg-[#17212b]/90 backdrop-blur-md border border-white/10 text-[10px] font-bold text-slate-200 flex items-center space-x-1">
+        {/* Контейнер интерактивного превью карты с КВАДРАТНЫМИ пропорциями (1:1) - увеличенная в 2 раза высота! */}
+        <div className="relative rounded-2xl overflow-hidden border border-white/5 shadow-inner aspect-square w-full">
+          <div ref={mapRef} className="w-full h-full z-0" />
+          <div className="absolute bottom-3 left-3 z-10 px-3 py-1.5 rounded-full bg-[#17212b]/90 backdrop-blur-md border border-white/10 text-[10px] font-bold text-slate-200 flex items-center space-x-1.5 shadow-md">
             <Navigation className="w-3 h-3 text-[#2aabee]" />
             <span>Локация определена</span>
           </div>
@@ -324,13 +329,86 @@ export const GuestHomeScreen: React.FC<GuestHomeScreenProps> = ({
             triggerHaptic('medium');
             onOpenMap();
           }}
-          className="w-full py-2.5 rounded-xl bg-[#242f3d] hover:bg-[#2b394a] text-slate-100 font-bold text-xs flex items-center justify-center space-x-2 transition-all border border-white/5 cursor-pointer"
+          className="w-full py-3 rounded-xl bg-[#242f3d] hover:bg-[#2b394a] text-slate-100 font-bold text-xs flex items-center justify-center space-x-2 transition-all border border-white/5 cursor-pointer"
         >
           <MapPin className="w-4 h-4 text-[#2aabee]" />
-          <span>Открыть карту ({partners.length} мест)</span>
+          <span>Открыть полноэкранную карту ({partners.length} мест)</span>
           <ChevronRight className="w-4 h-4 text-slate-400" />
         </button>
       </div>
+
+      {/* ПОПАП "КАК ПОЛУЧАТЬ ПОДАРКИ В 3 ШАГА" (вызывается кнопкой [i] в блоке приветствия) */}
+      <AnimatePresence>
+        {showInfoModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0e1621]/80 backdrop-blur-md">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="w-full max-w-sm bg-[#17212b] border border-white/10 rounded-2xl p-5 shadow-2xl space-y-4 text-slate-100 relative font-sans"
+            >
+              <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                <div className="flex items-center space-x-2 text-[#2aabee]">
+                  <ShieldCheck className="w-5 h-5 text-[#2aabee]" />
+                  <h3 className="font-extrabold text-sm text-slate-100">Как получать подарки</h3>
+                </div>
+                <button
+                  onClick={() => {
+                    triggerHaptic('light');
+                    setShowInfoModal(false);
+                  }}
+                  className="p-1.5 rounded-full bg-[#242f3d] text-slate-400 hover:text-white transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="space-y-2.5 text-xs">
+                <div className="p-3 rounded-xl bg-[#242f3d] border border-white/5 flex items-start space-x-3">
+                  <div className="w-7 h-7 rounded-full bg-amber-500/20 text-amber-400 font-black flex items-center justify-center text-xs shrink-0 mt-0.5">
+                    1
+                  </div>
+                  <div>
+                    <h5 className="font-bold text-slate-100">Отдыхайте</h5>
+                    <p className="text-slate-400 text-[11px]">Делайте заказы в заведениях-партнерах сети.</p>
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-xl bg-[#242f3d] border border-white/5 flex items-start space-x-3">
+                  <div className="w-7 h-7 rounded-full bg-[#2aabee]/20 text-[#2aabee] font-black flex items-center justify-center text-xs shrink-0 mt-0.5">
+                    2
+                  </div>
+                  <div>
+                    <h5 className="font-bold text-slate-100">Сканируйте QR</h5>
+                    <p className="text-slate-400 text-[11px]">Наведите камеру на QR-код у официанта при оплате.</p>
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-xl bg-[#242f3d] border border-white/5 flex items-start space-x-3">
+                  <div className="w-7 h-7 rounded-full bg-emerald-500/20 text-emerald-400 font-black flex items-center justify-center text-xs shrink-0 mt-0.5">
+                    3
+                  </div>
+                  <div>
+                    <h5 className="font-bold text-slate-100">Забирайте 5 Подарков</h5>
+                    <p className="text-slate-400 text-[11px]">Открывайте ваучеры в других интересных местах города!</p>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={() => {
+                  triggerHaptic('medium');
+                  setShowInfoModal(false);
+                }}
+                className="w-full py-2.5 rounded-xl bg-[#2aabee] hover:bg-[#229ed9] text-white font-extrabold text-xs shadow-md shadow-[#2aabee]/30 transition-all cursor-pointer"
+              >
+                Понятно!
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
+

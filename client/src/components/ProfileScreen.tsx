@@ -343,57 +343,55 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
   }
 
   return (
-    <div className="p-4 max-w-md mx-auto min-h-screen pb-24 text-slate-100 space-y-5">
-      {/* Шапка карточки профиля пользователя (Кликабельный блок данных для смены ролей) */}
+    <div className="p-4 max-w-md mx-auto min-h-screen pb-24 text-slate-100 space-y-4 font-sans">
+      {/* Шапка карточки профиля пользователя (Кликабельный блок данных для смены ролей - ТЕЛЕГРАМ СТИЛЬ) */}
       <div 
         onClick={() => {
           triggerHaptic('medium');
           setShowManageRoleModal(true);
         }}
-        className="glass-card p-5 rounded-3xl border border-slate-800 hover:border-amber-500/50 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-950 shadow-2xl relative overflow-hidden cursor-pointer transition-all active:scale-[0.99] group"
+        className="bg-[#17212b] hover:bg-[#1f2c3a] p-4.5 rounded-2xl border border-white/5 shadow-md relative overflow-hidden cursor-pointer transition-all active:scale-[0.99] group"
       >
-        <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 blur-3xl rounded-full pointer-events-none" />
-
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-3.5">
             {/* Фото из Telegram или аватар */}
             {tgUser?.photo_url ? (
               <img
                 src={tgUser.photo_url}
                 alt={tgUser.first_name}
-                className="w-16 h-16 rounded-2xl object-cover border-2 border-amber-500/40 shadow-lg shadow-amber-500/20 shrink-0 group-hover:scale-105 transition-transform"
+                className="w-14 h-14 rounded-full object-cover border-2 border-[#2aabee] shadow-md shrink-0 group-hover:scale-105 transition-transform"
               />
             ) : (
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-600 p-0.5 shadow-lg shadow-amber-500/20 shrink-0 group-hover:scale-105 transition-transform">
-                <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center font-black text-2xl text-amber-400">
-                  {tgUser?.first_name ? tgUser.first_name[0].toUpperCase() : <UserIcon className="w-7 h-7 text-amber-400" />}
+              <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-[#2aabee] to-[#229ed9] p-0.5 shadow-md shrink-0 group-hover:scale-105 transition-transform">
+                <div className="w-full h-full bg-[#17212b] rounded-full flex items-center justify-center font-bold text-xl text-[#2aabee]">
+                  {tgUser?.first_name ? tgUser.first_name[0].toUpperCase() : <UserIcon className="w-6 h-6 text-[#2aabee]" />}
                 </div>
               </div>
             )}
 
             <div>
               <div className="flex items-center space-x-2">
-                <h1 className="text-lg font-black text-slate-100 group-hover:text-amber-400 transition-colors">
+                <h1 className="text-base font-extrabold text-slate-100 group-hover:text-[#2aabee] transition-colors">
                   {tgUser?.first_name || 'Пользователь'} {tgUser?.last_name || ''}
                 </h1>
                 {isStaff && (
-                  <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[9px] font-black uppercase">
+                  <span className="px-2 py-0.5 rounded-full bg-[#2aabee]/20 text-[#2aabee] border border-[#2aabee]/30 text-[9px] font-bold uppercase">
                     {staffInfo?.role || 'БИЗНЕС'}
                   </span>
                 )}
               </div>
 
               {tgUser?.username && (
-                <p className="text-xs text-amber-400 font-medium">@{tgUser.username}</p>
+                <p className="text-xs text-[#2aabee] font-medium">@{tgUser.username}</p>
               )}
 
-              <p className="text-[10px] text-slate-500 font-mono mt-0.5">
+              <p className="text-[10px] text-slate-400 font-mono mt-0.5">
                 ID: {tgUser?.id || 'Demo-Guest-101'}
               </p>
             </div>
           </div>
 
-          <div className="py-1 px-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] font-bold flex items-center space-x-1 shadow-sm shrink-0">
+          <div className="py-1.5 px-2.5 rounded-full bg-[#242f3d] border border-white/5 text-[#2aabee] text-[10px] font-bold flex items-center space-x-1 shadow-sm shrink-0">
             <Sliders className="w-3.5 h-3.5" />
             <span>Смена роли</span>
           </div>

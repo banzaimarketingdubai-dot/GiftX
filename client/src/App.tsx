@@ -149,176 +149,182 @@ export const App: React.FC = () => {
     }
   }, []);
 
+  const isMainScreen = !activeLanding && !claimToken && (role === 'GUEST' || !role);
+
   return (
     <div className="min-h-screen bg-[#0e1621] text-slate-100 relative pb-24 font-sans selection:bg-[#2aabee]/30">
-      {/* TELEGRAM HEADER & HIGHLIGHTS / STORIES BAR */}
-      <div 
-        className="sticky top-0 z-40 bg-[#17212b] border-b border-white/5 px-4 pb-2.5 max-w-md mx-auto shadow-md transition-all"
-        style={{
-          paddingTop: 'max(env(safe-area-inset-top, 0px), var(--tg-safe-area-inset-top, 0px), var(--tg-content-safe-area-inset-top, 0px), 16px)'
-        }}
-      >
-        {/* Top title line */}
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center space-x-2.5">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-400 via-amber-500 to-amber-600 flex items-center justify-center font-black text-slate-950 text-xs shadow-sm shadow-amber-500/20">
-              GX
-            </div>
-            <div>
-              <div className="flex items-center space-x-1.5">
-                <span className="font-extrabold text-sm text-slate-100 tracking-tight">GiftX</span>
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+      {/* TELEGRAM HEADER & HIGHLIGHTS / STORIES BAR (Только на Главной странице, скроллится вместе с контентом) */}
+      {isMainScreen && (
+        <>
+          <div 
+            className="relative z-20 bg-[#17212b] border-b border-white/5 px-4 pb-2.5 max-w-md mx-auto shadow-md transition-all"
+            style={{
+              paddingTop: 'max(env(safe-area-inset-top, 0px), var(--tg-safe-area-inset-top, 0px), var(--tg-content-safe-area-inset-top, 0px), 16px)'
+            }}
+          >
+            {/* Top title line */}
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-400 via-amber-500 to-amber-600 flex items-center justify-center font-black text-slate-950 text-xs shadow-sm shadow-amber-500/20">
+                  GX
+                </div>
+                <div>
+                  <div className="flex items-center space-x-1.5">
+                    <span className="font-extrabold text-sm text-slate-100 tracking-tight">GiftX</span>
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  </div>
+                  <div className="text-[10px] text-slate-400 font-medium">@giftx2025_bot • Кросс-маркетинг</div>
+                </div>
               </div>
-              <div className="text-[10px] text-slate-400 font-medium">@giftx2025_bot • Кросс-маркетинг</div>
+
+              {isBusinessUser && ['WAITER', 'ADMIN'].includes(role) && (
+                <button
+                  onClick={() => {
+                    triggerHaptic('medium');
+                    setActiveLanding(null);
+                    setRole('GUEST');
+                  }}
+                  className="py-1 px-2.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 text-[10px] font-extrabold flex items-center space-x-1 shrink-0"
+                >
+                  <Building2 className="w-3 h-3" />
+                  <span>Бизнес ➔ Клиент</span>
+                </button>
+              )}
+            </div>
+
+            {/* Telegram Search Bar */}
+            <div className="relative mb-2.5">
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input 
+                type="text"
+                placeholder="Поиск заведений и подарков..."
+                className="w-full bg-[#242f3d] text-slate-100 text-xs pl-8 pr-3 py-1.5 rounded-xl border border-transparent focus:border-[#2aabee]/50 outline-none placeholder-slate-400 transition-all"
+              />
+            </div>
+
+            {/* TELEGRAM HIGHLIGHTS / STORIES STRIP (ЗЕЛЕНАЯ ОБВОДКА СТОРИС) */}
+            <div className="flex items-center space-x-3 overflow-x-auto pb-1 pt-0.5 no-scrollbar">
+              {/* Story 1: О сервисе */}
+              <button
+                onClick={() => {
+                  triggerHaptic('light');
+                  setActiveLanding(activeLanding === 'GUEST' ? null : 'GUEST');
+                }}
+                className="flex flex-col items-center space-y-1 shrink-0 group cursor-pointer"
+              >
+                <div className={`tg-story-ring ${activeLanding === 'GUEST' ? 'ring-2 ring-amber-400 scale-105' : ''}`}>
+                  <div className="w-12 h-12 rounded-full bg-[#17212b] p-0.5 border border-[#0e1621] flex items-center justify-center text-amber-400">
+                    <Sparkles className="w-5 h-5 text-amber-400" />
+                  </div>
+                </div>
+                <span className="text-[10px] font-medium text-slate-300 group-hover:text-white transition-colors">О сервисе</span>
+              </button>
+
+              {/* Story 2: Инструкция Гость */}
+              <button
+                onClick={() => {
+                  triggerHaptic('light');
+                  setHelpGuideDefaultRole('GUEST');
+                  setShowHelpGuide(true);
+                }}
+                className="flex flex-col items-center space-y-1 shrink-0 group cursor-pointer"
+              >
+                <div className="tg-story-ring">
+                  <div className="w-12 h-12 rounded-full bg-[#17212b] p-0.5 border border-[#0e1621] flex items-center justify-center text-emerald-400">
+                    <Gift className="w-5 h-5" />
+                  </div>
+                </div>
+                <span className="text-[10px] font-medium text-slate-300 group-hover:text-white transition-colors">Гость</span>
+              </button>
+
+              {/* Story 3: Инструкция Официант */}
+              <button
+                onClick={() => {
+                  triggerHaptic('light');
+                  setHelpGuideDefaultRole('WAITER');
+                  setShowHelpGuide(true);
+                }}
+                className="flex flex-col items-center space-y-1 shrink-0 group cursor-pointer"
+              >
+                <div className="tg-story-ring">
+                  <div className="w-12 h-12 rounded-full bg-[#17212b] p-0.5 border border-[#0e1621] flex items-center justify-center text-cyan-400">
+                    <QrCode className="w-5 h-5" />
+                  </div>
+                </div>
+                <span className="text-[10px] font-medium text-slate-300 group-hover:text-white transition-colors">Официант</span>
+              </button>
+
+              {/* Story 4: Инструкция Бизнес */}
+              <button
+                onClick={() => {
+                  triggerHaptic('light');
+                  setActiveLanding('BUSINESS');
+                  setShowBusinessOnboardingModal(true);
+                }}
+                className="flex flex-col items-center space-y-1 shrink-0 group cursor-pointer"
+              >
+                <div className="tg-story-ring">
+                  <div className="w-12 h-12 rounded-full bg-[#17212b] p-0.5 border border-[#0e1621] flex items-center justify-center text-purple-400">
+                    <Building2 className="w-5 h-5" />
+                  </div>
+                </div>
+                <span className="text-[10px] font-medium text-slate-300 group-hover:text-white transition-colors">Бизнес</span>
+              </button>
+
+              {/* Story 5: Инструкция Админ */}
+              <button
+                onClick={() => {
+                  triggerHaptic('light');
+                  setHelpGuideDefaultRole('ADMIN');
+                  setShowHelpGuide(true);
+                }}
+                className="flex flex-col items-center space-y-1 shrink-0 group cursor-pointer"
+              >
+                <div className="tg-story-ring">
+                  <div className="w-12 h-12 rounded-full bg-[#17212b] p-0.5 border border-[#0e1621] flex items-center justify-center text-amber-400">
+                    <ShieldAlert className="w-5 h-5" />
+                  </div>
+                </div>
+                <span className="text-[10px] font-medium text-slate-300 group-hover:text-white transition-colors">Админ</span>
+              </button>
+
+              {/* Story 6: Мой Профиль */}
+              <button
+                onClick={() => {
+                  triggerHaptic('light');
+                  setClaimToken(null);
+                  setActiveLanding(null);
+                  setRole('PROFILE');
+                }}
+                className="flex flex-col items-center space-y-1 shrink-0 group cursor-pointer"
+              >
+                <div className="tg-story-ring">
+                  <div className="w-12 h-12 rounded-full bg-[#17212b] p-0.5 border border-[#0e1621] flex items-center justify-center text-blue-400">
+                    <User className="w-5 h-5" />
+                  </div>
+                </div>
+                <span className="text-[10px] font-medium text-slate-300 group-hover:text-white transition-colors">Профиль</span>
+              </button>
             </div>
           </div>
 
-          {isBusinessUser && ['WAITER', 'ADMIN'].includes(role) && (
-            <button
-              onClick={() => {
-                triggerHaptic('medium');
-                setActiveLanding(null);
-                setRole('GUEST');
-              }}
-              className="py-1 px-2.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 text-[10px] font-extrabold flex items-center space-x-1 shrink-0"
-            >
-              <Building2 className="w-3 h-3" />
-              <span>Бизнес ➔ Клиент</span>
-            </button>
-          )}
-        </div>
-
-        {/* Telegram Search Bar */}
-        <div className="relative mb-2.5">
-          <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-          <input 
-            type="text"
-            placeholder="Поиск заведений и подарков..."
-            className="w-full bg-[#242f3d] text-slate-100 text-xs pl-8 pr-3 py-1.5 rounded-xl border border-transparent focus:border-[#2aabee]/50 outline-none placeholder-slate-400 transition-all"
-          />
-        </div>
-
-        {/* TELEGRAM HIGHLIGHTS / STORIES STRIP (ЗЕЛЕНАЯ ОБВОДКА СТОРИС) */}
-        <div className="flex items-center space-x-3 overflow-x-auto pb-1 pt-0.5 no-scrollbar">
-          {/* Story 1: О сервисе */}
-          <button
-            onClick={() => {
-              triggerHaptic('light');
-              setActiveLanding(activeLanding === 'GUEST' ? null : 'GUEST');
-            }}
-            className="flex flex-col items-center space-y-1 shrink-0 group cursor-pointer"
-          >
-            <div className={`tg-story-ring ${activeLanding === 'GUEST' ? 'ring-2 ring-amber-400 scale-105' : ''}`}>
-              <div className="w-12 h-12 rounded-full bg-[#17212b] p-0.5 border border-[#0e1621] flex items-center justify-center text-amber-400">
-                <Sparkles className="w-5 h-5 text-amber-400" />
-              </div>
-            </div>
-            <span className="text-[10px] font-medium text-slate-300 group-hover:text-white transition-colors">О сервисе</span>
-          </button>
-
-          {/* Story 2: Инструкция Гость */}
-          <button
-            onClick={() => {
-              triggerHaptic('light');
-              setHelpGuideDefaultRole('GUEST');
-              setShowHelpGuide(true);
-            }}
-            className="flex flex-col items-center space-y-1 shrink-0 group cursor-pointer"
-          >
-            <div className="tg-story-ring">
-              <div className="w-12 h-12 rounded-full bg-[#17212b] p-0.5 border border-[#0e1621] flex items-center justify-center text-emerald-400">
-                <Gift className="w-5 h-5" />
-              </div>
-            </div>
-            <span className="text-[10px] font-medium text-slate-300 group-hover:text-white transition-colors">Гость</span>
-          </button>
-
-          {/* Story 3: Инструкция Официант */}
-          <button
-            onClick={() => {
-              triggerHaptic('light');
-              setHelpGuideDefaultRole('WAITER');
-              setShowHelpGuide(true);
-            }}
-            className="flex flex-col items-center space-y-1 shrink-0 group cursor-pointer"
-          >
-            <div className="tg-story-ring">
-              <div className="w-12 h-12 rounded-full bg-[#17212b] p-0.5 border border-[#0e1621] flex items-center justify-center text-cyan-400">
-                <QrCode className="w-5 h-5" />
-              </div>
-            </div>
-            <span className="text-[10px] font-medium text-slate-300 group-hover:text-white transition-colors">Официант</span>
-          </button>
-
-          {/* Story 4: Инструкция Бизнес */}
-          <button
-            onClick={() => {
-              triggerHaptic('light');
-              setActiveLanding('BUSINESS');
-              setShowBusinessOnboardingModal(true);
-            }}
-            className="flex flex-col items-center space-y-1 shrink-0 group cursor-pointer"
-          >
-            <div className="tg-story-ring">
-              <div className="w-12 h-12 rounded-full bg-[#17212b] p-0.5 border border-[#0e1621] flex items-center justify-center text-purple-400">
-                <Building2 className="w-5 h-5" />
-              </div>
-            </div>
-            <span className="text-[10px] font-medium text-slate-300 group-hover:text-white transition-colors">Бизнес</span>
-          </button>
-
-          {/* Story 5: Инструкция Админ */}
-          <button
-            onClick={() => {
-              triggerHaptic('light');
-              setHelpGuideDefaultRole('ADMIN');
-              setShowHelpGuide(true);
-            }}
-            className="flex flex-col items-center space-y-1 shrink-0 group cursor-pointer"
-          >
-            <div className="tg-story-ring">
-              <div className="w-12 h-12 rounded-full bg-[#17212b] p-0.5 border border-[#0e1621] flex items-center justify-center text-amber-400">
-                <ShieldAlert className="w-5 h-5" />
-              </div>
-            </div>
-            <span className="text-[10px] font-medium text-slate-300 group-hover:text-white transition-colors">Админ</span>
-          </button>
-
-          {/* Story 6: Мой Профиль */}
-          <button
-            onClick={() => {
-              triggerHaptic('light');
-              setClaimToken(null);
-              setActiveLanding(null);
-              setRole('PROFILE');
-            }}
-            className="flex flex-col items-center space-y-1 shrink-0 group cursor-pointer"
-          >
-            <div className="tg-story-ring">
-              <div className="w-12 h-12 rounded-full bg-[#17212b] p-0.5 border border-[#0e1621] flex items-center justify-center text-blue-400">
-                <User className="w-5 h-5" />
-              </div>
-            </div>
-            <span className="text-[10px] font-medium text-slate-300 group-hover:text-white transition-colors">Профиль</span>
-          </button>
-        </div>
-      </div>
-
-      {/* TELEGRAM CATEGORY PILLS STRIP */}
-      <div className="max-w-md mx-auto px-4 pt-3 pb-1 flex space-x-1.5 overflow-x-auto no-scrollbar">
-        {['Все', '🔥 HoReCa', '💆‍♀️ Beauty & Spa', '🚗 Auto', '⚡ Спец'].map((cat, i) => (
-          <button
-            key={i}
-            className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
-              i === 0 
-                ? 'bg-[#2aabee] text-white shadow-sm shadow-[#2aabee]/30' 
-                : 'bg-[#242f3d] text-slate-300 hover:text-white border border-white/5'
-            }`}
-          >
-            {cat}
-          </button>
-        ))}
-      </div>
+          {/* TELEGRAM CATEGORY PILLS STRIP */}
+          <div className="max-w-md mx-auto px-4 pt-3 pb-1 flex space-x-1.5 overflow-x-auto no-scrollbar">
+            {['Все', '🔥 HoReCa', '💆‍♀️ Beauty & Spa', '🚗 Auto', '⚡ Спец'].map((cat, i) => (
+              <button
+                key={i}
+                className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                  i === 0 
+                    ? 'bg-[#2aabee] text-white shadow-sm shadow-[#2aabee]/30' 
+                    : 'bg-[#242f3d] text-slate-300 hover:text-white border border-white/5'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
 
       {/* Главный экран в зависимости от роли или активного лендинга */}
       {activeLanding === 'GUEST' ? (

@@ -239,7 +239,7 @@ export const PartnerMapScreen: React.FC = () => {
       markersGroupRef.current?.addLayer(gMarker);
     });
 
-    // 2. Отображение заведений-партнеров GiftX ЯРКИМИ ЦВЕТНЫМИ МАРКЕРАМИ
+    // 2. Отображение заведений-партнеров GiftX
     filteredPartners.forEach((partner) => {
       const partnerLat = partner.lat || 10.1982;
       const partnerLng = partner.lng || 103.9634;
@@ -249,17 +249,6 @@ export const PartnerMapScreen: React.FC = () => {
       const hasUserVouchers = userWallet.some(
         (v) => v.status === 'ACTIVE' && v.voucherOffer?.partnerId === partner.id
       );
-
-      // Яркие уникальные градиенты по категориям
-      const getCategoryGradient = (cat: string) => {
-        switch (cat) {
-          case 'HORECA': return 'linear-gradient(135deg, #f59e0b, #d97706)';
-          case 'BEAUTY_SPA': return 'linear-gradient(135deg, #ec4899, #be185d)';
-          case 'AUTO_MOTO': return 'linear-gradient(135deg, #3b82f6, #1d4ed8)';
-          case 'ENTERTAINMENT': return 'linear-gradient(135deg, #8b5cf6, #6d28d9)';
-          default: return 'linear-gradient(135deg, #f59e0b, #d97706)';
-        }
-      };
 
       const getCategoryBadge = (cat: string) => {
         switch (cat) {
@@ -271,45 +260,65 @@ export const PartnerMapScreen: React.FC = () => {
         }
       };
 
-      const iconHtml = `
-        <div style="
-          width: 44px;
-          height: 44px;
-          background: ${getCategoryGradient(partner.category)};
-          border: 2px solid ${hasUserVouchers ? '#34d399' : '#ffffff'};
-          border-radius: 16px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 20px;
-          box-shadow: 0 8px 25px ${hasUserVouchers ? 'rgba(52, 211, 153, 0.6)' : 'rgba(245, 158, 11, 0.4)'};
-          position: relative;
-          cursor: pointer;
-          transform: scale(1.05);
-        ">
-          ${getCategoryBadge(partner.category)}
-          ${
-            hasUserVouchers
-              ? `<div style="
-                  position: absolute;
-                  top: -4px;
-                  right: -4px;
-                  width: 14px;
-                  height: 14px;
-                  background: #10b981;
-                  border: 2px solid #0f172a;
-                  border-radius: 50%;
-                "></div>`
-              : ''
-          }
-        </div>
-      `;
+      // Заведения, где ЖДУТ ПОДАРКИ -> Акцентный цвет + фоновая световая пульсация!
+      // Доступные заведения без подарков -> Неакцентный цвет (#242f3d)
+      const iconHtml = hasUserVouchers
+        ? `
+          <div style="
+            width: 46px;
+            height: 46px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            border: 2.5px solid #ffffff;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            box-shadow: 0 0 25px rgba(16, 185, 129, 0.95), 0 0 10px rgba(52, 211, 153, 0.8);
+            animation: pulse 1.5s infinite;
+            position: relative;
+            cursor: pointer;
+          ">
+            🎁
+            <div style="
+              position: absolute;
+              top: -5px;
+              right: -5px;
+              width: 16px;
+              height: 16px;
+              background: #2aabee;
+              border: 2px solid #ffffff;
+              border-radius: 50%;
+              box-shadow: 0 0 8px #2aabee;
+            "></div>
+          </div>
+        `
+        : `
+          <div style="
+            width: 36px;
+            height: 36px;
+            background: #242f3d;
+            border: 1.5px solid #475569;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: #94a3b8;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            position: relative;
+            cursor: pointer;
+            opacity: 0.85;
+          ">
+            ${getCategoryBadge(partner.category)}
+          </div>
+        `;
 
       const customIcon = L.divIcon({
         className: 'custom-partner-vibrant-marker',
         html: iconHtml,
-        iconSize: [44, 44],
-        iconAnchor: [22, 22],
+        iconSize: [46, 46],
+        iconAnchor: [23, 23],
       });
 
       const marker = L.marker([partnerLat, partnerLng], { icon: customIcon });
@@ -329,20 +338,20 @@ export const PartnerMapScreen: React.FC = () => {
   }, [partners, googlePlaces, selectedCategory, searchQuery, userWallet]);
 
   return (
-    <div className="relative w-full h-screen overflow-hidden bg-slate-950 text-slate-100 pb-20">
+    <div className="relative w-full h-screen overflow-hidden bg-[#0e1621] text-slate-100 pb-20 font-sans">
       {/* Карта во весь экран */}
       <div ref={mapContainerRef} className="absolute inset-0 z-0" />
 
-      {/* Верхний оверлей: Поиск и Фильтры */}
-      <div className="absolute top-0 left-0 right-0 z-10 p-4 space-y-3 bg-gradient-to-b from-slate-950/90 via-slate-950/60 to-transparent backdrop-blur-sm max-w-md mx-auto">
+      {/* Верхний оверлей: Поиск и Фильтры (ТЕЛЕГРАМ СТИЛЬ) */}
+      <div className="absolute top-0 left-0 right-0 z-10 p-4 space-y-3 bg-gradient-to-b from-[#0e1621]/95 via-[#0e1621]/80 to-transparent backdrop-blur-md max-w-md mx-auto">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
-              <Compass className="w-4 h-4 animate-spin-slow" />
+            <div className="w-8 h-8 rounded-full bg-[#2aabee]/15 border border-[#2aabee]/30 flex items-center justify-center text-[#2aabee]">
+              <Compass className="w-4 h-4" />
             </div>
             <div>
               <h1 className="text-base font-extrabold text-slate-100">Карта Заведений</h1>
-              <p className="text-[10px] text-slate-400">Партнеры и Google Maps отзывы</p>
+              <p className="text-[10px] text-slate-400">Зеленые пульсирующие = подарки ждут вас</p>
             </div>
           </div>
 
@@ -353,9 +362,9 @@ export const PartnerMapScreen: React.FC = () => {
                 requestUserLocation(true);
               }}
               title="Мое местоположение"
-              className="w-8 h-8 rounded-xl bg-blue-500/20 border border-blue-500/30 text-blue-400 font-bold flex items-center justify-center hover:bg-blue-500/30 transition-all shadow-md"
+              className="w-8 h-8 rounded-full bg-[#2aabee]/20 border border-[#2aabee]/30 text-[#2aabee] font-bold flex items-center justify-center hover:bg-[#2aabee]/30 transition-all shadow-md cursor-pointer"
             >
-              <Navigation className="w-4 h-4 text-blue-400" />
+              <Navigation className="w-4 h-4 text-[#2aabee]" />
             </button>
 
             <button
@@ -363,10 +372,10 @@ export const PartnerMapScreen: React.FC = () => {
                 triggerHaptic('light');
                 setShowRegistrationModal(true);
               }}
-              className="py-1.5 px-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 font-bold text-xs flex items-center space-x-1 hover:bg-amber-500/20 transition-all"
+              className="py-1.5 px-2.5 rounded-full bg-[#242f3d] border border-white/10 text-[#2aabee] font-bold text-xs flex items-center space-x-1 hover:bg-[#2b394a] transition-all cursor-pointer"
             >
               <PlusCircle className="w-3.5 h-3.5" />
-              <span>+ Добавить место</span>
+              <span>+ Место</span>
             </button>
           </div>
         </div>
@@ -379,7 +388,7 @@ export const PartnerMapScreen: React.FC = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Поиск заведений или адреса..."
-            className="w-full py-2.5 pl-10 pr-4 rounded-2xl bg-slate-900/90 border border-slate-800 text-slate-100 text-xs shadow-lg outline-none focus:border-amber-500/50 backdrop-blur-xl transition-all"
+            className="w-full py-2.5 pl-10 pr-4 rounded-xl bg-[#242f3d] border border-white/5 text-slate-100 text-xs shadow-lg outline-none focus:border-[#2aabee]/50 backdrop-blur-xl transition-all"
           />
         </div>
 
@@ -398,10 +407,10 @@ export const PartnerMapScreen: React.FC = () => {
                 triggerHaptic('light');
                 setSelectedCategory(cat.id);
               }}
-              className={`py-1.5 px-3 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center space-x-1.5 ${
+              className={`py-1.5 px-3 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center space-x-1.5 cursor-pointer ${
                 selectedCategory === cat.id
-                  ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
-                  : 'bg-slate-900/90 text-slate-400 border border-slate-800'
+                  ? 'bg-[#2aabee] text-white shadow-md shadow-[#2aabee]/30'
+                  : 'bg-[#242f3d] text-slate-300 border border-white/5'
               }`}
             >
               <span>{cat.label}</span>
@@ -417,26 +426,26 @@ export const PartnerMapScreen: React.FC = () => {
             triggerHaptic('heavy');
             requestUserLocation(true);
           }}
-          className="w-12 h-12 rounded-full bg-slate-900/90 hover:bg-slate-800 border-2 border-blue-500/80 text-blue-400 flex items-center justify-center shadow-[0_4px_20px_rgba(59,130,246,0.4)] backdrop-blur-xl transition-all active:scale-90 group"
+          className="w-12 h-12 rounded-full bg-[#17212b]/95 hover:bg-[#1f2c3a] border-2 border-[#2aabee] text-[#2aabee] flex items-center justify-center shadow-[0_4px_20px_rgba(42,171,238,0.4)] backdrop-blur-xl transition-all active:scale-90 group cursor-pointer"
           title="Моё местоположение"
         >
-          <Navigation className="w-5 h-5 text-blue-400 group-hover:scale-110 transition-transform" />
+          <Navigation className="w-5 h-5 text-[#2aabee] group-hover:scale-110 transition-transform" />
         </button>
       </div>
 
-      {/* Нижняя всплывающая карточка выбранного заведения */}
+      {/* Нижняя всплывающая карточка выбранного заведения (ТЕЛЕГРАМ СТИЛЬ) */}
       {selectedPartner && (
         <div className="absolute bottom-20 left-4 right-4 z-20 max-w-md mx-auto animate-slideUp">
-          <div className="glass-card p-4 rounded-3xl border border-amber-500/30 shadow-2xl bg-slate-900/95 backdrop-blur-2xl">
+          <div className="bg-[#17212b] p-4 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-2xl">
             <div className="flex items-start justify-between">
               <div className="flex items-center space-x-3">
                 <VenueAvatar
                   logoUrl={selectedPartner.logoUrl}
                   name={selectedPartner.name}
-                  className="w-14 h-14 rounded-2xl border border-slate-700 shrink-0 shadow-md"
+                  className="w-14 h-14 rounded-2xl border border-white/10 shrink-0 shadow-md"
                 />
                 <div>
-                  <span className="text-[10px] uppercase font-bold text-amber-400 px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20">
+                  <span className="text-[10px] uppercase font-bold text-[#2aabee] px-2 py-0.5 rounded-full bg-[#2aabee]/10 border border-[#2aabee]/20">
                     {selectedPartner.category}
                   </span>
                   <h3 className="font-extrabold text-slate-100 text-base mt-1 line-clamp-1">
@@ -453,24 +462,24 @@ export const PartnerMapScreen: React.FC = () => {
                 <button
                   onClick={() => handleCopyMapVenueLink(selectedPartner)}
                   title="Скопировать прямую ссылку на карточку заведения (Web App)"
-                  className="p-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-400 hover:text-amber-300 transition-all flex items-center space-x-1 shadow-sm"
+                  className="p-2 rounded-xl bg-[#242f3d] border border-white/5 text-[#2aabee] transition-all flex items-center space-x-1 shadow-sm cursor-pointer"
                 >
                   {mapCopiedVenueId === selectedPartner.id ? (
                     <>
                       <Check className="w-4 h-4 text-emerald-400 animate-pulse" />
-                      <span className="text-[10px] font-black text-emerald-400">Скопировано</span>
+                      <span className="text-[10px] font-bold text-emerald-400">Скопировано</span>
                     </>
                   ) : (
                     <>
-                      <Link className="w-4 h-4 text-amber-400" />
-                      <span className="text-[10px] font-black text-amber-300">URL</span>
+                      <Link className="w-4 h-4 text-[#2aabee]" />
+                      <span className="text-[10px] font-bold text-[#2aabee]">URL</span>
                     </>
                   )}
                 </button>
 
                 <button
                   onClick={() => setSelectedPartner(null)}
-                  className="text-slate-500 hover:text-slate-300 p-1.5 rounded-xl hover:bg-slate-800 transition-colors"
+                  className="text-slate-400 hover:text-slate-200 p-1.5 rounded-full hover:bg-[#242f3d] transition-colors cursor-pointer"
                 >
                   ✕
                 </button>
@@ -478,14 +487,14 @@ export const PartnerMapScreen: React.FC = () => {
             </div>
 
             {/* Рейтинг Google Maps и кнопка отзывов */}
-            <div className="mt-3.5 pt-3 border-t border-slate-800/80 flex items-center justify-between">
+            <div className="mt-3.5 pt-3 border-t border-white/10 flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <div className="flex items-center space-x-1 px-2 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-bold">
+                <div className="flex items-center space-x-1 px-2 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-bold">
                   <Star className="w-3.5 h-3.5 fill-amber-400" />
                   <span>{(selectedPartner.googleRating || 4.8).toFixed(1)}</span>
                 </div>
                 <span className="text-xs text-slate-400">
-                  ({selectedPartner.googleReviewsCount || 120} отзывов Google)
+                  ({selectedPartner.googleReviewsCount || 120} отзывов)
                 </span>
               </div>
 
@@ -494,9 +503,9 @@ export const PartnerMapScreen: React.FC = () => {
                   triggerHaptic('light');
                   setShowReviewsModal(true);
                 }}
-                className="py-1.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-400 text-xs font-bold flex items-center space-x-1 transition-all border border-slate-700"
+                className="py-1.5 px-3 rounded-full bg-[#242f3d] hover:bg-[#2b394a] text-slate-200 text-xs font-bold flex items-center space-x-1 transition-all border border-white/5 cursor-pointer"
               >
-                <MessageSquare className="w-3.5 h-3.5" />
+                <MessageSquare className="w-3.5 h-3.5 text-[#2aabee]" />
                 <span>Отзывы</span>
               </button>
             </div>
@@ -508,10 +517,10 @@ export const PartnerMapScreen: React.FC = () => {
               );
 
               return (
-                <div className="mt-3 bg-slate-950/60 p-3 rounded-2xl border border-slate-800/80">
+                <div className="mt-3 bg-[#242f3d]/60 p-3 rounded-xl border border-white/5">
                   <div className="flex items-center justify-between text-xs mb-1.5">
                     <span className="font-bold text-slate-300 flex items-center space-x-1">
-                      <Gift className="w-3.5 h-3.5 text-amber-400" />
+                      <Gift className="w-3.5 h-3.5 text-emerald-400" />
                       <span>Ваши подарки здесь:</span>
                     </span>
                     <span className="font-bold text-emerald-400">{activeVouchers.length} активных</span>
@@ -522,13 +531,13 @@ export const PartnerMapScreen: React.FC = () => {
                       {activeVouchers.map((v) => (
                         <div key={v.id} className="text-xs text-slate-200 flex items-center justify-between">
                           <span className="truncate max-w-[200px]">🎁 {v.voucherOffer?.title}</span>
-                          <span className="text-[10px] text-amber-400 font-semibold">{v.voucherOffer?.discountValue}</span>
+                          <span className="text-[10px] text-emerald-400 font-semibold">{v.voucherOffer?.discountValue}</span>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-[11px] text-slate-500">
-                      У вас пока нет сгенерированных ваучеров в этом месте. Получите HappyBox от партнеров!
+                    <p className="text-[11px] text-slate-400">
+                      У вас пока нет ваучеров в этом месте. Сканируйте QR у официантов для получения бокса!
                     </p>
                   )}
                 </div>
@@ -542,9 +551,9 @@ export const PartnerMapScreen: React.FC = () => {
                   triggerHaptic('heavy');
                   setShowVenueModal(true);
                 }}
-                className="w-full py-2.5 px-3 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-extrabold text-xs flex items-center justify-center space-x-2 transition-all shadow-md"
+                className="w-full py-2.5 px-3 rounded-xl bg-[#2aabee]/15 hover:bg-[#2aabee]/25 border border-[#2aabee]/30 text-[#2aabee] font-extrabold text-xs flex items-center justify-center space-x-2 transition-all shadow-md cursor-pointer"
               >
-                <Gift className="w-4 h-4 text-amber-400" />
+                <Gift className="w-4 h-4 text-[#2aabee]" />
                 <span>🎁 Условия Боксов & Инструкция</span>
               </button>
 
@@ -554,9 +563,9 @@ export const PartnerMapScreen: React.FC = () => {
                     triggerHaptic('medium');
                     setShowReviewsModal(true);
                   }}
-                  className="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs flex items-center justify-center space-x-1.5 border border-slate-700 transition-all"
+                  className="py-2.5 px-3 rounded-xl bg-[#242f3d] hover:bg-[#2b394a] text-slate-200 font-bold text-xs flex items-center justify-center space-x-1.5 border border-white/5 transition-all cursor-pointer"
                 >
-                  <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+                  <ShieldCheck className="w-3.5 h-3.5 text-[#2aabee]" />
                   <span>Google Отзывы</span>
                 </button>
 
@@ -568,7 +577,7 @@ export const PartnerMapScreen: React.FC = () => {
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => triggerHaptic('medium')}
-                  className="py-2.5 px-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center justify-center space-x-1.5 transition-all shadow-md shadow-amber-500/20"
+                  className="py-2.5 px-3 rounded-xl bg-[#2aabee] hover:bg-[#229ed9] text-white font-bold text-xs flex items-center justify-center space-x-1.5 transition-all shadow-md shadow-[#2aabee]/30"
                 >
                   <Navigation className="w-3.5 h-3.5" />
                   <span>Маршрут</span>
@@ -579,7 +588,7 @@ export const PartnerMapScreen: React.FC = () => {
         </div>
       )}
 
-      {/* Модальное окно заведения (Условия боксов & Инструкция) */}
+      {/* Модальное окно заведения */}
       {showVenueModal && selectedPartner && (
         <VenueGuestModal
           partner={selectedPartner}
@@ -609,3 +618,4 @@ export const PartnerMapScreen: React.FC = () => {
     </div>
   );
 };
+
