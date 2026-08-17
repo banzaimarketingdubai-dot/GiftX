@@ -615,6 +615,9 @@ export const GuestUnpackScreen: React.FC<GuestUnpackScreenProps> = ({ claimToken
   }, [unpacked, loading, isOpening]);
 
   // 3. Быстрый тап по коробке (кликер-механика)
+  const isTelegramApp = typeof window !== 'undefined' && !!(window as any).Telegram?.WebApp?.initDataUnsafe?.user?.id;
+  const botUsername = (import.meta as any).env?.VITE_TELEGRAM_BOT_USERNAME || 'giftx2025_bot';
+
   const handleBoxTap = async () => {
     if (unpacked || loading || errorMsg || isOpening) return;
 
@@ -705,8 +708,11 @@ export const GuestUnpackScreen: React.FC<GuestUnpackScreenProps> = ({ claimToken
   }
 
   return (
-    <div className="min-h-screen flex flex-col justify-between p-3 sm:p-5 max-w-md mx-auto relative overflow-y-auto custom-scrollbar select-none pb-8">
-      {/* Шапка источника */}
+    <div className="min-h-screen flex flex-col justify-between p-4 max-w-md mx-auto relative overflow-hidden select-none font-sans">
+      {/* ФОНОВЫЕ НЕОНОВЫЕ ЭФФЕКТЫ */}
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-amber-500/10 blur-[100px] rounded-full pointer-events-none" />
+
+      {/* ШАПКА РАСПАКОВКИ */}
       <div className="text-center pt-2 sm:pt-4 z-10 shrink-0 space-y-1">
         <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-slate-900/80 border border-slate-800 text-xs text-amber-400">
           <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />

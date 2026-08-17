@@ -172,7 +172,7 @@ export const WaiterScreen: React.FC = () => {
   const botUsername = (import.meta as any).env?.VITE_TELEGRAM_BOT_USERNAME || 'giftx2025_bot';
   const telegramAppUrl = `https://t.me/${botUsername}?start=claim_${activeQrToken}`;
   const appUrl = `${window.location.origin}/?claim=${activeQrToken}`;
-  const qrCodeValue = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? appUrl : telegramAppUrl;
+  const qrCodeValue = appUrl; // ВСЕГДА ВЕБ-АПП: при сканировании камерой смартфона откроется Web App!
 
   const displayPartners = partners.length > 0 ? partners : [
     {
