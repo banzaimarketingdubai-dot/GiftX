@@ -159,7 +159,7 @@ export const App: React.FC = () => {
           <div 
             className="relative z-20 bg-[#17212b] border-b border-white/5 px-4 pb-2.5 max-w-md mx-auto shadow-md transition-all"
             style={{
-              paddingTop: 'max(env(safe-area-inset-top, 0px), var(--tg-safe-area-inset-top, 0px), var(--tg-content-safe-area-inset-top, 0px), 16px)'
+              paddingTop: 'calc(max(env(safe-area-inset-top, 0px), var(--tg-safe-area-inset-top, 0px), var(--tg-content-safe-area-inset-top, 0px), 0px) + 68px)'
             }}
           >
             {/* Top title line */}

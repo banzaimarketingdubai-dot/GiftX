@@ -273,7 +273,12 @@ export const AdminDashboardScreen: React.FC = () => {
   };
 
   return (
-    <div className="p-4 max-w-md mx-auto min-h-screen pb-24 text-slate-100 space-y-4 font-sans">
+    <div 
+      className="p-4 max-w-md mx-auto min-h-screen pb-24 text-slate-100 space-y-4 font-sans"
+      style={{
+        paddingTop: 'calc(max(env(safe-area-inset-top, 0px), var(--tg-safe-area-inset-top, 0px), var(--tg-content-safe-area-inset-top, 0px), 0px) + 72px)'
+      }}
+    >
       {/* Шапка админ-панели (ТЕЛЕГРАМ СТИЛЬ) */}
       <div className="bg-[#17212b] p-4.5 rounded-2xl border border-white/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-md">
         <div>

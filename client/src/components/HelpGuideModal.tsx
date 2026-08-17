@@ -33,7 +33,7 @@ export const HelpGuideModal: React.FC<HelpGuideModalProps> = ({ onClose, default
       <div 
         className="bg-[#17212b] border-b border-white/5 px-4 pb-3 flex items-center justify-between shadow-md shrink-0"
         style={{
-          paddingTop: 'calc(max(env(safe-area-inset-top, 0px), var(--tg-safe-area-inset-top, 0px), 0px) + 58px)'
+          paddingTop: 'calc(max(env(safe-area-inset-top, 0px), var(--tg-safe-area-inset-top, 0px), var(--tg-content-safe-area-inset-top, 0px), 0px) + 76px)'
         }}
       >
         <div className="flex items-center space-x-3 min-w-0 flex-1 pr-2">

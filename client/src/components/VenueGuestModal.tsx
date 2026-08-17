@@ -168,6 +168,18 @@ export const VenueGuestModal: React.FC<VenueGuestModalProps> = ({
                   <span>{workingHours}</span>
                 </span>
               </div>
+
+              <a
+                href={partner?.googleMapsUrl || `https://maps.google.com/?q=${encodeURIComponent(venueName + ' ' + address)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => triggerHaptic('light')}
+                className="inline-flex items-center space-x-1.5 text-xs font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-full hover:bg-amber-500/20 transition-all cursor-pointer shadow-sm mt-1"
+              >
+                <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                <span>{rating}</span>
+                <span className="text-slate-300 font-medium text-[11px]">({reviewsCount} отзывов на Google Maps ↗)</span>
+              </a>
             </div>
           </div>
 

@@ -178,7 +178,12 @@ export const WalletScreen: React.FC = () => {
   };
 
   return (
-    <div className="p-4 max-w-md mx-auto min-h-screen pb-24 text-slate-100 animate-fadeIn font-sans">
+    <div 
+      className="p-4 max-w-md mx-auto min-h-screen pb-24 text-slate-100 animate-fadeIn font-sans"
+      style={{
+        paddingTop: 'calc(max(env(safe-area-inset-top, 0px), var(--tg-safe-area-inset-top, 0px), var(--tg-content-safe-area-inset-top, 0px), 0px) + 72px)'
+      }}
+    >
       {/* Шапка кошелька (ТЕЛЕГРАМ СТИЛЬ) */}
       <div className="bg-[#17212b] p-4.5 rounded-2xl border border-white/5 mb-4 flex items-center justify-between shadow-md relative overflow-hidden">
         <div className="z-10">
@@ -453,10 +458,19 @@ export const WalletScreen: React.FC = () => {
                           {partner.category || 'HORECA'}
                         </span>
                         
-                        <div className="flex items-center space-x-1 text-xs font-bold text-amber-400">
+                        <a
+                          href={partner.googleMapsUrl || `https://maps.google.com/?q=${encodeURIComponent(partner.name + ' ' + (partner.address || ''))}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            triggerHaptic('light');
+                          }}
+                          className="flex items-center space-x-1 text-xs font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full hover:bg-amber-500/20 transition-all cursor-pointer"
+                        >
                           <Star className="w-3.5 h-3.5 fill-amber-400" />
-                          <span>{partner.googleRating || 4.8}</span>
-                        </div>
+                          <span>{partner.googleRating || 4.8} ↗</span>
+                        </a>
                       </div>
 
                       <h3 className="font-extrabold text-slate-100 text-sm mt-1 truncate">{partner.name}</h3>

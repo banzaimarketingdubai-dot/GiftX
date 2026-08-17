@@ -227,7 +227,12 @@ export const WaiterScreen: React.FC = () => {
 
   if (!selectedStaff) {
     return (
-      <div className="p-4 max-w-md mx-auto min-h-screen flex flex-col justify-center space-y-4 pb-20 font-sans">
+      <div 
+        className="p-4 max-w-md mx-auto min-h-screen flex flex-col justify-start space-y-4 pb-20 font-sans"
+        style={{
+          paddingTop: 'calc(max(env(safe-area-inset-top, 0px), var(--tg-safe-area-inset-top, 0px), var(--tg-content-safe-area-inset-top, 0px), 0px) + 72px)'
+        }}
+      >
         <div className="text-center">
           <div className="inline-flex p-3 bg-[#2aabee]/15 border border-[#2aabee]/30 rounded-full mb-3">
             <UserCheck className="w-7 h-7 text-[#2aabee]" />
@@ -433,7 +438,12 @@ export const WaiterScreen: React.FC = () => {
   }
 
   return (
-    <div className="p-4 max-w-md mx-auto min-h-screen flex flex-col justify-between pb-8 font-sans">
+    <div 
+      className="p-4 max-w-md mx-auto min-h-screen flex flex-col justify-between pb-8 font-sans"
+      style={{
+        paddingTop: 'calc(max(env(safe-area-inset-top, 0px), var(--tg-safe-area-inset-top, 0px), var(--tg-content-safe-area-inset-top, 0px), 0px) + 72px)'
+      }}
+    >
       {/* Шапка персонала */}
       <div className="bg-[#17212b] p-4 rounded-2xl border border-white/5 flex items-center justify-between shadow-md">
         <div className="flex items-center space-x-3">

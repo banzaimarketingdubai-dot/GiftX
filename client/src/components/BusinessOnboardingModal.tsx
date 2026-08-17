@@ -93,7 +93,12 @@ export const BusinessOnboardingModal: React.FC<BusinessOnboardingModalProps> = (
   const StepIcon = steps[currentStep].icon;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0e1621]/85 backdrop-blur-md animate-fadeIn overflow-y-auto">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0e1621]/85 backdrop-blur-md animate-fadeIn overflow-y-auto"
+      style={{
+        paddingTop: 'calc(max(env(safe-area-inset-top, 0px), var(--tg-safe-area-inset-top, 0px), var(--tg-content-safe-area-inset-top, 0px), 0px) + 72px)'
+      }}
+    >
       <div className="w-full max-w-md bg-[#17212b] border border-white/10 rounded-2xl p-5 shadow-2xl relative overflow-hidden flex flex-col justify-between min-h-[540px] my-auto font-sans">
         {/* Кнопка закрытия */}
         <button

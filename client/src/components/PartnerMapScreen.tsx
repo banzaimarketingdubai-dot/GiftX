@@ -489,25 +489,29 @@ export const PartnerMapScreen: React.FC = () => {
             {/* Рейтинг Google Maps и кнопка отзывов */}
             <div className="mt-3.5 pt-3 border-t border-white/10 flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <div className="flex items-center space-x-1 px-2 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-bold">
+                <a
+                  href={selectedPartner.googleMapsUrl || `https://maps.google.com/?q=${encodeURIComponent(selectedPartner.name + ' ' + selectedPartner.address)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => triggerHaptic('light')}
+                  className="flex items-center space-x-1 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-bold hover:bg-amber-500/20 transition-all cursor-pointer"
+                >
                   <Star className="w-3.5 h-3.5 fill-amber-400" />
                   <span>{(selectedPartner.googleRating || 4.8).toFixed(1)}</span>
-                </div>
-                <span className="text-xs text-slate-400">
-                  ({selectedPartner.googleReviewsCount || 120} отзывов)
-                </span>
+                  <span className="text-slate-400 font-normal text-[11px]">({selectedPartner.googleReviewsCount || 120})</span>
+                </a>
               </div>
 
-              <button
-                onClick={() => {
-                  triggerHaptic('light');
-                  setShowReviewsModal(true);
-                }}
+              <a
+                href={selectedPartner.googleMapsUrl || `https://maps.google.com/?q=${encodeURIComponent(selectedPartner.name + ' ' + selectedPartner.address)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => triggerHaptic('light')}
                 className="py-1.5 px-3 rounded-full bg-[#242f3d] hover:bg-[#2b394a] text-slate-200 text-xs font-bold flex items-center space-x-1 transition-all border border-white/5 cursor-pointer"
               >
                 <MessageSquare className="w-3.5 h-3.5 text-[#2aabee]" />
-                <span>Отзывы</span>
-              </button>
+                <span>Google Maps ↗</span>
+              </a>
             </div>
 
             {/* Доступные ваучеры пользователя в этом месте */}
@@ -558,16 +562,16 @@ export const PartnerMapScreen: React.FC = () => {
               </button>
 
               <div className="grid grid-cols-2 gap-2">
-                <button
-                  onClick={() => {
-                    triggerHaptic('medium');
-                    setShowReviewsModal(true);
-                  }}
+                <a
+                  href={selectedPartner.googleMapsUrl || `https://maps.google.com/?q=${encodeURIComponent(selectedPartner.name + ' ' + selectedPartner.address)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => triggerHaptic('medium')}
                   className="py-2.5 px-3 rounded-xl bg-[#242f3d] hover:bg-[#2b394a] text-slate-200 font-bold text-xs flex items-center justify-center space-x-1.5 border border-white/5 transition-all cursor-pointer"
                 >
                   <ShieldCheck className="w-3.5 h-3.5 text-[#2aabee]" />
-                  <span>Google Отзывы</span>
-                </button>
+                  <span>Google Отзывы ↗</span>
+                </a>
 
                 <a
                   href={
