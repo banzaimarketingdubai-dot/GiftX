@@ -341,20 +341,20 @@ export const GuestHomeScreen: React.FC<GuestHomeScreenProps> = ({
             exit={{ opacity: 0, y: 20 }}
             className="fixed inset-0 z-50 bg-[#0e1621] text-slate-100 flex flex-col overflow-hidden font-sans"
           >
-            {/* ШАПКА ПОПАПА */}
+            {/* ШАПКА ПОПАПА С УЧЕТОМ НАВИГАЦИИ ТЕЛЕГРАМА */}
             <div 
-              className="bg-[#17212b] border-b border-white/5 px-4 py-3 flex items-center justify-between shadow-md shrink-0"
+              className="bg-[#17212b] border-b border-white/5 px-4 pb-3 flex items-center justify-between shadow-md shrink-0"
               style={{
-                paddingTop: 'max(env(safe-area-inset-top, 0px), var(--tg-safe-area-inset-top, 0px), var(--tg-content-safe-area-inset-top, 0px), 14px)'
+                paddingTop: 'calc(max(env(safe-area-inset-top, 0px), var(--tg-safe-area-inset-top, 0px), 0px) + 58px)'
               }}
             >
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-2xl bg-[#2aabee]/15 border border-[#2aabee]/30 flex items-center justify-center text-[#2aabee]">
+              <div className="flex items-center space-x-3 min-w-0 flex-1 pr-2">
+                <div className="w-9 h-9 rounded-2xl bg-[#2aabee]/15 border border-[#2aabee]/30 flex items-center justify-center text-[#2aabee] shrink-0">
                   <Sparkles className="w-5 h-5 text-[#2aabee]" />
                 </div>
-                <div>
-                  <h3 className="font-extrabold text-base text-slate-100 leading-tight">Как получать подарки</h3>
-                  <p className="text-[11px] text-slate-400">Простая пошаговая инструкция</p>
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-extrabold text-sm sm:text-base text-slate-100 leading-tight truncate">Как получать подарки</h3>
+                  <p className="text-[10px] sm:text-[11px] text-slate-400 truncate">Простая пошаговая инструкция</p>
                 </div>
               </div>
 
@@ -363,7 +363,7 @@ export const GuestHomeScreen: React.FC<GuestHomeScreenProps> = ({
                   triggerHaptic('light');
                   setShowInfoModal(false);
                 }}
-                className="p-2.5 rounded-full bg-[#242f3d] text-slate-400 hover:text-white transition-all cursor-pointer border border-white/5 active:scale-95"
+                className="p-2 rounded-full bg-[#242f3d] text-slate-400 hover:text-white transition-all cursor-pointer border border-white/5 active:scale-95 shrink-0"
               >
                 <X className="w-5 h-5" />
               </button>

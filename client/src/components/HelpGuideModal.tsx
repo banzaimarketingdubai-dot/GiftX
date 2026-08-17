@@ -29,20 +29,20 @@ export const HelpGuideModal: React.FC<HelpGuideModalProps> = ({ onClose, default
 
   return (
     <div className="fixed inset-0 z-50 bg-[#0e1621] text-slate-100 flex flex-col overflow-hidden font-sans animate-fadeIn">
-      {/* 1. ВЕРХНЯЯ ШАПКА ФУЛЛ-СКРИН ПОПАПА */}
+      {/* 1. ВЕРХНЯЯ ШАПКА ФУЛЛ-СКРИН ПОПАПА С ГАРАНТИРОВАННЫМ ОТСТУПОМ ОТ ШТАТНОЙ НАВИГАЦИИ ТЕЛЕГРАМА */}
       <div 
-        className="bg-[#17212b] border-b border-white/5 px-4 py-3 flex items-center justify-between shadow-md shrink-0"
+        className="bg-[#17212b] border-b border-white/5 px-4 pb-3 flex items-center justify-between shadow-md shrink-0"
         style={{
-          paddingTop: 'max(env(safe-area-inset-top, 0px), var(--tg-safe-area-inset-top, 0px), var(--tg-content-safe-area-inset-top, 0px), 14px)'
+          paddingTop: 'calc(max(env(safe-area-inset-top, 0px), var(--tg-safe-area-inset-top, 0px), 0px) + 58px)'
         }}
       >
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-2xl bg-[#2aabee]/15 border border-[#2aabee]/30 flex items-center justify-center text-[#2aabee] shadow-sm">
+        <div className="flex items-center space-x-3 min-w-0 flex-1 pr-2">
+          <div className="w-9 h-9 rounded-2xl bg-[#2aabee]/15 border border-[#2aabee]/30 flex items-center justify-center text-[#2aabee] shadow-sm shrink-0">
             <HelpCircle className="w-5 h-5 text-[#2aabee]" />
           </div>
-          <div>
-            <h2 className="font-extrabold text-base text-slate-100 leading-tight">Инструкции & О сервисе</h2>
-            <p className="text-[11px] text-slate-400">Как работать с системой GiftX</p>
+          <div className="min-w-0 flex-1">
+            <h2 className="font-extrabold text-sm sm:text-base text-slate-100 leading-tight truncate">Инструкции & О сервисе</h2>
+            <p className="text-[10px] sm:text-[11px] text-slate-400 truncate">Как работать с системой GiftX</p>
           </div>
         </div>
 
@@ -51,7 +51,8 @@ export const HelpGuideModal: React.FC<HelpGuideModalProps> = ({ onClose, default
             triggerHaptic('light');
             onClose();
           }}
-          className="p-2.5 rounded-full bg-[#242f3d] text-slate-400 hover:text-white transition-all cursor-pointer border border-white/5 active:scale-95"
+          className="p-2 rounded-full bg-[#242f3d] text-slate-400 hover:text-white transition-all cursor-pointer border border-white/5 active:scale-95 shrink-0"
+          title="Закрыть"
         >
           <X className="w-5 h-5" />
         </button>
