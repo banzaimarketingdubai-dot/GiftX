@@ -258,30 +258,6 @@ export const GuestHomeScreen: React.FC<GuestHomeScreenProps> = ({
         </div>
       </motion.button>
 
-      {/* 2.5. БЛОК ТЕСТОВОЙ РАСПАКОВКИ 3D-БОКСА (ПОПРОБОВАТЬ РАСПАКОВКУ И СОХРАНИТЬ В КОШЕЛЕК) */}
-      <div 
-        onClick={() => {
-          triggerHaptic('medium');
-          setShowDemoBoxModal(true);
-        }}
-        className="bg-[#17212b] p-4 rounded-2xl border border-white/5 shadow-md flex items-center justify-between cursor-pointer hover:bg-[#1f2c3a] transition-all active:scale-[0.99] group"
-      >
-        <div className="flex items-center space-x-3.5 min-w-0 flex-1">
-          <div className="w-11 h-11 rounded-xl bg-[#2aabee]/15 border border-[#2aabee]/30 flex items-center justify-center text-[#2aabee] shrink-0 shadow-sm group-hover:scale-105 transition-transform">
-            <Gift className="w-6 h-6 text-[#2aabee]" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <span className="text-[9px] uppercase font-bold text-[#2aabee] tracking-widest block">Тестовый режим</span>
-            <h3 className="font-extrabold text-sm text-slate-100 truncate">Открыть Тестовый 3D-Бокс</h3>
-            <p className="text-[11px] text-slate-400 truncate">Распаковать 5 подарков и сохранить в кошелек</p>
-          </div>
-        </div>
-
-        <div className="p-2 rounded-xl bg-[#242f3d] text-[#2aabee] border border-white/5 group-hover:bg-[#2aabee] group-hover:text-white transition-all shrink-0">
-          <ChevronRight className="w-4 h-4" />
-        </div>
-      </div>
-
       {/* 3. БЛОК КАРТЫ (УВЕЛИЧЕННАЯ В 2 РАЗА ВЫСОТА ЗА СЧЕТ КВАДРАТНЫХ ПРОПОРЦИЙ 1:1) */}
       <div className="bg-[#17212b] p-4 rounded-2xl border border-white/5 space-y-3 shadow-md">
         <div className="flex items-center justify-between">
