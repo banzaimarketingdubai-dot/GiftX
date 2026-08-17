@@ -493,85 +493,87 @@ export const App: React.FC = () => {
         />
       )}
 
-      {/* TELEGRAM FLOATING GLASSMORPHIC NAVIGATION BAR */}
-      <div 
-        className="fixed bottom-3 left-1/2 -translate-x-1/2 z-50 w-[94%] max-w-md telegram-nav-glass rounded-full px-2 py-1.5 flex items-center justify-around"
-      >
-        <button
-          onClick={() => {
-            triggerHaptic('light');
-            setClaimToken(null);
-            setActiveLanding(null);
-            setRole('GUEST');
-          }}
-          className={`flex-1 py-1.5 px-2 rounded-full flex flex-col items-center justify-center space-y-0.5 text-[10px] font-bold transition-all relative cursor-pointer ${
-            (role === 'GUEST' || !role) && !claimToken && !activeLanding
-              ? 'bg-[#2aabee] text-white shadow-md shadow-[#2aabee]/40'
-              : 'text-slate-400 hover:text-slate-200'
-          }`}
+      {/* TELEGRAM FLOATING GLASSMORPHIC NAVIGATION BAR (Скрыто на экране заведения) */}
+      {!venueModalPartnerId && (
+        <div 
+          className="fixed bottom-3 left-1/2 -translate-x-1/2 z-50 w-[94%] max-w-md telegram-nav-glass rounded-full px-2 py-1.5 flex items-center justify-around"
         >
-          <Home className="w-4 h-4" />
-          <span>Главная</span>
-        </button>
+          <button
+            onClick={() => {
+              triggerHaptic('light');
+              setClaimToken(null);
+              setActiveLanding(null);
+              setRole('GUEST');
+            }}
+            className={`flex-1 py-1.5 px-2 rounded-full flex flex-col items-center justify-center space-y-0.5 text-[10px] font-bold transition-all relative cursor-pointer ${
+              (role === 'GUEST' || !role) && !claimToken && !activeLanding
+                ? 'bg-[#2aabee] text-white shadow-md shadow-[#2aabee]/40'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Home className="w-4 h-4" />
+            <span>Главная</span>
+          </button>
 
-        <button
-          onClick={() => {
-            triggerHaptic('light');
-            setClaimToken(null);
-            setActiveLanding(null);
-            setRole('WALLET');
-          }}
-          className={`flex-1 py-1.5 px-2 rounded-full flex flex-col items-center justify-center space-y-0.5 text-[10px] font-bold transition-all relative cursor-pointer ${
-            role === 'WALLET' && !claimToken && !activeLanding
-              ? 'bg-[#2aabee] text-white shadow-md shadow-[#2aabee]/40'
-              : 'text-slate-400 hover:text-slate-200'
-          }`}
-        >
-          <div className="relative">
-            <Gift className="w-4 h-4" />
-            {activeVouchersCount > 0 && (
-              <span className="absolute -top-1.5 -right-2 bg-red-500 text-white font-black text-[9px] px-1 min-w-[15px] h-3.5 flex items-center justify-center rounded-full border border-[#17212b] shadow-sm animate-pulse">
-                {activeVouchersCount}
-              </span>
-            )}
-          </div>
-          <span>Подарки</span>
-        </button>
+          <button
+            onClick={() => {
+              triggerHaptic('light');
+              setClaimToken(null);
+              setActiveLanding(null);
+              setRole('WALLET');
+            }}
+            className={`flex-1 py-1.5 px-2 rounded-full flex flex-col items-center justify-center space-y-0.5 text-[10px] font-bold transition-all relative cursor-pointer ${
+              role === 'WALLET' && !claimToken && !activeLanding
+                ? 'bg-[#2aabee] text-white shadow-md shadow-[#2aabee]/40'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <div className="relative">
+              <Gift className="w-4 h-4" />
+              {activeVouchersCount > 0 && (
+                <span className="absolute -top-1.5 -right-2 bg-red-500 text-white font-black text-[9px] px-1 min-w-[15px] h-3.5 flex items-center justify-center rounded-full border border-[#17212b] shadow-sm animate-pulse">
+                  {activeVouchersCount}
+                </span>
+              )}
+            </div>
+            <span>Подарки</span>
+          </button>
 
-        <button
-          onClick={() => {
-            triggerHaptic('light');
-            setClaimToken(null);
-            setActiveLanding(null);
-            setRole('MAP');
-          }}
-          className={`flex-1 py-1.5 px-2 rounded-full flex flex-col items-center justify-center space-y-0.5 text-[10px] font-bold transition-all relative cursor-pointer ${
-            role === 'MAP' && !claimToken && !activeLanding
-              ? 'bg-[#2aabee] text-white shadow-md shadow-[#2aabee]/40'
-              : 'text-slate-400 hover:text-slate-200'
-          }`}
-        >
-          <MapPin className="w-4 h-4" />
-          <span>Карта</span>
-        </button>
+          <button
+            onClick={() => {
+              triggerHaptic('light');
+              setClaimToken(null);
+              setActiveLanding(null);
+              setRole('MAP');
+            }}
+            className={`flex-1 py-1.5 px-2 rounded-full flex flex-col items-center justify-center space-y-0.5 text-[10px] font-bold transition-all relative cursor-pointer ${
+              role === 'MAP' && !claimToken && !activeLanding
+                ? 'bg-[#2aabee] text-white shadow-md shadow-[#2aabee]/40'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <MapPin className="w-4 h-4" />
+            <span>Карта</span>
+          </button>
 
-        <button
-          onClick={() => {
-            triggerHaptic('light');
-            setClaimToken(null);
-            setActiveLanding(null);
-            setRole('PROFILE');
-          }}
-          className={`flex-1 py-1.5 px-2 rounded-full flex flex-col items-center justify-center space-y-0.5 text-[10px] font-bold transition-all relative cursor-pointer ${
-            role === 'PROFILE' && !claimToken && !activeLanding
-              ? 'bg-[#2aabee] text-white shadow-md shadow-[#2aabee]/40'
-              : 'text-slate-400 hover:text-slate-200'
-          }`}
-        >
-          <User className="w-4 h-4" />
-          <span>Профиль</span>
-        </button>
-      </div>
+          <button
+            onClick={() => {
+              triggerHaptic('light');
+              setClaimToken(null);
+              setActiveLanding(null);
+              setRole('PROFILE');
+            }}
+            className={`flex-1 py-1.5 px-2 rounded-full flex flex-col items-center justify-center space-y-0.5 text-[10px] font-bold transition-all relative cursor-pointer ${
+              role === 'PROFILE' && !claimToken && !activeLanding
+                ? 'bg-[#2aabee] text-white shadow-md shadow-[#2aabee]/40'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <User className="w-4 h-4" />
+            <span>Профиль</span>
+          </button>
+        </div>
+      )}
     </div>
   );
 };

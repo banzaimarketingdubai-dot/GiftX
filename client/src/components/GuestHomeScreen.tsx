@@ -258,48 +258,7 @@ export const GuestHomeScreen: React.FC<GuestHomeScreenProps> = ({
         </div>
       </motion.button>
 
-      {/* 3. БЛОК КАРТЫ (УВЕЛИЧЕННАЯ В 2 РАЗА ВЫСОТА ЗА СЧЕТ КВАДРАТНЫХ ПРОПОРЦИЙ 1:1) */}
-      <div className="bg-[#17212b] p-4 rounded-2xl border border-white/5 space-y-3 shadow-md">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 rounded-full bg-[#2aabee]/15 border border-[#2aabee]/30 flex items-center justify-center text-[#2aabee]">
-              <Compass className="w-4 h-4" />
-            </div>
-            <div>
-              <h3 className="font-bold text-slate-100 text-sm">Заведения Рядом С Вами</h3>
-              <p className="text-[10px] text-slate-400">Зеленые с подарками • Серые в программе</p>
-            </div>
-          </div>
-
-          <span className="text-[10px] text-[#2aabee] font-mono font-bold px-2 py-0.5 rounded-full bg-[#2aabee]/10 border border-[#2aabee]/20 flex items-center space-x-1">
-            <Navigation className="w-3 h-3 text-[#2aabee] inline" />
-            <span>GPS</span>
-          </span>
-        </div>
-
-        {/* Контейнер интерактивного превью карты с КВАДРАТНЫМИ пропорциями (1:1) */}
-        <div className="relative rounded-2xl overflow-hidden border border-white/5 shadow-inner aspect-square w-full">
-          <div ref={mapRef} className="w-full h-full z-0" />
-          <div className="absolute bottom-3 left-3 z-10 px-3 py-1.5 rounded-full bg-[#17212b]/90 backdrop-blur-md border border-white/10 text-[10px] font-bold text-slate-200 flex items-center space-x-1.5 shadow-md">
-            <Navigation className="w-3 h-3 text-[#2aabee]" />
-            <span>Локация определена</span>
-          </div>
-        </div>
-
-        <button
-          onClick={() => {
-            triggerHaptic('medium');
-            onOpenMap();
-          }}
-          className="w-full py-3 rounded-xl bg-[#242f3d] hover:bg-[#2b394a] text-slate-100 font-bold text-xs flex items-center justify-center space-x-2 transition-all border border-white/5 cursor-pointer"
-        >
-          <MapPin className="w-4 h-4 text-[#2aabee]" />
-          <span>Открыть полноэкранную карту ({partners.length} мест)</span>
-          <ChevronRight className="w-4 h-4 text-slate-400" />
-        </button>
-      </div>
-
-      {/* 4. БЛОК МОИ ПОДАРКИ (КОШЕЛЕК - ОПУЩЕН ПОД БЛОК КАРТЫ) */}
+      {/* 3. БЛОК МОИ ПОДАРКИ (КОШЕЛЕК - ПОДНЯТ ВЫШЕ КАРТЫ) */}
       <div
         onClick={() => {
           triggerHaptic('medium');
@@ -332,6 +291,47 @@ export const GuestHomeScreen: React.FC<GuestHomeScreenProps> = ({
           )}
           <ChevronRight className="w-5 h-5 text-slate-500" />
         </div>
+      </div>
+
+      {/* 4. БЛОК КАРТЫ (ВЫСОТА УМЕНЬШЕНА В 2 РАЗА ДО ПРЕЖНИХ ЗНАЧЕНИЙ) */}
+      <div className="bg-[#17212b] p-4 rounded-2xl border border-white/5 space-y-3 shadow-md">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <div className="w-8 h-8 rounded-full bg-[#2aabee]/15 border border-[#2aabee]/30 flex items-center justify-center text-[#2aabee]">
+              <Compass className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-100 text-sm">Заведения Рядом С Вами</h3>
+              <p className="text-[10px] text-slate-400">Зеленые с подарками • Серые в программе</p>
+            </div>
+          </div>
+
+          <span className="text-[10px] text-[#2aabee] font-mono font-bold px-2 py-0.5 rounded-full bg-[#2aabee]/10 border border-[#2aabee]/20 flex items-center space-x-1">
+            <Navigation className="w-3 h-3 text-[#2aabee] inline" />
+            <span>GPS</span>
+          </span>
+        </div>
+
+        {/* Контейнер интерактивного превью карты (высота в 2 раза меньше) */}
+        <div className="relative rounded-2xl overflow-hidden border border-white/5 shadow-inner h-44 w-full">
+          <div ref={mapRef} className="w-full h-full z-0" />
+          <div className="absolute bottom-3 left-3 z-10 px-3 py-1.5 rounded-full bg-[#17212b]/90 backdrop-blur-md border border-white/10 text-[10px] font-bold text-slate-200 flex items-center space-x-1.5 shadow-md">
+            <Navigation className="w-3 h-3 text-[#2aabee]" />
+            <span>Локация определена</span>
+          </div>
+        </div>
+
+        <button
+          onClick={() => {
+            triggerHaptic('medium');
+            onOpenMap();
+          }}
+          className="w-full py-3 rounded-xl bg-[#242f3d] hover:bg-[#2b394a] text-slate-100 font-bold text-xs flex items-center justify-center space-x-2 transition-all border border-white/5 cursor-pointer"
+        >
+          <MapPin className="w-4 h-4 text-[#2aabee]" />
+          <span>Открыть полноэкранную карту ({partners.length} мест)</span>
+          <ChevronRight className="w-4 h-4 text-slate-400" />
+        </button>
       </div>
 
       {/* ПОПАП "КАК ПОЛУЧАТЬ ПОДАРКИ В 3 ШАГА" (ФУЛЛ-СКРИН С КРУПНЫМИ ПИКТОГРАММАМИ ШАГОВ В СТИЛЕ ТГ) */}

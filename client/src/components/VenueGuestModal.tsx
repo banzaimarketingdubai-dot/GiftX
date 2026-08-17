@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   X, 
   MapPin, 
@@ -30,6 +30,38 @@ export const VenueGuestModal: React.FC<VenueGuestModalProps> = ({
 }) => {
   const [partner, setPartner] = useState<Partner | null>(initialPartner || null);
   const [loading, setLoading] = useState(!initialPartner && !!partnerId);
+  const [activeInstructionSlide, setActiveInstructionSlide] = useState<number>(0);
+  const instructionSliderRef = useRef<HTMLDivElement>(null);
+
+  const scrollToInstructionSlide = (idx: number) => {
+    setActiveInstructionSlide(idx);
+    if (instructionSliderRef.current) {
+      const width = instructionSliderRef.current.clientWidth;
+      instructionSliderRef.current.scrollTo({
+        left: width * idx,
+        behavior: 'smooth',
+      });
+    }
+  };
+
+  // 🔄 Автоматический свайп слайдов инструкции каждые 4 секунды (4000 мс)
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActiveInstructionSlide((prev) => {
+        const nextIdx = (prev + 1) % 3;
+        if (instructionSliderRef.current) {
+          const width = instructionSliderRef.current.clientWidth;
+          instructionSliderRef.current.scrollTo({
+            left: width * nextIdx,
+            behavior: 'smooth',
+          });
+        }
+        return nextIdx;
+      });
+    }, 4000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     if (!initialPartner && partnerId) {
@@ -102,18 +134,20 @@ export const VenueGuestModal: React.FC<VenueGuestModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#0e1621]/85 backdrop-blur-md animate-fadeIn overflow-y-auto font-sans">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-[#0e1621]/95 backdrop-blur-md animate-fadeIn overflow-y-auto font-sans">
       <div className="w-full max-w-md bg-[#17212b] border border-white/10 rounded-2xl shadow-2xl overflow-hidden max-h-[95vh] flex flex-col relative my-auto">
         {/* ============================================================== */}
         {/* 📸 ШАПКА: ФОТО ЗАВЕДЕНИЯ НА ВСЮ ШИРИНУ ЭКРАНА                 */}
         {/* ============================================================== */}
-        <div className="relative h-44 sm:h-48 w-full overflow-hidden shrink-0 bg-[#0e1621]">
-          <img
-            src={coverPhoto}
-            alt={venueName}
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#17212b] via-[#17212b]/30 to-black/50" />
+        <div className="relative h-44 sm:h-48 w-full shrink-0 bg-[#0e1621]">
+          <div className="w-full h-full overflow-hidden">
+            <img
+              src={coverPhoto}
+              alt={venueName}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#17212b] via-[#17212b]/30 to-black/50" />
+          </div>
           
           {/* Верхние кнопки управления (Шеринг и Закрыть) */}
           <div className="absolute top-3 right-3 flex items-center space-x-2 z-20">
@@ -135,28 +169,30 @@ export const VenueGuestModal: React.FC<VenueGuestModalProps> = ({
               <X className="w-4 h-4" />
             </button>
           </div>
-        </div>
 
-        {/* ============================================================== */}
-        {/* 👤 ЛОГОТИП В КРУГЕ КАК В СОЦСЕТЯХ + ПРИВЕТСТВИЕ ГОСТЯ           */}
-        {/* ============================================================== */}
-        <div className="px-5 pb-5 relative z-10 space-y-4 overflow-y-auto flex-1 custom-scrollbar">
-          {/* Аватарка/Логотип в круге поверх обложки шапки */}
-          <div className="flex flex-col items-center text-center -mt-12 space-y-2">
+          {/* 👤 ЛОГОТИП В ЦЕНТРЕ НА ГРАНИЦЕ (100% ВИДИМОСТЬ БЕЗ ОБРЕЗАНИЯ) */}
+          <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 z-20">
             <VenueAvatar
               logoUrl={partner?.logoUrl}
               name={venueName}
-              className="w-20 h-20 text-2xl rounded-full border-4 border-[#17212b] shadow-2xl shrink-0 ring-2 ring-[#2aabee]/40"
+              className="w-20 h-20 text-2xl rounded-full border-4 border-[#17212b] shadow-2xl shrink-0 ring-4 ring-[#2aabee]/40"
               style={{ width: '80px', height: '80px' }}
             />
+          </div>
+        </div>
 
-            {/* Приветствие гостя */}
+        {/* ============================================================== */}
+        {/* 👤 ПРИВЕТСТВИЕ ГОСТЯ + ВЫДЕЛЕННАЯ ИНСТРУКЦИЯ                   */}
+        {/* ============================================================== */}
+        <div className="px-5 pt-12 pb-5 relative z-10 space-y-4 overflow-y-auto flex-1 custom-scrollbar">
+          {/* Приветствие гостя */}
+          <div className="flex flex-col items-center text-center space-y-2">
             <div className="space-y-1">
               <span className="text-[10px] font-bold uppercase text-[#2aabee] bg-[#2aabee]/15 border border-[#2aabee]/30 px-2.5 py-0.5 rounded-full tracking-wider inline-flex items-center space-x-1">
                 <Sparkles className="w-3 h-3 text-[#2aabee] inline" />
                 <span>Добро пожаловать!</span>
               </span>
-              <h2 className="text-lg font-extrabold text-slate-100 leading-tight">{venueName}</h2>
+              <h2 className="text-xl font-extrabold text-slate-100 leading-tight">{venueName}</h2>
               <div className="flex items-center justify-center space-x-2 text-xs text-slate-400 font-medium">
                 <span className="flex items-center space-x-1">
                   <MapPin className="w-3.5 h-3.5 text-[#2aabee] shrink-0" />
@@ -184,43 +220,203 @@ export const VenueGuestModal: React.FC<VenueGuestModalProps> = ({
           </div>
 
           {/* ============================================================== */}
-          {/* ⚡ ИНСТРУКЦИЯ КАК ПОЛУЧИТЬ ПОДАРОК (БОКС)                     */}
+          {/* ⚡ ИНТЕРАКТИВНЫЙ ГОРИЗОНТАЛЬНЫЙ СЛАЙДЕР ИНСТРУКЦИИ (3 ШАГА)    */}
           {/* ============================================================== */}
-          <div className="p-3.5 rounded-xl bg-[#242f3d] border border-white/5 space-y-2.5 shadow-sm">
-            <div className="flex items-center space-x-2 text-[#2aabee]">
-              <Zap className="w-4 h-4 text-[#2aabee] animate-pulse" />
-              <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-100">
-                Инструкция: Как получить ваш GiftX Box
-              </h4>
+          <div className="p-4 rounded-2xl bg-gradient-to-br from-[#1e2c3a] via-[#17212b] to-[#121922] border-2 border-[#2aabee]/50 space-y-3 shadow-xl shadow-[#2aabee]/10 relative overflow-hidden">
+            <div className="absolute -right-6 -top-6 w-20 h-20 bg-[#2aabee]/20 rounded-full blur-xl pointer-events-none" />
+
+            {/* Шапка блока слайдера */}
+            <div className="flex items-center justify-between relative z-10">
+              <div className="flex items-center space-x-2">
+                <div className="w-7 h-7 rounded-xl bg-[#2aabee]/20 border border-[#2aabee]/40 flex items-center justify-center text-[#2aabee] shrink-0">
+                  <Zap className="w-4 h-4 text-[#2aabee] animate-pulse" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-black uppercase tracking-wider text-slate-100">
+                    Как получить подарок
+                  </h4>
+                  <p className="text-[10px] text-slate-400 font-medium">Листайте шаги вправо ➔</p>
+                </div>
+              </div>
+
+              {/* Индикатор текущего шага */}
+              <span className="text-[10px] font-black uppercase text-[#2aabee] bg-[#2aabee]/15 border border-[#2aabee]/30 px-2.5 py-0.5 rounded-full">
+                Шаг {activeInstructionSlide + 1} из 3
+              </span>
             </div>
 
-            <div className="space-y-2 text-xs text-slate-300">
-              <div className="flex items-start space-x-2">
-                <span className="w-5 h-5 rounded-md bg-[#2aabee]/20 text-[#2aabee] font-bold flex items-center justify-center text-[11px] shrink-0 mt-0.5">
-                  1
-                </span>
-                <p className="leading-snug">
-                  При вызове официанта <strong className="text-[#2aabee]">сообщите, что вы гость GiftX</strong>.
-                </p>
+            {/* Контейнер слайдов с горизонтальным скроллом */}
+            <div
+              ref={instructionSliderRef}
+              onScroll={(e) => {
+                const width = e.currentTarget.clientWidth;
+                if (width > 0) {
+                  const idx = Math.round(e.currentTarget.scrollLeft / width);
+                  if (idx !== activeInstructionSlide) setActiveInstructionSlide(idx);
+                }
+              }}
+              className="flex space-x-3 overflow-x-auto snap-x snap-mandatory no-scrollbar relative z-10 pt-1 pb-1"
+            >
+              {/* SLIDE 1 */}
+              <div className="w-full shrink-0 snap-center space-y-3">
+                <div className="p-3 rounded-xl bg-[#17212b]/95 border border-white/10 space-y-2 shadow-sm">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-[#2aabee] to-[#229ed9] text-white font-black text-xs flex items-center justify-center shrink-0 shadow-md shadow-[#2aabee]/30">
+                      1
+                    </div>
+                    <span className="text-xs font-bold text-slate-200">Шаг 1: Скажите официанту</span>
+                  </div>
+
+                  <p className="text-xs text-slate-300 leading-snug">
+                    При вызове официанта или оплате чека произнесите:
+                  </p>
+
+                  <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-center font-extrabold text-sm shadow-inner">
+                    «Я гость GiftX!»
+                  </div>
+                </div>
+
+                {/* Графика под текстом для Шага 1 */}
+                <div className="p-3 rounded-xl bg-[#17212b]/60 border border-white/5 space-y-2 text-center">
+                  <div className="flex justify-center space-x-3 text-2xl select-none">
+                    <span className="p-2 rounded-xl bg-[#242f3d] border border-white/10 shadow-sm animate-bounce" style={{ animationDuration: '2s' }}>🍹</span>
+                    <span className="p-2 rounded-xl bg-[#242f3d] border border-white/10 shadow-sm animate-bounce" style={{ animationDuration: '2.4s' }}>💬</span>
+                    <span className="p-2 rounded-xl bg-[#242f3d] border border-white/10 shadow-sm animate-bounce" style={{ animationDuration: '2.8s' }}>💆‍♀️</span>
+                  </div>
+                  <div className="text-[11px] text-slate-400 font-medium">
+                    Официант подготовят QR-код нужного уровня бокса
+                  </div>
+                </div>
               </div>
 
-              <div className="flex items-start space-x-2">
-                <span className="w-5 h-5 rounded-md bg-[#2aabee]/20 text-[#2aabee] font-bold flex items-center justify-center text-[11px] shrink-0 mt-0.5">
-                  2
-                </span>
-                <p className="leading-snug">
-                  Официант покажет вам <strong className="text-[#2aabee]">QR-код соответствующего уровня бокса</strong>.
-                </p>
+              {/* SLIDE 2 */}
+              <div className="w-full shrink-0 snap-center space-y-3">
+                <div className="p-3 rounded-xl bg-[#17212b]/95 border border-white/10 space-y-2 shadow-sm">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-[#2aabee] to-[#229ed9] text-white font-black text-xs flex items-center justify-center shrink-0 shadow-md shadow-[#2aabee]/30">
+                      2
+                    </div>
+                    <span className="text-xs font-bold text-slate-200">Шаг 2: Сканируйте QR</span>
+                  </div>
+
+                  <p className="text-xs text-slate-300 leading-snug">
+                    Официант покажет вам на смартфоне:
+                  </p>
+
+                  <div className="p-2.5 rounded-xl bg-[#2aabee]/15 border border-[#2aabee]/40 text-[#2aabee] text-center font-extrabold text-xs shadow-inner">
+                    QR-код уровня бокса (Silver / Gold / VIP)
+                  </div>
+                </div>
+
+                {/* Графика под текстом для Шага 2 */}
+                <div className="p-3 rounded-xl bg-[#17212b]/60 border border-white/5 space-y-2 text-center">
+                  <div className="flex items-center justify-center space-x-3 text-2xl select-none">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-[#2aabee] to-cyan-400 p-0.5 shadow-lg shadow-[#2aabee]/30 flex items-center justify-center">
+                      <div className="w-full h-full bg-[#17212b] rounded-[10px] flex items-center justify-center">
+                        <Camera className="w-6 h-6 text-[#2aabee] animate-pulse" />
+                      </div>
+                    </div>
+                    <span className="text-slate-500 font-black text-base">➔</span>
+                    <div className="w-12 h-12 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 font-bold text-xs shadow-md">
+                      QR 📷
+                    </div>
+                  </div>
+                  <div className="text-[11px] text-slate-400 font-medium">
+                    Наведите камеру сканера на экран официанта
+                  </div>
+                </div>
               </div>
 
-              <div className="flex items-start space-x-2">
-                <span className="w-5 h-5 rounded-md bg-[#2aabee]/20 text-[#2aabee] font-bold flex items-center justify-center text-[11px] shrink-0 mt-0.5">
-                  3
-                </span>
-                <p className="leading-snug">
-                  Нажмите кнопку ниже, <strong className="text-[#2aabee]">отсканируйте QR</strong> и заберите карточки подарков!
-                </p>
+              {/* SLIDE 3 */}
+              <div className="w-full shrink-0 snap-center space-y-3">
+                <div className="p-3 rounded-xl bg-[#17212b]/95 border border-white/10 space-y-2 shadow-sm">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 text-white font-black text-xs flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/30">
+                      3
+                    </div>
+                    <span className="text-xs font-bold text-slate-200">Шаг 3: Заберите 5 Подарков</span>
+                  </div>
+
+                  <p className="text-xs text-slate-300 leading-snug">
+                    После сканирования раскроется 3D-бокс:
+                  </p>
+
+                  <div className="p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 text-center font-extrabold text-xs shadow-inner">
+                    Веер из 5 подарочных карт! 🎁
+                  </div>
+                </div>
+
+                {/* Графика под текстом для Шага 3 */}
+                <div className="p-3 rounded-xl bg-[#17212b]/60 border border-white/5 space-y-2 text-center">
+                  <div className="flex justify-center space-x-2 text-xl select-none">
+                    <div className="px-2.5 py-1 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-300 font-bold text-[10px] shadow-sm transform -rotate-6">
+                      🍹 Коктейль
+                    </div>
+                    <div className="px-2.5 py-1 rounded-lg bg-purple-500/20 border border-purple-500/40 text-purple-300 font-bold text-[10px] shadow-sm">
+                      💆‍♀️ СПА
+                    </div>
+                    <div className="px-2.5 py-1 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-bold text-[10px] shadow-sm transform rotate-6">
+                      🍕 Скидка
+                    </div>
+                  </div>
+                  <div className="text-[11px] text-slate-400 font-medium">
+                    Все карточки сохранятся в ваш Кошелек
+                  </div>
+                </div>
               </div>
+            </div>
+
+            {/* Точечная пагинация и стрелки управления */}
+            <div className="flex items-center justify-between pt-1 relative z-10 border-t border-white/5">
+              <button
+                onClick={() => {
+                  triggerHaptic('light');
+                  const newIdx = Math.max(0, activeInstructionSlide - 1);
+                  scrollToInstructionSlide(newIdx);
+                }}
+                disabled={activeInstructionSlide === 0}
+                className={`text-xs font-bold px-2 py-1 rounded-lg transition-all ${
+                  activeInstructionSlide === 0
+                    ? 'text-slate-600 cursor-not-allowed'
+                    : 'text-[#2aabee] hover:bg-[#2aabee]/10 cursor-pointer'
+                }`}
+              >
+                ← Назад
+              </button>
+
+              {/* Точки слайдов */}
+              <div className="flex space-x-2">
+                {[0, 1, 2].map((idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      triggerHaptic('light');
+                      scrollToInstructionSlide(idx);
+                    }}
+                    className={`h-2 rounded-full transition-all cursor-pointer ${
+                      activeInstructionSlide === idx
+                        ? 'w-6 bg-[#2aabee] shadow-sm shadow-[#2aabee]/50'
+                        : 'w-2 bg-slate-600 hover:bg-slate-400'
+                    }`}
+                  />
+                ))}
+              </div>
+
+              <button
+                onClick={() => {
+                  triggerHaptic('light');
+                  const newIdx = Math.min(2, activeInstructionSlide + 1);
+                  scrollToInstructionSlide(newIdx);
+                }}
+                disabled={activeInstructionSlide === 2}
+                className={`text-xs font-bold px-2 py-1 rounded-lg transition-all ${
+                  activeInstructionSlide === 2
+                    ? 'text-slate-600 cursor-not-allowed'
+                    : 'text-[#2aabee] hover:bg-[#2aabee]/10 cursor-pointer'
+                }`}
+              >
+                Вперед →
+              </button>
             </div>
           </div>
 
