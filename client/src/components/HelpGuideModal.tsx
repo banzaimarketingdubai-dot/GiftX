@@ -28,17 +28,17 @@ export const HelpGuideModal: React.FC<HelpGuideModalProps> = ({ onClose, default
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-xl">
-      <div className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-2xl flex flex-col max-h-[85vh] text-slate-100 relative">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#0e1621]/80 backdrop-blur-md">
+      <div className="w-full max-w-lg bg-[#17212b] border border-white/10 rounded-2xl p-5 shadow-2xl flex flex-col max-h-[85vh] text-slate-100 relative font-sans">
         {/* Шапка модалки */}
-        <div className="flex items-center justify-between pb-3 border-b border-slate-800 shrink-0">
+        <div className="flex items-center justify-between pb-3 border-b border-white/10 shrink-0">
           <div className="flex items-center space-x-2.5">
-            <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
+            <div className="w-9 h-9 rounded-full bg-[#2aabee]/15 border border-[#2aabee]/30 flex items-center justify-center text-[#2aabee]">
               <HelpCircle className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="font-extrabold text-base text-slate-100">Инструкция и Справка GiftX</h2>
-              <p className="text-[11px] text-slate-400">Выберите вашу роль или интересующий вопрос</p>
+              <h2 className="font-extrabold text-base text-slate-100">Инструкция GiftX</h2>
+              <p className="text-[11px] text-slate-400">Выберите роль или интересующий вопрос</p>
             </div>
           </div>
 
@@ -47,14 +47,14 @@ export const HelpGuideModal: React.FC<HelpGuideModalProps> = ({ onClose, default
               triggerHaptic('light');
               onClose();
             }}
-            className="p-2 rounded-xl bg-slate-800 text-slate-400 hover:text-white"
+            className="p-2 rounded-full bg-[#242f3d] text-slate-400 hover:text-white transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Переключатель вкладок 4 ролей + FAQ */}
-        <div className="flex space-x-1 py-3 border-b border-slate-800/80 overflow-x-auto no-scrollbar shrink-0">
+        <div className="flex space-x-1 py-3 border-b border-white/5 overflow-x-auto no-scrollbar shrink-0">
           {[
             { id: 'GUEST', label: '🎁 Гость', icon: Gift },
             { id: 'WAITER', label: '🍷 Официант', icon: QrCode },
@@ -70,10 +70,10 @@ export const HelpGuideModal: React.FC<HelpGuideModalProps> = ({ onClose, default
                   triggerHaptic('light');
                   setActiveTab(tab.id as any);
                 }}
-                className={`flex items-center space-x-1.5 py-1.5 px-3 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                className={`flex items-center space-x-1.5 py-1.5 px-3 rounded-full text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
                   activeTab === tab.id
-                    ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
-                    : 'bg-slate-950/60 text-slate-400 hover:text-slate-200 border border-slate-800'
+                    ? 'bg-[#2aabee] text-white shadow-md shadow-[#2aabee]/30'
+                    : 'bg-[#242f3d] text-slate-300 hover:text-white border border-white/5'
                 }`}
               >
                 <span>{tab.label}</span>
@@ -87,8 +87,8 @@ export const HelpGuideModal: React.FC<HelpGuideModalProps> = ({ onClose, default
           {/* 1. ИНСТРУКЦИЯ ДЛЯ ГОСТЯ */}
           {activeTab === 'GUEST' && (
             <div className="space-y-3.5">
-              <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 space-y-1">
-                <h3 className="font-bold text-amber-300 flex items-center space-x-2 text-sm">
+              <div className="p-3.5 rounded-xl bg-[#242f3d] border border-white/5 space-y-1">
+                <h3 className="font-bold text-[#2aabee] flex items-center space-x-2 text-sm">
                   <span>💡 Как работает GiftX для Гостя?</span>
                 </h3>
                 <p className="text-slate-300 text-[11px]">
@@ -97,9 +97,9 @@ export const HelpGuideModal: React.FC<HelpGuideModalProps> = ({ onClose, default
               </div>
 
               <div className="space-y-2.5">
-                <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800">
-                  <div className="font-bold text-amber-400 mb-1 flex items-center space-x-1.5">
-                    <span className="w-5 h-5 rounded-full bg-amber-500/20 flex items-center justify-center text-[10px]">1</span>
+                <div className="p-3 rounded-xl bg-[#242f3d]/60 border border-white/5">
+                  <div className="font-bold text-emerald-400 mb-1 flex items-center space-x-1.5">
+                    <span className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center text-[10px]">1</span>
                     <span>Получение бокса у официанта</span>
                   </div>
                   <p className="text-slate-300 text-[11px]">
@@ -107,7 +107,7 @@ export const HelpGuideModal: React.FC<HelpGuideModalProps> = ({ onClose, default
                   </p>
                 </div>
 
-                <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800">
+                <div className="p-3 rounded-xl bg-[#242f3d]/60 border border-white/5">
                   <div className="font-bold text-purple-400 mb-1 flex items-center space-x-1.5">
                     <span className="w-5 h-5 rounded-full bg-purple-500/20 flex items-center justify-center text-[10px]">2</span>
                     <span>Распаковка 3D-коробки (3 Тапа)</span>
@@ -117,7 +117,7 @@ export const HelpGuideModal: React.FC<HelpGuideModalProps> = ({ onClose, default
                   </p>
                 </div>
 
-                <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800">
+                <div className="p-3 rounded-xl bg-[#242f3d]/60 border border-white/5">
                   <div className="font-bold text-cyan-400 mb-1 flex items-center space-x-1.5">
                     <span className="w-5 h-5 rounded-full bg-cyan-500/20 flex items-center justify-center text-[10px]">3</span>
                     <span>Использование в другом месте</span>
@@ -133,7 +133,7 @@ export const HelpGuideModal: React.FC<HelpGuideModalProps> = ({ onClose, default
           {/* 2. ИНСТРУКЦИЯ ДЛЯ ОФИЦИАНТА */}
           {activeTab === 'WAITER' && (
             <div className="space-y-3.5">
-              <div className="p-3.5 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 space-y-1">
+              <div className="p-3.5 rounded-xl bg-[#242f3d] border border-white/5 space-y-1">
                 <h3 className="font-bold text-cyan-300 flex items-center space-x-2 text-sm">
                   <span>🍷 Пошаговая инструкция для Персонала / Официанта</span>
                 </h3>
@@ -143,14 +143,14 @@ export const HelpGuideModal: React.FC<HelpGuideModalProps> = ({ onClose, default
               </div>
 
               <div className="space-y-2.5">
-                <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800">
+                <div className="p-3 rounded-xl bg-[#242f3d]/60 border border-white/5">
                   <div className="font-bold text-slate-100 mb-1">Шаг 1: Авторизация на смене</div>
                   <p className="text-slate-400 text-[11px]">
                     Перейдите во вкладку **«Официант»**, выберите своё заведение и нажмите на свой профиль сотрудника.
                   </p>
                 </div>
 
-                <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800">
+                <div className="p-3 rounded-xl bg-[#242f3d]/60 border border-white/5">
                   <div className="font-bold text-slate-100 mb-1">Шаг 2: Выбор бокса по чеку</div>
                   <p className="text-slate-400 text-[11px]">
                     Определите сумму чека гостя и нажмите соответствующую кнопку:
@@ -160,7 +160,7 @@ export const HelpGuideModal: React.FC<HelpGuideModalProps> = ({ onClose, default
                   </p>
                 </div>
 
-                <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800">
+                <div className="p-3 rounded-xl bg-[#242f3d]/60 border border-white/5">
                   <div className="font-bold text-slate-100 mb-1">Шаг 3: Показ QR-кода и отклик</div>
                   <p className="text-slate-400 text-[11px]">
                     Покажите сгенерированный QR-код гостю. Код активен **3 минуты**. Как только гость сканирует код, ваш экран автоматически подтвердит вручение: *«🎉 Бокс успешно вручен!»*.
@@ -173,7 +173,7 @@ export const HelpGuideModal: React.FC<HelpGuideModalProps> = ({ onClose, default
           {/* 3. ИНСТРУКЦИЯ ДЛЯ ОУНЕРА БИЗНЕСА */}
           {activeTab === 'OWNER' && (
             <div className="space-y-3.5">
-              <div className="p-3.5 rounded-2xl bg-purple-500/10 border border-purple-500/20 space-y-1">
+              <div className="p-3.5 rounded-xl bg-[#242f3d] border border-white/5 space-y-1">
                 <h3 className="font-bold text-purple-300 flex items-center space-x-2 text-sm">
                   <span>🏢 Руководство для Владельца заведения (Owner / Manager)</span>
                 </h3>
@@ -183,14 +183,14 @@ export const HelpGuideModal: React.FC<HelpGuideModalProps> = ({ onClose, default
               </div>
 
               <div className="space-y-2.5">
-                <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800">
+                <div className="p-3 rounded-xl bg-[#242f3d]/60 border border-white/5">
                   <div className="font-bold text-purple-300 mb-1">1. Настройка порогов чеков (VND)</div>
                   <p className="text-slate-400 text-[11px]">
                     В Панели Управляющего (вкладка **«Админ»**) настройте сумму счёта для выдачи подарков (например, Базовый от 0k, Серебряный от 300k, Золотой от 600k VND).
                   </p>
                 </div>
 
-                <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800">
+                <div className="p-3 rounded-xl bg-[#242f3d]/60 border border-white/5">
                   <div className="font-bold text-purple-300 mb-1">2. Создание 3 типов подарков для привлечения</div>
                   <p className="text-slate-400 text-[11px]">
                     Создавайте акции в разделе **«Ваучеры»**:
@@ -200,7 +200,7 @@ export const HelpGuideModal: React.FC<HelpGuideModalProps> = ({ onClose, default
                   </p>
                 </div>
 
-                <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800">
+                <div className="p-3 rounded-xl bg-[#242f3d]/60 border border-white/5">
                   <div className="font-bold text-purple-300 mb-1">3. Приём и гашение ваучеров на кассе</div>
                   <p className="text-slate-400 text-[11px]">
                     Когда новый гость приходит к вам с ваучером из другого заведения, сотрудник вводит PIN-код заведения (по умолчанию **`1234`**) для гашения подарка.
@@ -213,7 +213,7 @@ export const HelpGuideModal: React.FC<HelpGuideModalProps> = ({ onClose, default
           {/* 4. ИНСТРУКЦИЯ ДЛЯ СУПЕРАДМИНА */}
           {activeTab === 'SUPERADMIN' && (
             <div className="space-y-3.5">
-              <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 space-y-1">
+              <div className="p-3.5 rounded-xl bg-[#242f3d] border border-white/5 space-y-1">
                 <h3 className="font-bold text-emerald-300 flex items-center space-x-2 text-sm">
                   <span>👑 Управление платформой GiftX (Superadmin)</span>
                 </h3>
@@ -223,14 +223,14 @@ export const HelpGuideModal: React.FC<HelpGuideModalProps> = ({ onClose, default
               </div>
 
               <div className="space-y-2.5">
-                <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800">
+                <div className="p-3 rounded-xl bg-[#242f3d]/60 border border-white/5">
                   <div className="font-bold text-emerald-400 mb-1">Кросс-маркетинговый алгоритм</div>
                   <p className="text-slate-400 text-[11px]">
                     Система никогда не выдает ваучеры из ТОЙ ЖЕ категории заведения, где был выдан QR-код (ресторан не отдаст клиента другому ресторану!). Гость ресторана всегда получает подарки в СПА, прокат байков, дайвинг и т.д.
                   </p>
                 </div>
 
-                <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800">
+                <div className="p-3 rounded-xl bg-[#242f3d]/60 border border-white/5">
                   <div className="font-bold text-emerald-400 mb-1">Антифрод и Контроль лимитов</div>
                   <p className="text-slate-400 text-[11px]">
                     Каждый QR-токен официанта живёт 3 минуты и сгорает сразу после активации. Гость не может активировать один и тот же код дважды.
@@ -261,8 +261,8 @@ export const HelpGuideModal: React.FC<HelpGuideModalProps> = ({ onClose, default
                   a: 'В демо-версии универсальный PIN-код заведений — 1234.'
                 }
               ].map((faq, idx) => (
-                <div key={idx} className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1">
-                  <h4 className="font-bold text-amber-400 text-xs">❓ {faq.q}</h4>
+                <div key={idx} className="p-3 rounded-xl bg-[#242f3d]/60 border border-white/5 space-y-1">
+                  <h4 className="font-bold text-[#2aabee] text-xs">❓ {faq.q}</h4>
                   <p className="text-slate-300 text-[11px] leading-normal">{faq.a}</p>
                 </div>
               ))}
@@ -271,13 +271,13 @@ export const HelpGuideModal: React.FC<HelpGuideModalProps> = ({ onClose, default
         </div>
 
         {/* Кнопка закрытия */}
-        <div className="pt-3 border-t border-slate-800 shrink-0">
+        <div className="pt-3 border-t border-white/10 shrink-0">
           <button
             onClick={() => {
               triggerHaptic('medium');
               onClose();
             }}
-            className="w-full py-3 bg-amber-500 hover:bg-amber-400 font-extrabold text-slate-950 rounded-2xl text-xs shadow-lg shadow-amber-500/20"
+            className="w-full py-2.5 bg-[#2aabee] hover:bg-[#229ed9] font-bold text-white rounded-xl text-xs shadow-md shadow-[#2aabee]/30 transition-all cursor-pointer"
           >
             Понятно, закрыть справочник
           </button>
@@ -286,3 +286,4 @@ export const HelpGuideModal: React.FC<HelpGuideModalProps> = ({ onClose, default
     </div>
   );
 };
+

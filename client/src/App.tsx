@@ -18,7 +18,7 @@ import { PartnerRegistrationModal } from './components/PartnerRegistrationModal'
 import { StaffInviteModal } from './components/StaffInviteModal';
 import { DemoBoxOpeningModal } from './components/DemoBoxOpeningModal';
 import { VenueGuestModal } from './components/VenueGuestModal';
-import { Home, Wallet, MapPin, User, HelpCircle, Building2, Sparkles, Gift } from 'lucide-react';
+import { Home, MapPin, User, HelpCircle, Building2, Sparkles, Gift, Search, QrCode, ShieldAlert } from 'lucide-react';
 
 export const App: React.FC = () => {
   const { role, setRole, setPartners } = useAppStore();
@@ -27,6 +27,7 @@ export const App: React.FC = () => {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showBusinessOnboardingModal, setShowBusinessOnboardingModal] = useState(false);
   const [showHelpGuide, setShowHelpGuide] = useState(false);
+  const [helpGuideDefaultRole, setHelpGuideDefaultRole] = useState<'GUEST' | 'WAITER' | 'ADMIN'>('GUEST');
   const [showScannerModal, setShowScannerModal] = useState(false);
   const [showDemoBoxModal, setShowDemoBoxModal] = useState(false);
   const [showPartnerRegisterModal, setShowPartnerRegisterModal] = useState(false);
@@ -109,10 +110,8 @@ export const App: React.FC = () => {
 
       if (savedStaff && (savedStaff.partnerId === venueId || venueId.includes('demo'))) {
         if (savedStaff.role === 'WAITER') {
-          // 2. У официанта открывается меню выбора боксов заведения
           setRole('WAITER');
         } else {
-          // 3. У администратора / суперадмина открывается статистика по заведению
           setRole('ADMIN');
         }
       } else if (tgUser?.id) {
@@ -122,7 +121,6 @@ export const App: React.FC = () => {
             if (data.success && data.isStaff) {
               setRole(data.staff.role === 'WAITER' ? 'WAITER' : 'ADMIN');
             } else {
-              // 1. У гостя открывается экран заведения с боксами и инструкцией
               setRole('GUEST');
               setVenueModalPartnerId(venueId);
             }
@@ -132,7 +130,6 @@ export const App: React.FC = () => {
             setVenueModalPartnerId(venueId);
           });
       } else {
-        // 1. У гостя открывается экран заведения с боксами и инструкцией
         setRole('GUEST');
         setVenueModalPartnerId(venueId);
       }
@@ -153,51 +150,29 @@ export const App: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 relative pb-16">
-      {/* Верхний брендовый хэдер */}
+    <div className="min-h-screen bg-[#0e1621] text-slate-100 relative pb-24 font-sans selection:bg-[#2aabee]/30">
+      {/* TELEGRAM HEADER & HIGHLIGHTS / STORIES BAR */}
       <div 
-        className="sticky top-0 z-40 bg-slate-950/95 backdrop-blur-xl border-b border-slate-800/80 px-4 pb-2.5 flex items-center justify-between max-w-md mx-auto transition-all"
+        className="sticky top-0 z-40 bg-[#17212b] border-b border-white/5 px-4 pb-2.5 max-w-md mx-auto shadow-md transition-all"
         style={{
-          paddingTop: 'max(env(safe-area-inset-top, 0px), var(--tg-safe-area-inset-top, 0px), var(--tg-content-safe-area-inset-top, 0px), 52px)'
+          paddingTop: 'max(env(safe-area-inset-top, 0px), var(--tg-safe-area-inset-top, 0px), var(--tg-content-safe-area-inset-top, 0px), 16px)'
         }}
       >
-        <div className="flex items-center space-x-2 shrink-0">
-          <button
-            onClick={() => {
-              triggerHaptic('medium');
-              setActiveLanding(activeLanding ? null : 'GUEST');
-            }}
-            className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
-          >
-            <div className="w-7 h-7 rounded-lg bg-amber-500/20 border border-amber-500/40 flex items-center justify-center font-black text-amber-400 text-xs">
-              X
+        {/* Top title line */}
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center space-x-2.5">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-400 via-amber-500 to-amber-600 flex items-center justify-center font-black text-slate-950 text-xs shadow-sm shadow-amber-500/20">
+              GX
             </div>
-            <span className="font-extrabold text-sm text-gradient-gold tracking-tight">GiftX</span>
-          </button>
-        </div>
+            <div>
+              <div className="flex items-center space-x-1.5">
+                <span className="font-extrabold text-sm text-slate-100 tracking-tight">GiftX</span>
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              </div>
+              <div className="text-[10px] text-slate-400 font-medium">@giftx2025_bot • Кросс-маркетинг</div>
+            </div>
+          </div>
 
-        <div className="flex items-center space-x-1.5 overflow-x-auto no-scrollbar">
-          {/* Кнопка переключения Лендинг / Приложение */}
-          <button
-            onClick={() => {
-              triggerHaptic('light');
-              if (activeLanding) {
-                setActiveLanding(null);
-              } else {
-                setActiveLanding('GUEST');
-              }
-            }}
-            className={`py-1 px-2 rounded-xl border text-xs font-black flex items-center space-x-1 transition-all shrink-0 ${
-              activeLanding
-                ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-md shadow-amber-500/20'
-                : 'bg-slate-900 hover:bg-slate-800 text-amber-400 border-amber-500/30'
-            }`}
-          >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>{activeLanding ? 'Приложение' : 'О сервисе'}</span>
-          </button>
-
-          {/* Индикатор бизнес-аккаунта */}
           {isBusinessUser && ['WAITER', 'ADMIN'].includes(role) && (
             <button
               onClick={() => {
@@ -205,25 +180,111 @@ export const App: React.FC = () => {
                 setActiveLanding(null);
                 setRole('GUEST');
               }}
-              className="py-1 px-2 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 text-[10px] font-extrabold flex items-center space-x-1 animate-pulse shrink-0"
+              className="py-1 px-2.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 text-[10px] font-extrabold flex items-center space-x-1 shrink-0"
             >
               <Building2 className="w-3 h-3" />
               <span>Бизнес ➔ Клиент</span>
             </button>
           )}
+        </div>
 
+        {/* Telegram Search Bar */}
+        <div className="relative mb-2.5">
+          <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <input 
+            type="text"
+            placeholder="Поиск заведений и подарков..."
+            className="w-full bg-[#242f3d] text-slate-100 text-xs pl-8 pr-3 py-1.5 rounded-xl border border-transparent focus:border-[#2aabee]/50 outline-none placeholder-slate-400 transition-all"
+          />
+        </div>
+
+        {/* TELEGRAM HIGHLIGHTS / STORIES STRIP (ЗЕЛЕНАЯ ОБВОДКА СТОРИС) */}
+        <div className="flex items-center space-x-3 overflow-x-auto pb-1 pt-0.5 no-scrollbar">
+          {/* Story 1: О сервисе */}
           <button
             onClick={() => {
               triggerHaptic('light');
-              setShowHelpGuide(true);
+              setActiveLanding(activeLanding === 'GUEST' ? null : 'GUEST');
             }}
-            className="py-1 px-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 text-xs font-bold flex items-center space-x-1 transition-all shadow-sm shadow-amber-500/10 shrink-0"
+            className="flex flex-col items-center space-y-1 shrink-0 group cursor-pointer"
           >
-            <HelpCircle className="w-3.5 h-3.5" />
-            <span>Инструкция</span>
+            <div className={`tg-story-ring ${activeLanding === 'GUEST' ? 'ring-2 ring-amber-400 scale-105' : ''}`}>
+              <div className="w-12 h-12 rounded-full bg-[#17212b] p-0.5 border border-[#0e1621] flex items-center justify-center text-amber-400">
+                <Sparkles className="w-5 h-5 text-amber-400" />
+              </div>
+            </div>
+            <span className="text-[10px] font-medium text-slate-300 group-hover:text-white transition-colors">О сервисе</span>
           </button>
 
-          {/* Пиктограмма профиля справа */}
+          {/* Story 2: Инструкция Гость */}
+          <button
+            onClick={() => {
+              triggerHaptic('light');
+              setHelpGuideDefaultRole('GUEST');
+              setShowHelpGuide(true);
+            }}
+            className="flex flex-col items-center space-y-1 shrink-0 group cursor-pointer"
+          >
+            <div className="tg-story-ring">
+              <div className="w-12 h-12 rounded-full bg-[#17212b] p-0.5 border border-[#0e1621] flex items-center justify-center text-emerald-400">
+                <Gift className="w-5 h-5" />
+              </div>
+            </div>
+            <span className="text-[10px] font-medium text-slate-300 group-hover:text-white transition-colors">Гость</span>
+          </button>
+
+          {/* Story 3: Инструкция Официант */}
+          <button
+            onClick={() => {
+              triggerHaptic('light');
+              setHelpGuideDefaultRole('WAITER');
+              setShowHelpGuide(true);
+            }}
+            className="flex flex-col items-center space-y-1 shrink-0 group cursor-pointer"
+          >
+            <div className="tg-story-ring">
+              <div className="w-12 h-12 rounded-full bg-[#17212b] p-0.5 border border-[#0e1621] flex items-center justify-center text-cyan-400">
+                <QrCode className="w-5 h-5" />
+              </div>
+            </div>
+            <span className="text-[10px] font-medium text-slate-300 group-hover:text-white transition-colors">Официант</span>
+          </button>
+
+          {/* Story 4: Инструкция Бизнес */}
+          <button
+            onClick={() => {
+              triggerHaptic('light');
+              setActiveLanding('BUSINESS');
+              setShowBusinessOnboardingModal(true);
+            }}
+            className="flex flex-col items-center space-y-1 shrink-0 group cursor-pointer"
+          >
+            <div className="tg-story-ring">
+              <div className="w-12 h-12 rounded-full bg-[#17212b] p-0.5 border border-[#0e1621] flex items-center justify-center text-purple-400">
+                <Building2 className="w-5 h-5" />
+              </div>
+            </div>
+            <span className="text-[10px] font-medium text-slate-300 group-hover:text-white transition-colors">Бизнес</span>
+          </button>
+
+          {/* Story 5: Инструкция Админ */}
+          <button
+            onClick={() => {
+              triggerHaptic('light');
+              setHelpGuideDefaultRole('ADMIN');
+              setShowHelpGuide(true);
+            }}
+            className="flex flex-col items-center space-y-1 shrink-0 group cursor-pointer"
+          >
+            <div className="tg-story-ring">
+              <div className="w-12 h-12 rounded-full bg-[#17212b] p-0.5 border border-[#0e1621] flex items-center justify-center text-amber-400">
+                <ShieldAlert className="w-5 h-5" />
+              </div>
+            </div>
+            <span className="text-[10px] font-medium text-slate-300 group-hover:text-white transition-colors">Админ</span>
+          </button>
+
+          {/* Story 6: Мой Профиль */}
           <button
             onClick={() => {
               triggerHaptic('light');
@@ -231,16 +292,32 @@ export const App: React.FC = () => {
               setActiveLanding(null);
               setRole('PROFILE');
             }}
-            title="Профиль"
-            className={`p-1.5 rounded-xl border transition-all flex items-center justify-center shrink-0 ${
-              role === 'PROFILE' && !claimToken && !activeLanding
-                ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-md shadow-amber-500/20'
-                : 'bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/30 text-amber-400 shadow-sm shadow-amber-500/10'
-            }`}
+            className="flex flex-col items-center space-y-1 shrink-0 group cursor-pointer"
           >
-            <User className="w-4 h-4" />
+            <div className="tg-story-ring">
+              <div className="w-12 h-12 rounded-full bg-[#17212b] p-0.5 border border-[#0e1621] flex items-center justify-center text-blue-400">
+                <User className="w-5 h-5" />
+              </div>
+            </div>
+            <span className="text-[10px] font-medium text-slate-300 group-hover:text-white transition-colors">Профиль</span>
           </button>
         </div>
+      </div>
+
+      {/* TELEGRAM CATEGORY PILLS STRIP */}
+      <div className="max-w-md mx-auto px-4 pt-3 pb-1 flex space-x-1.5 overflow-x-auto no-scrollbar">
+        {['Все', '🔥 HoReCa', '💆‍♀️ Beauty & Spa', '🚗 Auto', '⚡ Спец'].map((cat, i) => (
+          <button
+            key={i}
+            className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+              i === 0 
+                ? 'bg-[#2aabee] text-white shadow-sm shadow-[#2aabee]/30' 
+                : 'bg-[#242f3d] text-slate-300 hover:text-white border border-white/5'
+            }`}
+          >
+            {cat}
+          </button>
+        ))}
       </div>
 
       {/* Главный экран в зависимости от роли или активного лендинга */}
@@ -323,7 +400,7 @@ export const App: React.FC = () => {
       {/* Справочник и Инструкции по ролям */}
       {showHelpGuide && (
         <HelpGuideModal
-          defaultRole={role === 'WAITER' ? 'WAITER' : role === 'ADMIN' ? 'ADMIN' : 'GUEST'}
+          defaultRole={helpGuideDefaultRole}
           onClose={() => setShowHelpGuide(false)}
         />
       )}
@@ -367,12 +444,9 @@ export const App: React.FC = () => {
         />
       )}
 
-      {/* Нижняя навигация */}
+      {/* TELEGRAM FLOATING GLASSMORPHIC NAVIGATION BAR */}
       <div 
-        className="fixed bottom-0 left-0 right-0 z-40 px-2 pt-2 bg-slate-950/90 backdrop-blur-xl border-t border-slate-800 flex justify-center space-x-2 max-w-md mx-auto"
-        style={{
-          paddingBottom: 'max(env(safe-area-inset-bottom, 0px), var(--tg-safe-area-inset-bottom, 0px), 10px)'
-        }}
+        className="fixed bottom-3 left-1/2 -translate-x-1/2 z-50 w-[94%] max-w-md telegram-nav-glass rounded-full px-2 py-1.5 flex items-center justify-around"
       >
         <button
           onClick={() => {
@@ -381,10 +455,10 @@ export const App: React.FC = () => {
             setActiveLanding(null);
             setRole('GUEST');
           }}
-          className={`flex-1 py-2 px-2 rounded-2xl flex items-center justify-center space-x-1.5 text-xs font-extrabold transition-all ${
+          className={`flex-1 py-1.5 px-2 rounded-full flex flex-col items-center justify-center space-y-0.5 text-[10px] font-bold transition-all relative cursor-pointer ${
             (role === 'GUEST' || !role) && !claimToken && !activeLanding
-              ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20'
-              : 'bg-slate-900 text-slate-400 border border-slate-800'
+              ? 'bg-[#2aabee] text-white shadow-md shadow-[#2aabee]/40'
+              : 'text-slate-400 hover:text-slate-200'
           }`}
         >
           <Home className="w-4 h-4" />
@@ -398,13 +472,18 @@ export const App: React.FC = () => {
             setActiveLanding(null);
             setRole('WALLET');
           }}
-          className={`flex-1 py-2 px-2 rounded-2xl flex items-center justify-center space-x-1.5 text-xs font-extrabold transition-all ${
+          className={`flex-1 py-1.5 px-2 rounded-full flex flex-col items-center justify-center space-y-0.5 text-[10px] font-bold transition-all relative cursor-pointer ${
             role === 'WALLET' && !claimToken && !activeLanding
-              ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20'
-              : 'bg-slate-900 text-slate-400 border border-slate-800'
+              ? 'bg-[#2aabee] text-white shadow-md shadow-[#2aabee]/40'
+              : 'text-slate-400 hover:text-slate-200'
           }`}
         >
-          <Gift className="w-4 h-4" />
+          <div className="relative">
+            <Gift className="w-4 h-4" />
+            <span className="absolute -top-1 -right-2 bg-red-500 text-white font-black text-[9px] px-1 rounded-full border border-[#17212b]">
+              5
+            </span>
+          </div>
           <span>Подарки</span>
         </button>
 
@@ -415,16 +494,34 @@ export const App: React.FC = () => {
             setActiveLanding(null);
             setRole('MAP');
           }}
-          className={`flex-1 py-2 px-2 rounded-2xl flex items-center justify-center space-x-1.5 text-xs font-extrabold transition-all ${
+          className={`flex-1 py-1.5 px-2 rounded-full flex flex-col items-center justify-center space-y-0.5 text-[10px] font-bold transition-all relative cursor-pointer ${
             role === 'MAP' && !claimToken && !activeLanding
-              ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20'
-              : 'bg-slate-900 text-slate-400 border border-slate-800'
+              ? 'bg-[#2aabee] text-white shadow-md shadow-[#2aabee]/40'
+              : 'text-slate-400 hover:text-slate-200'
           }`}
         >
           <MapPin className="w-4 h-4" />
           <span>Карта</span>
         </button>
+
+        <button
+          onClick={() => {
+            triggerHaptic('light');
+            setClaimToken(null);
+            setActiveLanding(null);
+            setRole('PROFILE');
+          }}
+          className={`flex-1 py-1.5 px-2 rounded-full flex flex-col items-center justify-center space-y-0.5 text-[10px] font-bold transition-all relative cursor-pointer ${
+            role === 'PROFILE' && !claimToken && !activeLanding
+              ? 'bg-[#2aabee] text-white shadow-md shadow-[#2aabee]/40'
+              : 'text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          <User className="w-4 h-4" />
+          <span>Профиль</span>
+        </button>
       </div>
     </div>
   );
 };
+
