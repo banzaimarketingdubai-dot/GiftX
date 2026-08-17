@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Wallet, Clock, MapPin, Gift, CheckCircle, Sparkles, Navigation, ChevronRight, ArrowLeft, Star, ExternalLink, Building2, Link, Copy, Check } from 'lucide-react';
+import { Wallet, Clock, MapPin, Gift, CheckCircle, Sparkles, Navigation, ChevronRight, ArrowLeft, Star, ExternalLink, Building2, Link, Copy, Check, Archive } from 'lucide-react';
 import { ClaimedVoucher } from '../types';
 import { VoucherRedeemModal } from './VoucherRedeemModal';
 import { DemoBoxOpeningModal } from './DemoBoxOpeningModal';
@@ -19,7 +19,8 @@ export const WalletScreen: React.FC = () => {
   const { setRole, setSelectedMapPartner } = useAppStore();
   const [wallet, setWallet] = useState<ClaimedVoucher[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'ACTIVE' | 'ARCHIVE'>('ACTIVE');
+  const [walletView, setWalletView] = useState<'VENUES' | 'GIFTS'>('VENUES');
+  const [showArchive, setShowArchive] = useState(false);
   const [selectedVenueId, setSelectedVenueId] = useState<string | null>(null);
   const [selectedVoucher, setSelectedVoucher] = useState<ClaimedVoucher | null>(null);
   const [copiedVenueId, setCopiedVenueId] = useState<string | null>(null);
@@ -189,21 +190,48 @@ export const WalletScreen: React.FC = () => {
         <div className="z-10">
           <div className="flex items-center space-x-2 text-[10px] text-[#2aabee] font-bold uppercase tracking-wider mb-1">
             <Wallet className="w-3.5 h-3.5" />
-            <span>Мои заведения & подарки</span>
+            <span>{showArchive ? 'Архив списанных подарков' : 'Мои заведения & подарки'}</span>
           </div>
-          <h1 className="text-lg font-extrabold text-slate-100">Кошелек GiftX</h1>
+          <h1 className="text-lg font-extrabold text-slate-100">
+            {showArchive ? 'Архив подарков' : 'Кошелек GiftX'}
+          </h1>
         </div>
 
-        <button
-          onClick={() => {
-            triggerHaptic('medium');
-            setShowDemoBoxModal(true);
-          }}
-          className="z-10 px-3.5 py-1.5 rounded-xl bg-[#2aabee]/15 border border-[#2aabee]/30 text-[#2aabee] font-bold text-[11px] hover:bg-[#2aabee]/25 transition-all cursor-pointer flex items-center space-x-1.5 shadow-sm"
-        >
-          <Sparkles className="w-3.5 h-3.5 text-[#2aabee]" />
-          <span>🎁 Открыть 3D-Бокс</span>
-        </button>
+        <div className="flex items-center space-x-2 z-10">
+          {/* Кнопка 3D-Бокса */}
+          <button
+            onClick={() => {
+              triggerHaptic('medium');
+              setShowDemoBoxModal(true);
+            }}
+            className="px-3 py-1.5 rounded-xl bg-[#2aabee]/15 border border-[#2aabee]/30 text-[#2aabee] font-bold text-[11px] hover:bg-[#2aabee]/25 transition-all cursor-pointer flex items-center space-x-1.5 shadow-sm"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-[#2aabee]" />
+            <span className="hidden sm:inline">🎁 3D-Бокс</span>
+          </button>
+
+          {/* ИКОНКА АРХИВА В ПРАВОМ ВЕРХНЕМ УГЛУ */}
+          <button
+            onClick={() => {
+              triggerHaptic('medium');
+              setShowArchive(!showArchive);
+              if (selectedVenueId) setSelectedVenueId(null);
+            }}
+            title={showArchive ? "Вернуться в активные подарки" : "Посмотреть архив списанных подарков"}
+            className={`p-2 rounded-xl border transition-all cursor-pointer flex items-center justify-center relative shadow-sm ${
+              showArchive
+                ? 'bg-amber-500 text-slate-950 border-amber-400 font-extrabold shadow-amber-500/20'
+                : 'bg-[#242f3d] hover:bg-[#2b394a] text-slate-300 border-white/5'
+            }`}
+          >
+            <Archive className="w-4.5 h-4.5" />
+            {archiveVouchers.length > 0 && !showArchive && (
+              <span className="absolute -top-1 -right-1 bg-amber-500 text-slate-950 font-black text-[9px] min-w-[15px] h-3.5 px-0.5 flex items-center justify-center rounded-full border border-[#17212b]">
+                {archiveVouchers.length}
+              </span>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Кнопка возврата к списку заведений при просмотре карточки */}
@@ -216,41 +244,41 @@ export const WalletScreen: React.FC = () => {
           className="w-full py-2.5 px-4 rounded-xl bg-[#242f3d] border border-white/5 text-slate-200 hover:text-white font-bold text-xs flex items-center space-x-2 mb-4 transition-all shadow-sm active:scale-95 cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4 text-[#2aabee]" />
-          <span>← Вернуться ко всем заведениям ({groupedActiveVenues.length})</span>
+          <span>← Вернуться ко всем локациям ({groupedActiveVenues.length})</span>
         </button>
       )}
 
-      {/* Переключатель вкладок: Активные vs Архив (ТЕЛЕГРАМ СТИЛЬ) */}
-      {!selectedVenueId && (
+      {/* Переключатель вкладок: ЛОКАЦИИ vs ПОДАРКИ (ТЕЛЕГРАМ СТИЛЬ) */}
+      {!selectedVenueId && !showArchive && (
         <div className="flex bg-[#17212b] p-1.5 rounded-2xl border border-white/5 mb-4 shadow-md">
           <button
             onClick={() => {
               triggerHaptic('light');
-              setActiveTab('ACTIVE');
+              setWalletView('VENUES');
             }}
-            className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center space-x-1.5 cursor-pointer ${
-              activeTab === 'ACTIVE'
+            className={`flex-1 py-2 rounded-xl text-xs font-black transition-all flex items-center justify-center space-x-1.5 cursor-pointer ${
+              walletView === 'VENUES'
                 ? 'bg-[#2aabee] text-white shadow-md shadow-[#2aabee]/30'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
             <Building2 className="w-3.5 h-3.5" />
-            <span>Заведения ({groupedActiveVenues.length})</span>
+            <span>Локации ({groupedActiveVenues.length})</span>
           </button>
 
           <button
             onClick={() => {
               triggerHaptic('light');
-              setActiveTab('ARCHIVE');
+              setWalletView('GIFTS');
             }}
-            className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center space-x-1.5 cursor-pointer ${
-              activeTab === 'ARCHIVE'
-                ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/30'
+            className={`flex-1 py-2 rounded-xl text-xs font-black transition-all flex items-center justify-center space-x-1.5 cursor-pointer ${
+              walletView === 'GIFTS'
+                ? 'bg-[#2aabee] text-white shadow-md shadow-[#2aabee]/30'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            <CheckCircle className="w-3.5 h-3.5" />
-            <span>Архив ({groupedArchiveVenues.length})</span>
+            <Gift className="w-3.5 h-3.5" />
+            <span>Подарки ({activeVouchers.length})</span>
           </button>
         </div>
       )}
@@ -404,7 +432,94 @@ export const WalletScreen: React.FC = () => {
             })}
           </div>
         </div>
-      ) : activeTab === 'ACTIVE' ? (
+      ) : !showArchive && walletView === 'GIFTS' ? (
+        /* ========================================= */
+        /* ВКЛАДКА ПОДАРКИ (ВСЕ АКТИВНЫЕ КАРТОЧКИ) */
+        /* ========================================= */
+        activeVouchers.length === 0 ? (
+          <div className="bg-[#17212b] p-6 rounded-2xl text-center border border-white/5 my-6 space-y-3 shadow-md">
+            <Gift className="w-12 h-12 text-[#2aabee] mx-auto animate-bounce" />
+            <h3 className="text-sm font-extrabold text-slate-100">У вас пока нет активных карточек подарков</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Отсканируйте QR-код официанта в заведении или нажмите кнопку ниже, чтобы открыть интерактивный 3D-Бокс и получить первые подарки!
+            </p>
+            <button
+              onClick={() => {
+                triggerHaptic('medium');
+                setShowDemoBoxModal(true);
+              }}
+              className="w-full py-3.5 px-4 rounded-xl bg-[#2aabee] hover:bg-[#229ed9] text-white font-extrabold text-xs shadow-md shadow-[#2aabee]/30 transition-all cursor-pointer active:scale-95 flex items-center justify-center space-x-2"
+            >
+              <Sparkles className="w-4 h-4 text-white" />
+              <span>🎁 Открыть 3D-Бокс и получить подарки</span>
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider px-1">
+              Все ваши активные карточки подарков ({activeVouchers.length}):
+            </div>
+
+            {activeVouchers.map((v) => {
+              const offer = v.voucherOffer;
+              const partner = offer?.partner;
+              const tier = getVoucherTier(v);
+              const theme = getTierTheme(tier);
+
+              return (
+                <div
+                  key={v.id}
+                  onClick={() => {
+                    triggerHaptic('medium');
+                    setSelectedVoucher(v);
+                  }}
+                  className={`${theme.cardBg} p-4.5 rounded-2xl border-2 ${theme.border} cursor-pointer shadow-xl transition-all active:scale-[0.99] group space-y-3 relative overflow-hidden`}
+                >
+                  <div className={`absolute top-0 inset-x-0 h-1.5 ${theme.topBar}`} />
+
+                  <div className="flex items-start space-x-3.5">
+                    <img
+                      src={getVoucherImage(offer?.imageUrl, offer?.category)}
+                      alt={offer?.title}
+                      className="w-18 h-18 rounded-xl object-cover border border-white/10 shrink-0 group-hover:scale-105 transition-transform shadow-md"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <span className={`text-[10px] uppercase font-black px-2.5 py-0.5 rounded-full ${theme.badgeBg} truncate`}>
+                          {theme.badgeLabel}
+                        </span>
+                        
+                        <span className="text-slate-300 flex items-center space-x-1 font-mono font-bold text-xs bg-slate-900/80 px-2.5 py-0.5 rounded-full border border-white/10">
+                          <Clock className="w-3 h-3 text-[#2aabee] animate-pulse" />
+                          <span>{formatRemainingTime(v.expiresAt)}</span>
+                        </span>
+                      </div>
+
+                      <h4 className="font-extrabold text-slate-100 text-sm mt-1.5 leading-snug">{offer?.title}</h4>
+                      {partner && (
+                        <p className="text-[11px] text-[#2aabee] font-bold truncate flex items-center space-x-1 mt-0.5">
+                          <Building2 className="w-3 h-3 text-[#2aabee] shrink-0" />
+                          <span>{partner.name}</span>
+                        </p>
+                      )}
+                      <p className="text-xs text-slate-300 line-clamp-2 mt-1">{offer?.description}</p>
+                    </div>
+                  </div>
+
+                  <div className="pt-2.5 border-t border-white/10 flex items-center justify-between">
+                    <span className={`font-extrabold text-sm ${theme.accentText}`}>{offer?.discountValue}</span>
+                    
+                    <button className="py-2 px-3.5 rounded-xl bg-[#2aabee] hover:bg-[#229ed9] text-white text-xs font-black flex items-center space-x-1 shadow-md shadow-[#2aabee]/30 transition-all cursor-pointer">
+                      <span>Гасить / Показать QR</span>
+                      <ChevronRight className="w-3.5 h-3.5 text-white" />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )
+      ) : !showArchive && walletView === 'VENUES' ? (
         /* ========================================= */
         /* СПИСОК ЗАВЕДЕНИЙ С ДОСТУПНЫМИ ПОДАРКАМИ */
         /* ========================================= */
