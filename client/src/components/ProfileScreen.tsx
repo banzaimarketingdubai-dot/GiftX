@@ -33,6 +33,7 @@ import { ManageUserRoleModal } from './ManageUserRoleModal';
 import { AdminDashboardScreen } from './AdminDashboardScreen';
 import { WaiterScreen } from './WaiterScreen';
 import { PlatformAnalyticsScreen } from './PlatformAnalyticsScreen';
+import { SuperAdminHubScreen } from './SuperAdminHubScreen';
 import { useAppStore } from '../store/useAppStore';
 import { VenueAvatar } from './VenueAvatar';
 
@@ -80,7 +81,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [showBusinessOnboardingModal, setShowBusinessOnboardingModal] = useState(false);
   const [showManageRoleModal, setShowManageRoleModal] = useState(false);
-  const [viewMode, setViewMode] = useState<'PROFILE' | 'ADMIN' | 'WAITER' | 'ANALYTICS'>('PROFILE');
+  const [viewMode, setViewMode] = useState<'PROFILE' | 'ADMIN' | 'WAITER' | 'ANALYTICS' | 'SUPERADMIN'>('PROFILE');
 
   // Состояние копирования Revoo-ссылок
   const [revooLinkCopied, setRevooLinkCopied] = useState(false);
@@ -256,6 +257,13 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
     setViewMode('PROFILE');
     setRole('PROFILE');
   };
+
+  // Экран Суперадмина и Хаба всех ролей
+  if (viewMode === 'SUPERADMIN') {
+    return (
+      <SuperAdminHubScreen onClose={() => setViewMode('PROFILE')} />
+    );
+  }
 
   // Экран Детальной Аналитики и Монетизации
   if (viewMode === 'ANALYTICS') {
@@ -817,6 +825,20 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
         <h4 className="text-[10px] uppercase font-bold text-slate-400 tracking-wider px-1">
           Настройки и сессии
         </h4>
+
+        <button
+          onClick={() => {
+            triggerHaptic('heavy');
+            setViewMode('SUPERADMIN');
+          }}
+          className="w-full p-3.5 rounded-xl bg-gradient-to-r from-[#2aabee]/20 via-[#17212b] to-[#17212b] border border-[#2aabee]/40 text-slate-100 text-xs font-black flex items-center justify-between hover:bg-[#1f2c3a] transition-all cursor-pointer shadow-md active:scale-[0.99]"
+        >
+          <div className="flex items-center space-x-2.5">
+            <span className="text-base">👑</span>
+            <span>Хаб Суперадмина & Все Роли (Рубрики & Тесты)</span>
+          </div>
+          <ChevronRight className="w-4 h-4 text-[#2aabee]" />
+        </button>
 
         <button
           onClick={() => {

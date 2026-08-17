@@ -32,8 +32,12 @@ import { PlatformAnalyticsScreen } from './PlatformAnalyticsScreen';
 import { SuperAdminDbScreen } from './SuperAdminDbScreen';
 import { VenueAvatar } from './VenueAvatar';
 
-export const AdminDashboardScreen: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'VENUES' | 'MODERATION' | 'STAFF' | 'APPLICATIONS' | 'OFFERS' | 'ANALYTICS' | 'DATABASE'>('VENUES');
+interface AdminDashboardScreenProps {
+  defaultTab?: 'VENUES' | 'MODERATION' | 'STAFF' | 'APPLICATIONS' | 'OFFERS' | 'ANALYTICS' | 'DATABASE';
+}
+
+export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ defaultTab = 'VENUES' }) => {
+  const [activeTab, setActiveTab] = useState<'VENUES' | 'MODERATION' | 'STAFF' | 'APPLICATIONS' | 'OFFERS' | 'ANALYTICS' | 'DATABASE'>(defaultTab);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showDemoBoxModal, setShowDemoBoxModal] = useState(false);
