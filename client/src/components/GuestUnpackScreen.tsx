@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import { Gift, Sparkles, AlertTriangle, ShieldCheck, ArrowRight, MapPin, ChevronLeft, ChevronRight, RotateCw, Navigation } from 'lucide-react';
+import { Gift, Sparkles, AlertTriangle, ShieldCheck, ArrowRight, MapPin, ChevronLeft, ChevronRight, RotateCw, Navigation, Wallet } from 'lucide-react';
 import { triggerHaptic, triggerNotificationHaptic, getTelegramUserData } from '../telegram';
 import { ClaimedVoucher } from '../types';
 import { useAppStore } from '../store/useAppStore';
@@ -25,6 +25,7 @@ const PlayingCardsDeck: React.FC<PlayingCardsDeckProps> = ({ vouchers: initialVo
   const [flippedCards, setFlippedCards] = useState<Record<string, boolean>>({});
   const [confirmDiscardVoucher, setConfirmDiscardVoucher] = useState<ClaimedVoucher | null>(null);
   const [actionFeedback, setActionFeedback] = useState<{ id: string; type: 'SAVED' | 'DISCARDED' } | null>(null);
+  const [isSavingWalletAnimation, setIsSavingWalletAnimation] = useState(false);
   const [savedToast, setSavedToast] = useState<{ title: string; partnerName: string; discount?: string } | null>(null);
 
   useEffect(() => {
@@ -55,7 +56,12 @@ const PlayingCardsDeck: React.FC<PlayingCardsDeckProps> = ({ vouchers: initialVo
   const handleSaveToWallet = (voucher: ClaimedVoucher) => {
     triggerNotificationHaptic('success');
     setActionFeedback({ id: voucher.id, type: 'SAVED' });
+    setIsSavingWalletAnimation(true);
     setSavedCount((prev) => prev + 1);
+
+    setTimeout(() => {
+      setIsSavingWalletAnimation(false);
+    }, 950);
 
     // Сохраняем ваучер в локальное хранилище для мгновенного доступа в Кошельке
     try {
@@ -396,6 +402,38 @@ const PlayingCardsDeck: React.FC<PlayingCardsDeckProps> = ({ vouchers: initialVo
             </motion.div>
           );
         })}
+
+        {/* АНИМАЦИЯ КОШЕЛЬКА, ПОЯВЛЯЮЩЕГОСЯ СНИЗУ НАВСТРЕЧУ СВАЙПУ ВНИЗ */}
+        <AnimatePresence>
+          {isSavingWalletAnimation && (
+            <motion.div
+              initial={{ y: 90, opacity: 0, scale: 0.85 }}
+              animate={{ y: -10, opacity: 1, scale: 1 }}
+              exit={{ y: 90, opacity: 0, scale: 0.85 }}
+              transition={{ type: 'spring', stiffness: 380, damping: 24 }}
+              className="absolute bottom-[-15px] inset-x-2 z-50 bg-[#17212b] border-2 border-[#2aabee] rounded-2xl p-3.5 shadow-[0_0_50px_rgba(42,171,238,0.75)] flex items-center justify-between text-slate-100 overflow-hidden pointer-events-none"
+            >
+              {/* Неоновый фон приемного кармана кошелька */}
+              <div className="absolute inset-0 bg-gradient-to-t from-[#2aabee]/35 via-emerald-500/15 to-transparent animate-pulse" />
+              
+              <div className="flex items-center space-x-3 z-10">
+                <div className="w-11 h-11 rounded-xl bg-[#2aabee] text-white flex items-center justify-center shadow-lg shadow-[#2aabee]/40 animate-bounce shrink-0">
+                  <Wallet className="w-6 h-6 text-white animate-pulse" />
+                </div>
+                <div className="min-w-0">
+                  <span className="text-[9px] font-black uppercase text-[#2aabee] tracking-widest block">
+                    ✓ Добавление в Кошелек
+                  </span>
+                  <h4 className="text-xs font-black text-slate-100 truncate">Кошелек GiftX открыт</h4>
+                </div>
+              </div>
+
+              <div className="z-10 px-2.5 py-1.5 rounded-xl bg-emerald-500 text-slate-950 font-black text-xs shadow-md shadow-emerald-500/30 flex items-center space-x-1 animate-pulse shrink-0">
+                <span>+1 Подарок 📥</span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Быстрые кнопки действия для активной карты */}
