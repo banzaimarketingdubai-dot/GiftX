@@ -30,6 +30,7 @@ import { triggerHaptic, triggerNotificationHaptic } from '../telegram';
 import { DemoBoxOpeningModal } from './DemoBoxOpeningModal';
 import { PlatformAnalyticsScreen } from './PlatformAnalyticsScreen';
 import { SuperAdminDbScreen } from './SuperAdminDbScreen';
+import { VenueAvatar } from './VenueAvatar';
 
 export const AdminDashboardScreen: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'VENUES' | 'MODERATION' | 'STAFF' | 'APPLICATIONS' | 'OFFERS' | 'ANALYTICS' | 'DATABASE'>('VENUES');
@@ -388,10 +389,10 @@ export const AdminDashboardScreen: React.FC = () => {
                 <div key={partner.id} className="glass-card p-4 rounded-2xl border border-slate-800 space-y-3">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center space-x-3">
-                      <img
-                        src={partner.logoUrl}
-                        alt={partner.name}
-                        className="w-12 h-12 rounded-xl object-cover border border-slate-700 shrink-0"
+                      <VenueAvatar
+                        logoUrl={partner.logoUrl}
+                        name={partner.name}
+                        className="w-12 h-12 rounded-xl border border-slate-700 shrink-0"
                       />
                       <div>
                         <div className="flex items-center space-x-2">
@@ -762,10 +763,10 @@ export const AdminDashboardScreen: React.FC = () => {
                   <div key={partner.id} className="glass-card p-4 rounded-2xl border border-amber-500/30 space-y-3 shadow-xl">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center space-x-3">
-                        <img
-                          src={partner.logoUrl}
-                          alt={partner.name}
-                          className="w-12 h-12 rounded-xl object-cover border border-slate-700 shrink-0"
+                        <VenueAvatar
+                          logoUrl={partner.logoUrl}
+                          name={partner.name}
+                          className="w-12 h-12 rounded-xl border border-slate-700 shrink-0"
                         />
                         <div>
                           <span className="text-[9px] uppercase font-bold text-amber-400 px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20">

@@ -40,6 +40,7 @@ export interface Partner {
   workingHours?: string;
   category: PartnerCategory;
   logoUrl: string;
+  coverUrl?: string;
   address: string;
   lat?: number;
   lng?: number;

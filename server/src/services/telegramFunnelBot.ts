@@ -738,14 +738,35 @@ export class TelegramFunnelBot {
       const partner = await prisma.partner.findUnique({ where: { id: partnerId } });
       if (partner) partnerName = partner.name;
 
-      await prisma.staffMember.create({
-        data: {
-          partnerId,
-          name: `${firstName} (${role === 'OWNER' ? 'Владелец' : role === 'MANAGER' ? 'Админ' : 'Официант'})`,
-          role,
-          telegramId
-        }
+      const existingStaff = await prisma.staffMember.findFirst({
+        where: { partnerId, telegramId }
       });
+
+      if (existingStaff) {
+        await prisma.staffMember.update({
+          where: { id: existingStaff.id },
+          data: {
+            role,
+            name: `${firstName} (${role === 'OWNER' ? 'Владелец' : role === 'MANAGER' ? 'Админ' : 'Официант'})`
+          }
+        });
+      } else {
+        await prisma.staffMember.create({
+          data: {
+            partnerId,
+            name: `${firstName} (${role === 'OWNER' ? 'Владелец' : role === 'MANAGER' ? 'Админ' : 'Официант'})`,
+            role,
+            telegramId
+          }
+        });
+      }
+
+      if (role === 'OWNER') {
+        await prisma.partner.update({
+          where: { id: partnerId },
+          data: { ownerTelegramId: telegramId }
+        }).catch(() => {});
+      }
     } catch (err: any) {
       console.warn('[TelegramBot] Staff join DB fallback:', err.message);
     }

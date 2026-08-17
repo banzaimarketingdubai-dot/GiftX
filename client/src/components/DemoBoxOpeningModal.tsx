@@ -117,6 +117,7 @@ export const DemoBoxOpeningModal: React.FC<DemoBoxOpeningModalProps> = ({ onClos
                 <Play className="w-4 h-4 text-cyan-400 group-hover:translate-x-0.5 transition-transform" />
               </div>
               <p className="text-[10px] text-slate-400 font-normal">Чек от 300k VND</p>
+              <span className="text-[9px] text-cyan-300 font-black bg-cyan-500/10 px-1.5 py-0.2 rounded border border-cyan-500/20 inline-block">3 карты (2S+1G)</span>
             </button>
 
             <button
@@ -128,6 +129,7 @@ export const DemoBoxOpeningModal: React.FC<DemoBoxOpeningModalProps> = ({ onClos
                 <Play className="w-4 h-4 text-amber-400 group-hover:translate-x-0.5 transition-transform" />
               </div>
               <p className="text-[10px] text-slate-400 font-normal">Чек от 600k VND</p>
+              <span className="text-[9px] text-amber-300 font-black bg-amber-500/10 px-1.5 py-0.2 rounded border border-amber-500/20 inline-block">4 карты (1S+2G+1P)</span>
             </button>
 
             <button
@@ -139,6 +141,7 @@ export const DemoBoxOpeningModal: React.FC<DemoBoxOpeningModalProps> = ({ onClos
                 <Play className="w-4 h-4 text-purple-400 group-hover:translate-x-0.5 transition-transform" />
               </div>
               <p className="text-[10px] text-slate-400 font-normal">VIP Чек от 1.0M VND</p>
+              <span className="text-[9px] text-purple-300 font-black bg-purple-500/10 px-1.5 py-0.2 rounded border border-purple-500/20 inline-block">5 карт (1S+2G+2P)</span>
             </button>
           </div>
         </div>

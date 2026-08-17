@@ -249,6 +249,7 @@ staffRouter.post('/partner/location', async (req: Request, res: Response) => {
       category,
       address,
       logoUrl,
+      coverUrl,
       lat,
       lng,
       googleMapsUrl,
@@ -285,6 +286,7 @@ staffRouter.post('/partner/location', async (req: Request, res: Response) => {
           ...(category && { category }),
           ...(address && { address }),
           ...(logoUrl && { logoUrl }),
+          ...(coverUrl !== undefined && { coverUrl }),
           ...(finalLat !== undefined && { lat: finalLat }),
           ...(finalLng !== undefined && { lng: finalLng }),
           ...(googleMapsUrl && { googleMapsUrl }),
@@ -293,9 +295,37 @@ staffRouter.post('/partner/location', async (req: Request, res: Response) => {
           ...(basicThreshold !== undefined && { basicThreshold: parseFloat(basicThreshold) }),
           ...(silverThreshold !== undefined && { silverThreshold: parseFloat(silverThreshold) }),
           ...(goldThreshold !== undefined && { goldThreshold: parseFloat(goldThreshold) }),
-          ...(platinumThreshold !== undefined && { platinumThreshold: parseFloat(platinumThreshold) })
+          ...(platinumThreshold !== undefined && { platinumThreshold: parseFloat(platinumThreshold) }),
+          ...(telegramId && role === 'OWNER' && { ownerTelegramId: BigInt(telegramId) })
         }
       });
+
+      if (telegramId) {
+        const staffRole = (role as 'OWNER' | 'MANAGER' | 'WAITER') || 'OWNER';
+        const parsedTgId = BigInt(telegramId);
+        const existingStaff = await prisma.staffMember.findFirst({
+          where: { partnerId: updated.id, telegramId: parsedTgId }
+        });
+        if (existingStaff) {
+          await prisma.staffMember.update({
+            where: { id: existingStaff.id },
+            data: {
+              role: staffRole,
+              name: `${name || updated.name} (${staffRole === 'OWNER' ? 'Владелец' : staffRole === 'MANAGER' ? 'Админ' : 'Стаф'})`
+            }
+          }).catch((err) => console.error('Update staff error:', err));
+        } else {
+          await prisma.staffMember.create({
+            data: {
+              partnerId: updated.id,
+              name: `${name || updated.name} (${staffRole === 'OWNER' ? 'Владелец' : staffRole === 'MANAGER' ? 'Админ' : 'Стаф'})`,
+              role: staffRole,
+              telegramId: parsedTgId
+            }
+          }).catch((err) => console.error('Create staff error:', err));
+        }
+      }
+
       return res.json({ success: true, partner: updated, message: 'Локация заведения обновлена' });
     } else {
       // Создание нового партнера при регистрации
@@ -313,6 +343,7 @@ staffRouter.post('/partner/location', async (req: Request, res: Response) => {
           category,
           address: finalAddress,
           logoUrl: logoUrl || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=200&q=80',
+          coverUrl: coverUrl || undefined,
           lat: finalLat || 10.1982,
           lng: finalLng || 103.9634,
           googleMapsUrl: googleMapsUrl || `https://maps.google.com/?q=${encodeURIComponent(name + ' ' + finalAddress)}`,
@@ -331,14 +362,28 @@ staffRouter.post('/partner/location', async (req: Request, res: Response) => {
       // Если передали telegramId — создаем запись StaffMember с выбранной ролью
       if (telegramId) {
         const staffRole = (role as 'OWNER' | 'MANAGER' | 'WAITER') || 'OWNER';
-        await prisma.staffMember.create({
-          data: {
-            partnerId: created.id,
-            name: `${name} (${staffRole === 'OWNER' ? 'Владелец' : staffRole === 'MANAGER' ? 'Админ' : 'Стаф'})`,
-            role: staffRole,
-            telegramId: BigInt(telegramId)
-          }
-        }).catch((err) => console.error('Auto create staff member error:', err));
+        const parsedTgId = BigInt(telegramId);
+        const existingStaff = await prisma.staffMember.findFirst({
+          where: { partnerId: created.id, telegramId: parsedTgId }
+        });
+        if (existingStaff) {
+          await prisma.staffMember.update({
+            where: { id: existingStaff.id },
+            data: {
+              role: staffRole,
+              name: `${name} (${staffRole === 'OWNER' ? 'Владелец' : staffRole === 'MANAGER' ? 'Админ' : 'Стаф'})`
+            }
+          }).catch((err) => console.error('Update staff member error:', err));
+        } else {
+          await prisma.staffMember.create({
+            data: {
+              partnerId: created.id,
+              name: `${name} (${staffRole === 'OWNER' ? 'Владелец' : staffRole === 'MANAGER' ? 'Админ' : 'Стаф'})`,
+              role: staffRole,
+              telegramId: parsedTgId
+            }
+          }).catch((err) => console.error('Auto create staff member error:', err));
+        }
       }
 
       // Отправляем уведомление администраторам GiftX в Telegram

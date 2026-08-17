@@ -34,6 +34,7 @@ import { AdminDashboardScreen } from './AdminDashboardScreen';
 import { WaiterScreen } from './WaiterScreen';
 import { PlatformAnalyticsScreen } from './PlatformAnalyticsScreen';
 import { useAppStore } from '../store/useAppStore';
+import { VenueAvatar } from './VenueAvatar';
 
 interface ProfileScreenProps {
   onSwitchToClientMode: () => void;
@@ -427,10 +428,10 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onSwitchToClientMo
         <div className="glass-card p-5 rounded-3xl border border-amber-500/30 bg-amber-950/20 space-y-4 shadow-xl">
           <div className="flex items-center justify-between border-b border-amber-500/20 pb-3">
             <div className="flex items-center space-x-3">
-              <img
-                src={staffInfo.partner.logoUrl}
-                alt={staffInfo.partner.name}
-                className="w-12 h-12 rounded-2xl object-cover border border-amber-500/30 shrink-0 shadow-md"
+              <VenueAvatar
+                logoUrl={staffInfo.partner.logoUrl}
+                name={staffInfo.partner.name}
+                className="w-12 h-12 rounded-2xl border border-amber-500/30 shrink-0 shadow-md"
               />
               <div>
                 <span className="text-[9px] uppercase font-extrabold tracking-widest text-amber-400 block">

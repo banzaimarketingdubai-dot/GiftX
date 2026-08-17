@@ -17,7 +17,7 @@ export const STOCK_IMAGES = {
     DEFAULT: 'https://images.unsplash.com/photo-1513151233558-d860c5398176?w=600&q=80',        // Праздничный 3D подарок
   },
 
-  // 🏬 2. Стоковые изображения под категории ЗАВЕДЕНИЙ
+  // 🏬 2. Стоковые изображения под категории ЗАВЕДЕНИЙ (Аватар)
   venues: {
     HORECA: 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=600&q=80',        // Sunset Beach Club & Рестораны
     BEAUTY_SPA: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=600&q=80',    // Lotus Wellness & Spa
@@ -26,7 +26,42 @@ export const STOCK_IMAGES = {
     SERVICES: 'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=600&q=80',      // Услуги и Консьерж
     FITNESS: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=600&q=80',       // Фитнес & Спорт
     DEFAULT: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&q=80',       // Атмосферное заведение
+  },
+
+  // 🖼️ 3. Фоновые изображения по умолчанию для шапки заведений
+  covers: {
+    HORECA: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&q=80',
+    BEAUTY_SPA: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=1200&q=80',
+    AUTO_MOTO: 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=1200&q=80',
+    ENTERTAINMENT: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=1200&q=80',
+    SERVICES: 'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=1200&q=80',
+    DEFAULT: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&q=80',
   }
+};
+
+/**
+ * Извлекает 1-2 буквы (инициалы) из названия заведения
+ */
+export const getVenueInitials = (name?: string): string => {
+  if (!name || !name.trim()) return 'GX';
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  if (words.length >= 2) {
+    return (words[0][0] + words[1][0]).toUpperCase();
+  }
+  return words[0].substring(0, 2).toUpperCase();
+};
+
+/**
+ * Возвращает фоновое изображение по умолчанию для заведения
+ */
+export const getVenueCoverImage = (coverUrl?: string, category?: string): string => {
+  if (coverUrl && coverUrl.trim().length > 5 && !coverUrl.includes('placeholder')) {
+    return coverUrl;
+  }
+  if (category && (STOCK_IMAGES.covers as any)[category]) {
+    return (STOCK_IMAGES.covers as any)[category];
+  }
+  return STOCK_IMAGES.covers.DEFAULT;
 };
 
 /**

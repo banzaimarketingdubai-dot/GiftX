@@ -7,6 +7,7 @@ import { PartnerRegistrationModal } from './PartnerRegistrationModal';
 import { VenueGuestModal } from './VenueGuestModal';
 import { triggerHaptic, triggerNotificationHaptic, getTelegramUserData } from '../telegram';
 import { useAppStore } from '../store/useAppStore';
+import { VenueAvatar } from './VenueAvatar';
 
 export const PartnerMapScreen: React.FC = () => {
   const { selectedMapPartner } = useAppStore();
@@ -429,10 +430,10 @@ export const PartnerMapScreen: React.FC = () => {
           <div className="glass-card p-4 rounded-3xl border border-amber-500/30 shadow-2xl bg-slate-900/95 backdrop-blur-2xl">
             <div className="flex items-start justify-between">
               <div className="flex items-center space-x-3">
-                <img
-                  src={selectedPartner.logoUrl}
-                  alt={selectedPartner.name}
-                  className="w-14 h-14 rounded-2xl object-cover border border-slate-700 shrink-0 shadow-md"
+                <VenueAvatar
+                  logoUrl={selectedPartner.logoUrl}
+                  name={selectedPartner.name}
+                  className="w-14 h-14 rounded-2xl border border-slate-700 shrink-0 shadow-md"
                 />
                 <div>
                   <span className="text-[10px] uppercase font-bold text-amber-400 px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20">

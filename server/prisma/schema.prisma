@@ -65,6 +65,7 @@ model Partner {
   workingHours       String?
   category           PartnerCategory
   logoUrl            String
+  coverUrl           String?
   address            String
   lat                Float?
   lng                Float?

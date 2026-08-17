@@ -3,6 +3,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { Sparkles, QrCode, CheckCircle2, Clock, UserCheck, RefreshCw, ChevronRight, Search, PlusCircle, X, Send, FileText } from 'lucide-react';
 import { useAppStore } from '../store/useAppStore';
 import { triggerHaptic, triggerNotificationHaptic, getTelegramUserData } from '../telegram';
+import { VenueAvatar } from './VenueAvatar';
 
 export const WaiterScreen: React.FC = () => {
   const { 
@@ -289,7 +290,7 @@ export const WaiterScreen: React.FC = () => {
           {displayPartners.map((partner) => (
             <div key={partner.id} className="glass-card rounded-2xl p-4 border border-slate-800 space-y-2">
               <div className="flex items-center space-x-3 mb-2">
-                <img src={partner.logoUrl} alt={partner.name} className="w-10 h-10 rounded-xl object-cover" />
+                <VenueAvatar logoUrl={partner.logoUrl} name={partner.name} className="w-10 h-10 rounded-xl" />
                 <div>
                   <h3 className="font-bold text-slate-100 text-xs">{partner.name}</h3>
                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
@@ -361,7 +362,7 @@ export const WaiterScreen: React.FC = () => {
                         }`}
                       >
                         <div className="flex items-center space-x-2">
-                          <img src={p.logoUrl} alt={p.name} className="w-7 h-7 rounded-lg object-cover" />
+                          <VenueAvatar logoUrl={p.logoUrl} name={p.name} className="w-7 h-7 rounded-lg" />
                           <div>
                             <span className="font-bold block text-xs">{p.name}</span>
                             <span className="text-[9px] text-slate-500">{p.address}</span>
@@ -436,7 +437,7 @@ export const WaiterScreen: React.FC = () => {
       {/* Шапка персонала */}
       <div className="glass-card p-4 rounded-2xl border border-slate-800 flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <img src={selectedStaff.partner?.logoUrl} alt="Logo" className="w-11 h-11 rounded-xl object-cover border border-slate-700" />
+          <VenueAvatar logoUrl={selectedStaff.partner?.logoUrl} name={selectedStaff.partner?.name} className="w-11 h-11 rounded-xl border border-slate-700" />
           <div>
             <h2 className="font-bold text-slate-100 text-sm">{selectedStaff.partner?.name}</h2>
             <div className="flex items-center space-x-2 text-xs text-slate-400 mt-0.5">

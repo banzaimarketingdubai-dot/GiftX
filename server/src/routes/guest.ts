@@ -11,9 +11,13 @@ guestRouter.get('/validate-token/:token', async (req: Request, res: Response) =>
     const { token } = req.params;
 
     if (token.startsWith('demo_')) {
+      let boxLevel = 'GOLD';
+      if (token.includes('silver')) boxLevel = 'SILVER';
+      if (token.includes('platinum')) boxLevel = 'PLATINUM';
+
       return res.json({
         success: true,
-        boxLevel: 'GOLD',
+        boxLevel,
         donorPartnerName: 'Sunset Beach Club',
         donorCategory: 'HORECA',
         expiresAt: new Date(Date.now() + 3 * 60 * 1000)
@@ -68,7 +72,7 @@ guestRouter.get('/validate-token/:token', async (req: Request, res: Response) =>
   }
 });
 
-// 2. Активация бокса и алгоритм матчинга 5 ваучеров
+// 2. Активация бокса и алгоритм матчинга карточек
 guestRouter.post('/claim-box', async (req: Request, res: Response) => {
   try {
     const { token, telegramId, firstName, lastName, username } = req.body;
@@ -78,63 +82,110 @@ guestRouter.post('/claim-box', async (req: Request, res: Response) => {
     }
 
     if (token.startsWith('demo_')) {
-      const demoVouchers = [
-        {
-          id: 'cv_demo_1',
-          userId: 'demo_user',
-          voucherOfferId: 'vo_demo_1',
-          status: 'ACTIVE',
-          claimedAt: new Date(),
-          expiresAt: new Date(Date.now() + 72 * 3600 * 1000),
-          voucherOffer: {
-            id: 'vo_demo_1',
-            title: 'Бесплатный массаж стоп 30 мин',
-            description: 'При заказе любого массажа тела от 60 мин',
-            discountValue: 'FREE (100%)',
+      let demoLevel: 'SILVER' | 'GOLD' | 'PLATINUM' = 'GOLD';
+      if (token.includes('silver')) demoLevel = 'SILVER';
+      if (token.includes('platinum')) demoLevel = 'PLATINUM';
+
+      const demoPool = {
+        SILVER: [
+          {
+            id: 'vo_demo_s1',
+            title: 'Фирменный приветственный коктейль',
+            description: 'Бесплатный напиток от бармена при любом заказе',
+            discountValue: 'FREE DRINK',
+            category: 'TRAFFIC_MAGNET',
+            targetBoxLevel: 'SILVER',
             validityHours: 72,
-            imageUrl: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=500&q=80',
-            partner: { name: 'Lotus Wellness & Spa', address: 'Phu Quoc, Duong Dong, Main Rd 12' }
-          }
-        },
-        {
-          id: 'cv_demo_2',
-          userId: 'demo_user',
-          voucherOfferId: 'vo_demo_2',
-          status: 'ACTIVE',
-          claimedAt: new Date(),
-          expiresAt: new Date(Date.now() + 72 * 3600 * 1000),
-          voucherOffer: {
-            id: 'vo_demo_2',
-            title: 'Скидка 20% на аренду байка Premium',
-            description: 'Действует на Honda SH / NVX при аренде от 2 дней',
-            discountValue: '-20%',
+            imageUrl: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=500&q=80',
+            partner: { name: 'Sunset Beach Club', address: 'Phu Quoc, Long Beach' }
+          },
+          {
+            id: 'vo_demo_s2',
+            title: 'Скидка 15% на аренду скутера',
+            description: 'При аренде от 1 суток',
+            discountValue: '-15%',
+            category: 'LIFESTYLE',
+            targetBoxLevel: 'SILVER',
             validityHours: 72,
             imageUrl: 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=500&q=80',
             partner: { name: 'Island Moto & Buggy Rental', address: 'Phu Quoc, An Thoi Town' }
           }
-        },
-        {
-          id: 'cv_demo_3',
-          userId: 'demo_user',
-          voucherOfferId: 'vo_demo_3',
-          status: 'ACTIVE',
-          claimedAt: new Date(),
-          expiresAt: new Date(Date.now() + 72 * 3600 * 1000),
-          voucherOffer: {
-            id: 'vo_demo_3',
-            title: 'Приветственный коктейль на яхте',
-            description: 'При выходе на сноркелинг-тур',
-            discountValue: 'FREE DRINK',
+        ],
+        GOLD: [
+          {
+            id: 'vo_demo_g1',
+            title: 'Бесплатный массаж стоп 30 мин',
+            description: 'При заказе любого массажа тела от 60 мин',
+            discountValue: 'FREE (100%)',
+            category: 'LIFESTYLE',
+            targetBoxLevel: 'GOLD',
+            validityHours: 72,
+            imageUrl: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=500&q=80',
+            partner: { name: 'Lotus Wellness & Spa', address: 'Phu Quoc, Duong Dong' }
+          },
+          {
+            id: 'vo_demo_g2',
+            title: 'Фирменный авторский десерт от шефа',
+            description: 'Подарок при чеке от 200k VND',
+            discountValue: 'FREE DESERT',
+            category: 'TRAFFIC_MAGNET',
+            targetBoxLevel: 'GOLD',
+            validityHours: 72,
+            imageUrl: 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=500&q=80',
+            partner: { name: 'Mango Bay Restaurant', address: 'Ong Lang Beach' }
+          }
+        ],
+        PLATINUM: [
+          {
+            id: 'vo_demo_p1',
+            title: 'VIP Сноркелинг тур на яхте',
+            description: 'Скидка 300,000 VND на приватную прогулку',
+            discountValue: '300k VND',
+            category: 'ANCHOR',
+            targetBoxLevel: 'PLATINUM',
             validityHours: 72,
             imageUrl: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=500&q=80',
-            partner: { name: 'Deep Blue Diving & Snorkeling', address: 'Phu Quoc, Pier Harbor 8' }
+            partner: { name: 'Deep Blue Diving & Yacht Club', address: 'Pier Harbor 8' }
+          },
+          {
+            id: 'vo_demo_p2',
+            title: 'Дегустационный сет и VIP Бокал Вина',
+            description: 'Премиум дегустация от шеф-повара',
+            discountValue: 'VIP 100%',
+            category: 'ANCHOR',
+            targetBoxLevel: 'PLATINUM',
+            validityHours: 72,
+            imageUrl: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=500&q=80',
+            partner: { name: 'Rory’s Beach Bar VIP', address: 'Phu Quoc South Beach' }
           }
-        }
-      ];
+        ]
+      };
+
+      let selectedDemoOffers: any[] = [];
+      if (demoLevel === 'SILVER') {
+        // 2 Серебряных + 1 Золотая (всего 3)
+        selectedDemoOffers = [demoPool.SILVER[0], demoPool.SILVER[1], demoPool.GOLD[0]];
+      } else if (demoLevel === 'GOLD') {
+        // 1 Серебряная + 2 Золотых + 1 Платиновая (всего 4)
+        selectedDemoOffers = [demoPool.SILVER[0], demoPool.GOLD[0], demoPool.GOLD[1], demoPool.PLATINUM[0]];
+      } else {
+        // 1 Серебряная + 2 Золотых + 2 Платиновых (всего 5)
+        selectedDemoOffers = [demoPool.SILVER[0], demoPool.GOLD[0], demoPool.GOLD[1], demoPool.PLATINUM[0], demoPool.PLATINUM[1]];
+      }
+
+      const demoVouchers = selectedDemoOffers.map((offer, idx) => ({
+        id: `cv_demo_${demoLevel.toLowerCase()}_${idx + 1}`,
+        userId: 'demo_user',
+        voucherOfferId: offer.id,
+        status: 'ACTIVE',
+        claimedAt: new Date(),
+        expiresAt: new Date(Date.now() + 72 * 3600 * 1000),
+        voucherOffer: offer
+      }));
 
       return res.json({
         success: true,
-        boxLevel: 'GOLD',
+        boxLevel: demoLevel,
         donorPartnerName: 'Sunset Beach Club',
         vouchers: demoVouchers
       });
@@ -184,6 +235,7 @@ guestRouter.post('/claim-box', async (req: Request, res: Response) => {
         });
 
         const donorCategory = tokenRecord.partner.category;
+        const boxLevel = tokenRecord.boxLevel || 'GOLD';
 
         const availableOffers = await tx.voucherOffer.findMany({
           where: {
@@ -197,25 +249,36 @@ guestRouter.post('/claim-box', async (req: Request, res: Response) => {
 
         const validOffers = availableOffers.filter(o => o.claimedCount < o.totalLimit);
 
-        const magnets = validOffers.filter(o => o.category === 'TRAFFIC_MAGNET');
-        const lifestyles = validOffers.filter(o => o.category === 'LIFESTYLE');
-        const anchors = validOffers.filter(o => o.category === 'ANCHOR');
+        // Распределение по уровню бокса:
+        // SILVER: 2 Silver, 1 Gold (3 карт)
+        // GOLD: 1 Silver, 2 Gold, 1 Platinum (4 карт)
+        // PLATINUM: 1 Silver, 2 Gold, 2 Platinum (5 карт)
+        const targetCounts = boxLevel === 'SILVER'
+          ? { SILVER: 2, GOLD: 1, PLATINUM: 0 }
+          : boxLevel === 'GOLD'
+          ? { SILVER: 1, GOLD: 2, PLATINUM: 1 }
+          : { SILVER: 1, GOLD: 2, PLATINUM: 2 };
 
-        const selectedOffers: typeof validOffers = [];
+        const totalExpected = boxLevel === 'SILVER' ? 3 : boxLevel === 'GOLD' ? 4 : 5;
 
         const pickRandom = (arr: typeof validOffers, count: number) => {
           const shuffled = [...arr].sort(() => 0.5 - Math.random());
           return shuffled.slice(0, count);
         };
 
-        selectedOffers.push(...pickRandom(magnets, 2));
-        selectedOffers.push(...pickRandom(lifestyles, 2));
-        selectedOffers.push(...pickRandom(anchors, 1));
+        const selectedOffers: typeof validOffers = [];
 
-        if (selectedOffers.length < 5) {
+        for (const [lvl, reqCount] of Object.entries(targetCounts)) {
+          if (reqCount > 0) {
+            const matching = validOffers.filter(o => o.targetBoxLevel === lvl || (!o.targetBoxLevel && lvl === 'SILVER'));
+            selectedOffers.push(...pickRandom(matching, reqCount));
+          }
+        }
+
+        if (selectedOffers.length < totalExpected) {
           const pickedIds = new Set(selectedOffers.map(o => o.id));
           const remaining = validOffers.filter(o => !pickedIds.has(o.id));
-          selectedOffers.push(...pickRandom(remaining, 5 - selectedOffers.length));
+          selectedOffers.push(...pickRandom(remaining, totalExpected - selectedOffers.length));
         }
 
         const now = new Date();

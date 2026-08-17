@@ -4,7 +4,8 @@ import { ClaimedVoucher } from '../types';
 import { VoucherRedeemModal } from './VoucherRedeemModal';
 import { triggerHaptic, triggerNotificationHaptic, getTelegramUserData } from '../telegram';
 import { useAppStore } from '../store/useAppStore';
-import { getVenueImage, getVoucherImage } from '../utils/stockImages';
+import { getVenueImage, getVoucherImage, getVenueCoverImage } from '../utils/stockImages';
+import { VenueAvatar } from './VenueAvatar';
 
 interface GroupedVenue {
   partnerId: string;
@@ -194,7 +195,7 @@ export const WalletScreen: React.FC = () => {
           <div className="glass-card rounded-3xl border border-slate-800 overflow-hidden shadow-2xl space-y-3">
             <div className="relative h-44 w-full">
               <img
-                src={getVenueImage(currentVenueGroup.partner.logoUrl, currentVenueGroup.partner.category)}
+                src={getVenueCoverImage(currentVenueGroup.partner.coverUrl, currentVenueGroup.partner.category)}
                 alt={currentVenueGroup.partner.name}
                 className="w-full h-full object-cover"
               />
@@ -356,10 +357,10 @@ export const WalletScreen: React.FC = () => {
                   className="glass-card p-4 rounded-3xl border border-slate-800 hover:border-amber-500/50 cursor-pointer shadow-xl transition-all active:scale-[0.99] group bg-slate-900/90 relative overflow-hidden"
                 >
                   <div className="flex items-center space-x-4">
-                    <img
-                      src={getVenueImage(partner.logoUrl, partner.category)}
-                      alt={partner.name}
-                      className="w-20 h-20 rounded-2xl object-cover border-2 border-amber-500/30 shrink-0 group-hover:scale-105 transition-transform shadow-md"
+                    <VenueAvatar
+                      logoUrl={partner.logoUrl}
+                      name={partner.name}
+                      className="w-20 h-20 text-xl rounded-2xl border-2 border-amber-500/30 shrink-0 group-hover:scale-105 transition-transform shadow-md"
                     />
 
                     <div className="flex-1 min-w-0">

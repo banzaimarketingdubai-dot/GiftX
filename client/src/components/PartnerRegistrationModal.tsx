@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MapPin, X, Link as LinkIcon, Star, Check, Globe, Navigation, Building2, PlusCircle } from 'lucide-react';
+import { MapPin, X, Link as LinkIcon, Star, Check, Globe, Navigation, Building2, PlusCircle, Upload, Camera, Image as ImageIcon } from 'lucide-react';
 import L from 'leaflet';
 import { PartnerCategory } from '../types';
 import { triggerHaptic, triggerNotificationHaptic, getTelegramUserData } from '../telegram';
@@ -54,6 +54,35 @@ export const PartnerRegistrationModal: React.FC<PartnerRegistrationModalProps> =
   };
   const [address, setAddress] = useState(initialPartner?.address || '');
   const [logoUrl, setLogoUrl] = useState(initialPartner?.logoUrl || '');
+  const [coverUrl, setCoverUrl] = useState(initialPartner?.coverUrl || '');
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          triggerNotificationHaptic('success');
+          setLogoUrl(event.target.result as string);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleCoverUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          triggerNotificationHaptic('success');
+          setCoverUrl(event.target.result as string);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
   const [lat, setLat] = useState<number>(initialPartner?.lat || 10.1982);
   const [lng, setLng] = useState<number>(initialPartner?.lng || 103.9634);
   const [googleMapsUrl, setGoogleMapsUrl] = useState(initialPartner?.googleMapsUrl || '');
@@ -286,6 +315,7 @@ export const PartnerRegistrationModal: React.FC<PartnerRegistrationModalProps> =
           category,
           address,
           logoUrl,
+          coverUrl,
           lat,
           lng,
           googleMapsUrl,
@@ -349,6 +379,90 @@ export const PartnerRegistrationModal: React.FC<PartnerRegistrationModalProps> =
               {error}
             </div>
           )}
+
+          {/* 🖼️ ЗАГРУЗКА ИЗОБРАЖЕНИЙ: ЛОГОТИП (АВАТАР) И ФОН ШАПКИ */}
+          <div className="p-3.5 rounded-2xl bg-slate-950 border border-amber-500/30 space-y-3 shadow-lg">
+            <label className="block text-[11px] font-black uppercase tracking-wider text-amber-400 flex items-center space-x-1.5">
+              <Camera className="w-4 h-4 text-amber-400" />
+              <span>Фото и логотип заведения (С устройства)</span>
+            </label>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Аватар / Логотип */}
+              <div className="space-y-1.5">
+                <span className="text-[10px] font-bold text-slate-300 block">Аватарка / Логотип в круге</span>
+                <div className="flex items-center space-x-2.5">
+                  <img
+                    src={logoUrl || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=200&q=80'}
+                    alt="Logo preview"
+                    className="w-12 h-12 rounded-full object-cover border-2 border-amber-500/50 shadow-md shrink-0 bg-slate-900"
+                  />
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <label
+                      htmlFor="logo-file-input"
+                      className="cursor-pointer py-1.5 px-2.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-extrabold text-[10px] flex items-center justify-center space-x-1 transition-all active:scale-95 shadow-sm"
+                    >
+                      <Upload className="w-3 h-3 text-amber-400" />
+                      <span>Загрузить лого...</span>
+                    </label>
+                    <input
+                      id="logo-file-input"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleLogoUpload}
+                      className="hidden"
+                    />
+                    <input
+                      type="url"
+                      value={logoUrl}
+                      onChange={(e) => setLogoUrl(e.target.value)}
+                      placeholder="Или вставьте URL лого..."
+                      className="w-full py-1 px-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-200 text-[10px] outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Обзоное фото фоновой шапки */}
+              <div className="space-y-1.5">
+                <span className="text-[10px] font-bold text-slate-300 block">Обзорное фоновое фото шапки</span>
+                <div className="flex items-center space-x-2.5">
+                  <div className="w-16 h-12 rounded-xl border border-slate-700 overflow-hidden shrink-0 bg-slate-900 relative">
+                    {coverUrl ? (
+                      <img src={coverUrl} alt="Cover preview" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-slate-600">
+                        <ImageIcon className="w-5 h-5" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <label
+                      htmlFor="cover-file-input"
+                      className="cursor-pointer py-1.5 px-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-extrabold text-[10px] flex items-center justify-center space-x-1 transition-all active:scale-95 shadow-sm"
+                    >
+                      <Upload className="w-3 h-3 text-amber-400" />
+                      <span>Загрузить фон...</span>
+                    </label>
+                    <input
+                      id="cover-file-input"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleCoverUpload}
+                      className="hidden"
+                    />
+                    <input
+                      type="url"
+                      value={coverUrl}
+                      onChange={(e) => setCoverUrl(e.target.value)}
+                      placeholder="Или вставьте URL фона..."
+                      className="w-full py-1 px-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-200 text-[10px] outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
 
           {/* Выбор роли пользователя */}
           <div>
