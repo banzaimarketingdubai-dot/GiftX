@@ -22,14 +22,31 @@ interface VenueGuestModalProps {
   onOpenScanner: () => void;
 }
 
+const getCachedPartner = (partnerId?: string, initialPartner?: Partner | null): Partner | null => {
+  if (initialPartner) return initialPartner;
+  if (!partnerId) return null;
+  try {
+    const cachedStr = localStorage.getItem('giftx_cached_partners');
+    if (cachedStr) {
+      const cachedList: Partner[] = JSON.parse(cachedStr);
+      if (Array.isArray(cachedList)) {
+        const found = cachedList.find((p) => p.id === partnerId);
+        if (found) return found;
+      }
+    }
+  } catch (e) {}
+  return null;
+};
+
 export const VenueGuestModal: React.FC<VenueGuestModalProps> = ({
   partnerId,
   partner: initialPartner,
   onClose,
   onOpenScanner,
 }) => {
-  const [partner, setPartner] = useState<Partner | null>(initialPartner || null);
-  const [loading, setLoading] = useState(!initialPartner && !!partnerId);
+  const initialCached = getCachedPartner(partnerId, initialPartner);
+  const [partner, setPartner] = useState<Partner | null>(initialCached);
+  const [loading, setLoading] = useState(!initialCached && !!partnerId);
   const [activeInstructionSlide, setActiveInstructionSlide] = useState<number>(0);
   const instructionSliderRef = useRef<HTMLDivElement>(null);
 
@@ -65,30 +82,29 @@ export const VenueGuestModal: React.FC<VenueGuestModalProps> = ({
 
   useEffect(() => {
     if (!initialPartner && partnerId) {
-      setLoading(true);
-      fetch('/api/staff/partners')
+      fetch(`/api/guest/partner/${partnerId}`)
         .then((res) => res.json())
         .then((data) => {
-          if (data.success && data.partners) {
-            const found = data.partners.find((p: any) => p.id === partnerId);
-            if (found) {
-              setPartner(found);
-            } else {
-              setPartner({
-                id: partnerId,
-                name: 'Sunset Beach Club',
-                category: 'HORECA',
-                address: 'Long Beach, Phu Quoc',
-                logoUrl: '',
-                coverUrl: '',
-                googleRating: 4.8,
-                googleReviewsCount: 342,
-                silverThreshold: 300000,
-                goldThreshold: 600000,
-                platinumThreshold: 1000000,
-                workingHours: '10:00 - 23:00'
-              } as Partner);
-            }
+          if (data.success && data.partner) {
+            setPartner(data.partner);
+            try {
+              const cachedStr = localStorage.getItem('giftx_cached_partners');
+              let cachedList: Partner[] = cachedStr ? JSON.parse(cachedStr) : [];
+              if (!Array.isArray(cachedList)) cachedList = [];
+              const existsIdx = cachedList.findIndex((p) => p.id === partnerId);
+              if (existsIdx >= 0) cachedList[existsIdx] = data.partner;
+              else cachedList.push(data.partner);
+              localStorage.setItem('giftx_cached_partners', JSON.stringify(cachedList));
+            } catch (e) {}
+          } else {
+            return fetch('/api/staff/partners')
+              .then((res) => res.json())
+              .then((pData) => {
+                if (pData.success && pData.partners) {
+                  const found = pData.partners.find((p: any) => p.id === partnerId);
+                  if (found) setPartner(found);
+                }
+              });
           }
         })
         .catch(() => {})

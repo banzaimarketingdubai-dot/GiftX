@@ -584,6 +584,30 @@ guestRouter.get('/map-partners', async (_req: Request, res: Response) => {
   }
 });
 
+// 5.1. Мгновенное получение данных конкретного заведения по ID
+guestRouter.get('/partner/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const partner = await prisma.partner.findUnique({
+      where: { id },
+      include: {
+        voucherOffers: true
+      }
+    });
+
+    if (!partner) {
+      return res.status(404).json({ success: false, error: 'Заведение не найдено' });
+    }
+
+    return res.json({
+      success: true,
+      partner
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Вспомогательные функции для вычисления расстояния между координатами (Гаверсинус)
 function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371; // Радиус Земли в км

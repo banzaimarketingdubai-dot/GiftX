@@ -20,10 +20,25 @@ import { DemoBoxOpeningModal } from './components/DemoBoxOpeningModal';
 import { VenueGuestModal } from './components/VenueGuestModal';
 import { Home, MapPin, User, HelpCircle, Building2, Sparkles, Gift, Search, QrCode, ShieldAlert } from 'lucide-react';
 
+const getInitialVenueId = (): string | null => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    let venueId = urlParams.get('venue');
+    const tgStartParam = (window as any).Telegram?.WebApp?.initDataUnsafe?.start_param;
+    if (!venueId && tgStartParam && tgStartParam.startsWith('venue_')) {
+      venueId = tgStartParam.replace(/^venue_/, '');
+    }
+    return venueId;
+  } catch (e) {
+    return null;
+  }
+};
+
 export const App: React.FC = () => {
   const { role, setRole, setPartners } = useAppStore();
   const [claimToken, setClaimToken] = useState<string | null>(null);
-  const [venueModalPartnerId, setVenueModalPartnerId] = useState<string | null>(null);
+  const [venueModalPartnerId, setVenueModalPartnerId] = useState<string | null>(getInitialVenueId);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showBusinessOnboardingModal, setShowBusinessOnboardingModal] = useState(false);
   const [showHelpGuide, setShowHelpGuide] = useState(false);
@@ -192,7 +207,7 @@ export const App: React.FC = () => {
     }
   }, []);
 
-  const isMainScreen = !activeLanding && !claimToken && (role === 'GUEST' || !role);
+  const isMainScreen = !activeLanding && !claimToken && !venueModalPartnerId && (role === 'GUEST' || !role);
 
   return (
     <div className="min-h-screen bg-[#0e1621] text-slate-100 relative pb-24 font-sans selection:bg-[#2aabee]/30">
