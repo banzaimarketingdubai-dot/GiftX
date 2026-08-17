@@ -190,36 +190,31 @@ export const GuestHomeScreen: React.FC<GuestHomeScreenProps> = ({
 
   return (
     <div className="p-4 max-w-md mx-auto min-h-screen pb-24 text-slate-100 space-y-4 font-sans">
-      {/* 1. БЛОК ПРИВЕТСТВИЯ + КНОПКА ИНФОРМАЦИИ (i) */}
+      {/* 1. БЛОК ПРИВЕТСТВИЯ + ГОЛУБОЙ КРУГ С БУКВОЙ (i) СПРАВА (КНОПКА ПОПАПА ИНСТРУКЦИЙ) */}
       <div className="bg-[#17212b] p-4.5 rounded-2xl border border-white/5 shadow-md flex items-center justify-between">
-        <div className="flex items-center space-x-3.5">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-[#2aabee] to-[#229ed9] flex items-center justify-center font-bold text-xl text-white shrink-0 shadow-lg shadow-[#2aabee]/30">
-            {tgUser?.first_name ? tgUser.first_name[0].toUpperCase() : <Gift className="w-6 h-6 text-white" />}
+        <div className="space-y-1">
+          <div className="inline-flex items-center space-x-1.5 px-2 py-0.5 rounded-full bg-[#2aabee]/15 border border-[#2aabee]/30 text-[#2aabee] text-[10px] font-bold">
+            <Sparkles className="w-3 h-3 text-[#2aabee]" />
+            <span>GiftX Кросс-маркетинг</span>
           </div>
-          <div className="space-y-0.5">
-            <div className="inline-flex items-center space-x-1.5 px-2 py-0.5 rounded-full bg-[#2aabee]/15 border border-[#2aabee]/30 text-[#2aabee] text-[10px] font-bold">
-              <Sparkles className="w-3 h-3 text-[#2aabee]" />
-              <span>GiftX Кросс-маркетинг</span>
-            </div>
-            <h1 className="text-lg font-extrabold text-slate-100 tracking-tight">
-              Привет, {tgUser?.first_name || 'Гость'} 👋
-            </h1>
-            <p className="text-xs text-slate-400">
-              Бесплатные подарки в ресторанах и СПА
-            </p>
-          </div>
+          <h1 className="text-lg font-extrabold text-slate-100 tracking-tight">
+            Привет, {tgUser?.first_name || 'Гость'} 👋
+          </h1>
+          <p className="text-xs text-slate-400">
+            Бесплатные подарки в ресторанах и СПА
+          </p>
         </div>
 
-        {/* Кружок с буквой I (Info) для вызова попапа с инструкцией */}
+        {/* Голубой круг с буквой i справа — кнопка открытия попапа инструкций */}
         <button
           onClick={() => {
             triggerHaptic('light');
             setShowInfoModal(true);
           }}
           title="Как получать подарки"
-          className="w-9 h-9 rounded-full bg-[#242f3d] hover:bg-[#2aabee] hover:text-white border border-white/10 text-[#2aabee] flex items-center justify-center transition-all shadow-md active:scale-95 shrink-0 cursor-pointer"
+          className="w-11 h-11 rounded-full bg-gradient-to-tr from-[#2aabee] to-[#229ed9] hover:from-[#229ed9] hover:to-[#0088cc] text-white flex items-center justify-center transition-all shadow-lg shadow-[#2aabee]/35 active:scale-95 shrink-0 cursor-pointer"
         >
-          <Info className="w-5 h-5" />
+          <Info className="w-6 h-6 text-white" />
         </button>
       </div>
 
