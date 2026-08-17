@@ -726,6 +726,31 @@ export const GuestUnpackScreen: React.FC<GuestUnpackScreenProps> = ({ claimToken
         </p>
       </div>
 
+      {/* БАННЕР АВТОРИЗАЦИИ В TELEGRAM ДЛЯ ВЕБ-БРАУЗЕРА */}
+      {!isTelegramApp && (
+        <div className="bg-[#17212b] p-3 rounded-2xl border border-[#2aabee]/40 shadow-lg flex items-center justify-between text-left z-20 my-1">
+          <div className="flex items-center space-x-2.5 min-w-0">
+            <div className="w-9 h-9 rounded-xl bg-[#2aabee] text-white flex items-center justify-center font-bold text-base shrink-0 shadow-md">
+              ✈️
+            </div>
+            <div className="min-w-0">
+              <span className="text-[9px] font-black uppercase text-[#2aabee] tracking-widest block">Авторизация Telegram</span>
+              <h4 className="text-[11px] font-bold text-slate-100 truncate">Авторизуйтесь чтобы сохранить подарки в кошельке</h4>
+            </div>
+          </div>
+          <a
+            href={`https://t.me/${botUsername}?start=claim_${claimToken}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => triggerHaptic('medium')}
+            className="px-3 py-1.5 rounded-xl bg-[#2aabee] hover:bg-[#229ed9] text-white font-extrabold text-[11px] shrink-0 shadow-md transition-all active:scale-95 flex items-center space-x-1"
+          >
+            <span>Войти в Бот</span>
+            <ArrowRight className="w-3 h-3 text-white" />
+          </a>
+        </div>
+      )}
+
       {/* Шкала энергии / Индикатор кликера */}
       {!unpacked && !loading && (
         <div className="w-full max-w-xs mx-auto space-y-1.5 z-20 my-1">
