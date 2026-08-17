@@ -117,6 +117,45 @@ export const WalletScreen: React.FC = () => {
   const currentVenueGroup = groupedActiveVenues.find(g => g.partnerId === selectedVenueId) || 
                             groupedArchiveVenues.find(g => g.partnerId === selectedVenueId);
 
+  const handleCreateDemoVoucher = () => {
+    triggerHaptic('medium');
+    triggerNotificationHaptic('success');
+    const demoVoucher: ClaimedVoucher = {
+      id: 'demo-claimed-' + Date.now(),
+      userId: 'demo-user-1',
+      voucherOfferId: 'demo-offer-1',
+      status: 'ACTIVE',
+      claimedAt: new Date(),
+      expiresAt: new Date(Date.now() + 72 * 60 * 60 * 1000),
+      qrCodeSecret: 'demo-secret-' + Date.now(),
+      voucherOffer: {
+        id: 'demo-offer-1',
+        partnerId: 'demo-partner-1',
+        title: '🍹 Бесплатный Авторский Коктейль',
+        description: 'Приветственный фирменный коктейль от шеф-бармена при посещении Sunset Beach Club',
+        category: 'TRAFFIC_MAGNET',
+        imageUrl: 'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=400&q=80',
+        validityHours: 72,
+        discountValue: '100% FREE',
+        totalLimit: 100,
+        claimedCount: 10,
+        partner: {
+          id: 'demo-partner-1',
+          name: 'Sunset Beach Club',
+          category: 'HORECA',
+          address: 'Long Beach, St 4, Phu Quoc',
+          logoUrl: 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=400&q=80',
+          coverUrl: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=600&q=80',
+          googleRating: 4.8,
+          googleReviewsCount: 342,
+          workingHours: '10:00 - 23:00'
+        }
+      }
+    };
+    setWallet((prev) => [demoVoucher, ...prev]);
+    setSelectedVenueId('demo-partner-1');
+  };
+
   return (
     <div className="p-4 max-w-md mx-auto min-h-screen pb-24 text-slate-100 animate-fadeIn font-sans">
       {/* Шапка кошелька (ТЕЛЕГРАМ СТИЛЬ) */}
@@ -128,10 +167,14 @@ export const WalletScreen: React.FC = () => {
           </div>
           <h1 className="text-lg font-extrabold text-slate-100">Кошелек GiftX</h1>
         </div>
-        <div className="z-10 w-11 h-11 rounded-2xl bg-[#2aabee]/15 border border-[#2aabee]/30 flex flex-col items-center justify-center font-bold text-[#2aabee] text-xs shadow-sm">
-          <span>{groupedActiveVenues.length}</span>
-          <span className="text-[9px] text-[#2aabee]/80 font-normal">зав.</span>
-        </div>
+
+        <button
+          onClick={handleCreateDemoVoucher}
+          className="z-10 px-3 py-1.5 rounded-xl bg-[#2aabee]/15 border border-[#2aabee]/30 text-[#2aabee] font-bold text-[11px] hover:bg-[#2aabee]/25 transition-all cursor-pointer flex items-center space-x-1"
+        >
+          <Gift className="w-3.5 h-3.5" />
+          <span>+ Тестовый подарок</span>
+        </button>
       </div>
 
       {/* Кнопка возврата к списку заведений при просмотре карточки */}
