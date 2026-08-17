@@ -332,75 +332,127 @@ export const GuestHomeScreen: React.FC<GuestHomeScreenProps> = ({
         </div>
       </div>
 
-      {/* ПОПАП "КАК ПОЛУЧАТЬ ПОДАРКИ В 3 ШАГА" (вызывается кнопкой [i] в блоке приветствия) */}
+      {/* ПОПАП "КАК ПОЛУЧАТЬ ПОДАРКИ В 3 ШАГА" (ФУЛЛ-СКРИН С КРУПНЫМИ ПИКТОГРАММАМИ ШАГОВ В СТИЛЕ ТГ) */}
       <AnimatePresence>
         {showInfoModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0e1621]/80 backdrop-blur-md">
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="w-full max-w-sm bg-[#17212b] border border-white/10 rounded-2xl p-5 shadow-2xl space-y-4 text-slate-100 relative font-sans"
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="fixed inset-0 z-50 bg-[#0e1621] text-slate-100 flex flex-col overflow-hidden font-sans"
+          >
+            {/* ШАПКА ПОПАПА */}
+            <div 
+              className="bg-[#17212b] border-b border-white/5 px-4 py-3 flex items-center justify-between shadow-md shrink-0"
+              style={{
+                paddingTop: 'max(env(safe-area-inset-top, 0px), var(--tg-safe-area-inset-top, 0px), var(--tg-content-safe-area-inset-top, 0px), 14px)'
+              }}
             >
-              <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                <div className="flex items-center space-x-2 text-[#2aabee]">
-                  <ShieldCheck className="w-5 h-5 text-[#2aabee]" />
-                  <h3 className="font-extrabold text-sm text-slate-100">Как получать подарки</h3>
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-2xl bg-[#2aabee]/15 border border-[#2aabee]/30 flex items-center justify-center text-[#2aabee]">
+                  <Sparkles className="w-5 h-5 text-[#2aabee]" />
                 </div>
-                <button
-                  onClick={() => {
-                    triggerHaptic('light');
-                    setShowInfoModal(false);
-                  }}
-                  className="p-1.5 rounded-full bg-[#242f3d] text-slate-400 hover:text-white transition-colors cursor-pointer"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              <div className="space-y-2.5 text-xs">
-                <div className="p-3 rounded-xl bg-[#242f3d] border border-white/5 flex items-start space-x-3">
-                  <div className="w-7 h-7 rounded-full bg-amber-500/20 text-amber-400 font-black flex items-center justify-center text-xs shrink-0 mt-0.5">
-                    1
-                  </div>
-                  <div>
-                    <h5 className="font-bold text-slate-100">Отдыхайте</h5>
-                    <p className="text-slate-400 text-[11px]">Делайте заказы в заведениях-партнерах сети.</p>
-                  </div>
-                </div>
-
-                <div className="p-3 rounded-xl bg-[#242f3d] border border-white/5 flex items-start space-x-3">
-                  <div className="w-7 h-7 rounded-full bg-[#2aabee]/20 text-[#2aabee] font-black flex items-center justify-center text-xs shrink-0 mt-0.5">
-                    2
-                  </div>
-                  <div>
-                    <h5 className="font-bold text-slate-100">Сканируйте QR</h5>
-                    <p className="text-slate-400 text-[11px]">Наведите камеру на QR-код у официанта при оплате.</p>
-                  </div>
-                </div>
-
-                <div className="p-3 rounded-xl bg-[#242f3d] border border-white/5 flex items-start space-x-3">
-                  <div className="w-7 h-7 rounded-full bg-emerald-500/20 text-emerald-400 font-black flex items-center justify-center text-xs shrink-0 mt-0.5">
-                    3
-                  </div>
-                  <div>
-                    <h5 className="font-bold text-slate-100">Забирайте 5 Подарков</h5>
-                    <p className="text-slate-400 text-[11px]">Открывайте ваучеры в других интересных местах города!</p>
-                  </div>
+                <div>
+                  <h3 className="font-extrabold text-base text-slate-100 leading-tight">Как получать подарки</h3>
+                  <p className="text-[11px] text-slate-400">Простая пошаговая инструкция</p>
                 </div>
               </div>
 
               <button
                 onClick={() => {
+                  triggerHaptic('light');
+                  setShowInfoModal(false);
+                }}
+                className="p-2.5 rounded-full bg-[#242f3d] text-slate-400 hover:text-white transition-all cursor-pointer border border-white/5 active:scale-95"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* СКРОЛЛИРУЕМЫЙ КОНТЕНТ С КРУПНЫМИ ПИКТОГРАММАМИ */}
+            <div className="flex-1 overflow-y-auto p-4 max-w-md mx-auto w-full space-y-4 custom-scrollbar">
+              <div className="bg-[#17212b] p-4.5 rounded-2xl border border-white/5 space-y-1 shadow-md">
+                <span className="text-[10px] font-bold text-[#2aabee] uppercase tracking-wider bg-[#2aabee]/15 px-2.5 py-0.5 rounded-full inline-flex items-center space-x-1 border border-[#2aabee]/20">
+                  <Sparkles className="w-3 h-3 text-[#2aabee]" />
+                  <span>3 простых шага</span>
+                </span>
+                <h3 className="font-extrabold text-base text-slate-100 pt-1">
+                  Бесплатные подарки в лучшем заведении города
+                </h3>
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  Отдыхайте в ресторанах и СПА сети GiftX, сканируйте QR-код счёта и забирайте веер из 5 подарочных ваучеров!
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                {/* ШАГ 1 */}
+                <div className="bg-[#17212b] p-4 rounded-2xl border border-white/5 flex items-start space-x-4 shadow-md">
+                  <div className="w-16 h-16 rounded-2xl bg-[#242f3d] border border-white/10 flex flex-col items-center justify-center text-[#2aabee] shrink-0 shadow-md">
+                    <span className="text-2xl select-none">🍹</span>
+                    <span className="text-[9px] font-black text-[#2aabee] uppercase mt-0.5">Шаг 1</span>
+                  </div>
+                  <div className="space-y-1 flex-1">
+                    <h4 className="font-extrabold text-sm text-slate-100">
+                      Отдыхайте в заведении
+                    </h4>
+                    <p className="text-xs text-slate-300 leading-relaxed">
+                      Делайте заказы в заведениях-партнерах сети (рестораны, СПА, развлечения).
+                    </p>
+                  </div>
+                </div>
+
+                {/* ШАГ 2 */}
+                <div className="bg-[#17212b] p-4 rounded-2xl border border-white/5 flex items-start space-x-4 shadow-md">
+                  <div className="w-16 h-16 rounded-2xl bg-[#242f3d] border border-white/10 flex flex-col items-center justify-center text-amber-400 shrink-0 shadow-md">
+                    <span className="text-2xl select-none">📷</span>
+                    <span className="text-[9px] font-black text-amber-400 uppercase mt-0.5">Шаг 2</span>
+                  </div>
+                  <div className="space-y-1 flex-1">
+                    <h4 className="font-extrabold text-sm text-slate-100">
+                      Сканируйте QR у официанта
+                    </h4>
+                    <p className="text-xs text-slate-300 leading-relaxed">
+                      При оплате счёта попросите официанта показать QR-код вашей суммы и отсканируйте его камерой.
+                    </p>
+                  </div>
+                </div>
+
+                {/* ШАГ 3 */}
+                <div className="bg-[#17212b] p-4 rounded-2xl border border-white/5 flex items-start space-x-4 shadow-md">
+                  <div className="w-16 h-16 rounded-2xl bg-[#242f3d] border border-white/10 flex flex-col items-center justify-center text-emerald-400 shrink-0 shadow-md">
+                    <span className="text-2xl select-none">🎁</span>
+                    <span className="text-[9px] font-black text-emerald-400 uppercase mt-0.5">Шаг 3</span>
+                  </div>
+                  <div className="space-y-1 flex-1">
+                    <h4 className="font-extrabold text-sm text-slate-100">
+                      Забирайте 5 Подарков
+                    </h4>
+                    <p className="text-xs text-slate-300 leading-relaxed">
+                      Откройте 3D-бокс и заберите веер из 5 карточек с бесплатными напитками, массажами и скидками!
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ФУТЕР */}
+            <div 
+              className="bg-[#17212b] border-t border-white/5 p-4 shrink-0 max-w-md mx-auto w-full shadow-lg"
+              style={{
+                paddingBottom: 'max(env(safe-area-inset-bottom, 0px), var(--tg-safe-area-inset-bottom, 0px), var(--tg-content-safe-area-inset-bottom, 0px), 16px)'
+              }}
+            >
+              <button
+                onClick={() => {
                   triggerHaptic('medium');
                   setShowInfoModal(false);
                 }}
-                className="w-full py-2.5 rounded-xl bg-[#2aabee] hover:bg-[#229ed9] text-white font-extrabold text-xs shadow-md shadow-[#2aabee]/30 transition-all cursor-pointer"
+                className="w-full py-3.5 bg-[#2aabee] hover:bg-[#229ed9] font-extrabold text-white rounded-xl text-xs shadow-md shadow-[#2aabee]/30 transition-all cursor-pointer active:scale-[0.99]"
               >
-                Понятно!
+                Всё понятно! 🚀
               </button>
-            </motion.div>
-          </div>
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
