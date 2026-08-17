@@ -36,9 +36,10 @@ import { VenueAvatar } from './VenueAvatar';
 
 interface AdminDashboardScreenProps {
   defaultTab?: 'VENUES' | 'MODERATION' | 'STAFF' | 'APPLICATIONS' | 'OFFERS' | 'ANALYTICS' | 'DATABASE';
+  hideHeaderAndTabs?: boolean;
 }
 
-export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ defaultTab = 'VENUES' }) => {
+export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ defaultTab = 'VENUES', hideHeaderAndTabs = false }) => {
   const [activeTab, setActiveTab] = useState<'VENUES' | 'MODERATION' | 'STAFF' | 'APPLICATIONS' | 'OFFERS' | 'ANALYTICS' | 'DATABASE'>(defaultTab);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -357,26 +358,28 @@ const getDemoPartnersList = () => [
       }}
     >
       {/* Шапка админ-панели (ТЕЛЕГРАМ СТИЛЬ) */}
-      <div className="bg-[#17212b] p-4.5 rounded-2xl border border-white/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-md">
-        <div>
-          <div className="flex items-center space-x-2 text-[10px] font-bold text-[#2aabee] uppercase tracking-wider mb-1">
-            <ShieldAlert className="w-4 h-4" />
-            <span>Панель Управляющего</span>
+      {!hideHeaderAndTabs && (
+        <div className="bg-[#17212b] p-4.5 rounded-2xl border border-white/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-md">
+          <div>
+            <div className="flex items-center space-x-2 text-[10px] font-bold text-[#2aabee] uppercase tracking-wider mb-1">
+              <ShieldAlert className="w-4 h-4" />
+              <span>Панель Управляющего</span>
+            </div>
+            <h1 className="text-lg font-extrabold text-slate-100">GiftX Admin Center</h1>
           </div>
-          <h1 className="text-lg font-extrabold text-slate-100">GiftX Admin Center</h1>
+          
+          <button
+            onClick={() => {
+              triggerHaptic('medium');
+              setShowDemoBoxModal(true);
+            }}
+            className="w-full sm:w-auto px-3.5 py-2 rounded-xl bg-[#2aabee] hover:bg-[#229ed9] text-white font-bold text-xs shadow-md shadow-[#2aabee]/30 flex items-center justify-center space-x-1.5 active:scale-95 transition-all cursor-pointer"
+          >
+            <Gift className="w-4 h-4 text-white" />
+            <span>🎁 Демо-открытие бокса</span>
+          </button>
         </div>
-        
-        <button
-          onClick={() => {
-            triggerHaptic('medium');
-            setShowDemoBoxModal(true);
-          }}
-          className="w-full sm:w-auto px-3.5 py-2 rounded-xl bg-[#2aabee] hover:bg-[#229ed9] text-white font-bold text-xs shadow-md shadow-[#2aabee]/30 flex items-center justify-center space-x-1.5 active:scale-95 transition-all cursor-pointer"
-        >
-          <Gift className="w-4 h-4 text-white" />
-          <span>🎁 Демо-открытие бокса</span>
-        </button>
-      </div>
+      )}
 
       {/* Метрики KPI (ТЕЛЕГРАМ СТИЛЬ) */}
       <div className="grid grid-cols-2 gap-2.5">
@@ -413,33 +416,35 @@ const getDemoPartnersList = () => [
         </div>
       </div>
 
-      {/* Переключатель вкладок админки (ТЕЛЕГРАМ СТИЛЬ) */}
-      <div className="flex space-x-1 bg-[#17212b] p-1.5 rounded-2xl border border-white/5 overflow-x-auto no-scrollbar shadow-md">
-        {[
-          { id: 'VENUES', label: '🏢 Заведения' },
-          { id: 'MODERATION', label: `⚖️ Модерация (${partners.filter((p) => p.moderationStatus === 'PENDING').length})` },
-          { id: 'STAFF', label: '👥 Персонал & Собственники' },
-          { id: 'APPLICATIONS', label: `📥 Заявки (${applications.filter((a) => a.status === 'PENDING').length})` },
-          { id: 'OFFERS', label: '🎁 Ваучеры' },
-          { id: 'ANALYTICS', label: '📊 Аналитика' },
-          { id: 'DATABASE', label: '🗄️ Моделирование БД' },
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => {
-              triggerHaptic('light');
-              setActiveTab(tab.id as any);
-            }}
-            className={`flex-1 py-1.5 px-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
-              activeTab === tab.id
-                ? 'bg-[#2aabee] text-white shadow-md shadow-[#2aabee]/30'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      {/* Переключатель вкладок админки (ОТКЛЮЧЕН В РЕЖИМЕ СУПЕРАДМИН ХАБА ДЛЯ УСТРАНЕНИЯ ДУБЛИРОВАНИЯ) */}
+      {!hideHeaderAndTabs && (
+        <div className="flex space-x-1 bg-[#17212b] p-1.5 rounded-2xl border border-white/5 overflow-x-auto no-scrollbar shadow-md">
+          {[
+            { id: 'VENUES', label: '🏢 Заведения' },
+            { id: 'MODERATION', label: `⚖️ Модерация (${partners.filter((p) => p.moderationStatus === 'PENDING').length})` },
+            { id: 'STAFF', label: '👥 Персонал & Собственники' },
+            { id: 'APPLICATIONS', label: `📥 Заявки (${applications.filter((a) => a.status === 'PENDING').length})` },
+            { id: 'OFFERS', label: '🎁 Ваучеры' },
+            { id: 'ANALYTICS', label: '📊 Аналитика' },
+            { id: 'DATABASE', label: '🗄️ Моделирование БД' },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => {
+                triggerHaptic('light');
+                setActiveTab(tab.id as any);
+              }}
+              className={`flex-1 py-1.5 px-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+                activeTab === tab.id
+                  ? 'bg-[#2aabee] text-white shadow-md shadow-[#2aabee]/30'
+                  : 'text-slate-400 hover:text-[#2aabee]'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* ВКЛАДКА 1: ЗАВЕДЕНИЯ */}
       {activeTab === 'VENUES' && (

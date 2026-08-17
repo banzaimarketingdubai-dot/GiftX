@@ -119,15 +119,15 @@ export const SuperAdminHubScreen: React.FC<SuperAdminHubScreenProps> = ({ onClos
       {/* 3. КОНТЕНТ ВЫБРАННОЙ РУБРИКИ */}
       <div className="max-w-md mx-auto p-4 space-y-4">
         {activeRubric === 'VENUES' && (
-          <AdminDashboardScreen defaultTab="VENUES" />
+          <AdminDashboardScreen defaultTab="VENUES" hideHeaderAndTabs={true} />
         )}
 
         {activeRubric === 'OFFERS' && (
-          <AdminDashboardScreen defaultTab="OFFERS" />
+          <AdminDashboardScreen defaultTab="OFFERS" hideHeaderAndTabs={true} />
         )}
 
         {activeRubric === 'STAFF' && (
-          <AdminDashboardScreen defaultTab="STAFF" />
+          <AdminDashboardScreen defaultTab="STAFF" hideHeaderAndTabs={true} />
         )}
 
         {activeRubric === 'ANALYTICS' && (
@@ -176,7 +176,7 @@ export const SuperAdminHubScreen: React.FC<SuperAdminHubScreenProps> = ({ onClos
                 MANAGER MODE
               </span>
             </div>
-            <AdminDashboardScreen defaultTab="APPLICATIONS" />
+            <AdminDashboardScreen defaultTab="APPLICATIONS" hideHeaderAndTabs={true} />
           </div>
         )}
 
@@ -194,7 +194,7 @@ export const SuperAdminHubScreen: React.FC<SuperAdminHubScreenProps> = ({ onClos
                 OWNER MODE
               </span>
             </div>
-            <AdminDashboardScreen defaultTab="VENUES" />
+            <AdminDashboardScreen defaultTab="VENUES" hideHeaderAndTabs={true} />
           </div>
         )}
       </div>
