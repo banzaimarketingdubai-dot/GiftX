@@ -25,6 +25,8 @@ interface GuestHomeScreenProps {
   onOpenWallet: () => void;
   onOpenMap: () => void;
   onScanTokenSuccess: (token: string) => void;
+  hasVenueRole?: boolean;
+  onOpenWaiterQr?: () => void;
 }
 
 export const GuestHomeScreen: React.FC<GuestHomeScreenProps> = ({
@@ -32,6 +34,8 @@ export const GuestHomeScreen: React.FC<GuestHomeScreenProps> = ({
   onOpenWallet,
   onOpenMap,
   onScanTokenSuccess,
+  hasVenueRole,
+  onOpenWaiterQr,
 }) => {
   const tgUser = getTelegramUserData();
   const [activeVouchersCount, setActiveVouchersCount] = useState<number>(0);
@@ -39,10 +43,33 @@ export const GuestHomeScreen: React.FC<GuestHomeScreenProps> = ({
   const [partners, setPartners] = useState<Partner[]>([]);
   const [showInfoModal, setShowInfoModal] = useState<boolean>(false);
   const [showDemoBoxModal, setShowDemoBoxModal] = useState<boolean>(false);
+  const [isVenueRoleUser, setIsVenueRoleUser] = useState<boolean>(hasVenueRole || false);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number }>({
     lat: 10.1982,
     lng: 103.9634,
   });
+
+  useEffect(() => {
+    if (hasVenueRole) {
+      setIsVenueRoleUser(true);
+      return;
+    }
+    const demoStaff = localStorage.getItem('giftx_demo_staff');
+    if (demoStaff) {
+      setIsVenueRoleUser(true);
+      return;
+    }
+    if (tgUser?.id) {
+      fetch(`/api/staff/check-member/${tgUser.id}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && data.isStaff) {
+            setIsVenueRoleUser(true);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [hasVenueRole, tgUser?.id]);
 
   const mapRef = useRef<HTMLDivElement>(null);
   const leafletMap = useRef<L.Map | null>(null);
@@ -220,43 +247,121 @@ export const GuestHomeScreen: React.FC<GuestHomeScreenProps> = ({
         </button>
       </div>
 
-      {/* 2. БЛОК СКАНИРОВАТЬ КУАР ОФИЦИАНТА (СТАНДАРТНЫЙ РАЗМЕР И ШИРИНА КАК У ПРИВЕТСТВИЯ) */}
-      <motion.button
-        whileHover={{ scale: 1.01 }}
-        whileTap={{ scale: 0.99 }}
-        onClick={() => {
-          triggerHaptic('heavy');
-          onOpenScanner();
-        }}
-        className="w-full cursor-pointer p-4.5 rounded-2xl bg-gradient-to-r from-[#2aabee] via-[#229ed9] to-[#0088cc] text-white shadow-lg shadow-[#2aabee]/30 relative overflow-hidden group transition-all text-left border border-white/10"
-      >
-        <div className="flex items-center space-x-3.5 relative z-10">
-          <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-md p-0.5 shadow-md shrink-0 group-hover:scale-105 transition-transform flex items-center justify-center">
-            <Camera className="w-6 h-6 text-white animate-pulse" />
-          </div>
-
-          <div className="space-y-0.5 flex-1">
-            <div className="inline-flex items-center space-x-1 text-[9px] font-bold text-white uppercase tracking-widest px-2 py-0.5 rounded-full bg-white/20 border border-white/30 backdrop-blur-sm">
-              <Zap className="w-2.5 h-2.5 text-amber-300" />
-              <span>Главное действие</span>
+      {/* 2. БЛОК СКАНИРОВАТЬ КУАР / ПОКАЗАТЬ КУАР */}
+      {isVenueRoleUser ? (
+        <div className="grid grid-cols-2 gap-2.5">
+          {/* Левая половина (Голубая) - СКАНИРОВАТЬ QR */}
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => {
+              triggerHaptic('heavy');
+              onOpenScanner();
+            }}
+            className="cursor-pointer p-3.5 rounded-2xl bg-gradient-to-br from-[#2aabee] via-[#229ed9] to-[#0088cc] text-white shadow-lg shadow-[#2aabee]/25 relative overflow-hidden group transition-all text-left border border-white/20 flex flex-col justify-between"
+          >
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center shadow-xs">
+                  <Camera className="w-5 h-5 text-white animate-pulse" />
+                </div>
+                <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/20 border border-white/30 text-white">
+                  ГОСТЬ
+                </span>
+              </div>
+              <div>
+                <h2 className="text-xs sm:text-sm font-black text-white leading-tight uppercase">
+                  СКАНИРОВАТЬ QR
+                </h2>
+                <p className="text-[10px] text-blue-100 font-medium mt-0.5 line-clamp-1">
+                  Камера смартфона
+                </p>
+              </div>
             </div>
-            <h2 className="text-base font-black text-white leading-tight">
-              СКАНИРОВАТЬ QR ОФИЦИАНТА
-            </h2>
-            <p className="text-[11px] text-blue-100 font-medium line-clamp-1">
-              Наведите камеру при оплате счёта и заберите 5 подарков!
-            </p>
-          </div>
-        </div>
 
-        <div className="mt-3 pt-2.5 border-t border-white/20 flex items-center justify-between text-xs font-bold text-white">
-          <span>Нажмите для открытия сканера</span>
-          <div className="flex items-center space-x-1 px-3 py-1 rounded-lg bg-white text-[#2aabee] font-black shadow-sm group-hover:translate-x-1 transition-transform">
-            <span>Открыть</span>
-            <ArrowRight className="w-3.5 h-3.5 text-[#2aabee]" />
-          </div>
+            <div className="mt-3 pt-2 border-t border-white/20 flex items-center justify-between text-[11px] font-bold text-white">
+              <span>Сканер</span>
+              <div className="w-5 h-5 rounded-full bg-white text-[#2aabee] flex items-center justify-center shadow-xs group-hover:translate-x-0.5 transition-transform">
+                <ArrowRight className="w-3 h-3 text-[#2aabee]" />
+              </div>
+            </div>
+          </motion.button>
+
+          {/* Правая половина (Желтая/Янтарная) - ПОКАЗАТЬ QR-КОД */}
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => {
+              triggerHaptic('heavy');
+              if (onOpenWaiterQr) onOpenWaiterQr();
+            }}
+            className="cursor-pointer p-3.5 rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-yellow-500 text-slate-950 shadow-lg shadow-amber-500/25 relative overflow-hidden group transition-all text-left border border-amber-300/50 flex flex-col justify-between"
+          >
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="w-9 h-9 rounded-xl bg-slate-950/15 backdrop-blur-md flex items-center justify-center shadow-xs">
+                  <QrCode className="w-5 h-5 text-slate-950 animate-bounce-short" />
+                </div>
+                <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-950/15 border border-slate-950/20 text-slate-950">
+                  БИЗНЕС
+                </span>
+              </div>
+              <div>
+                <h2 className="text-xs sm:text-sm font-black text-slate-950 leading-tight uppercase">
+                  ПОКАЗАТЬ QR-КОД
+                </h2>
+                <p className="text-[10px] text-amber-950/80 font-bold mt-0.5 line-clamp-1">
+                  Выдача подарка
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-3 pt-2 border-t border-slate-950/15 flex items-center justify-between text-[11px] font-extrabold text-slate-950">
+              <span>Создать QR</span>
+              <div className="w-5 h-5 rounded-full bg-slate-950 text-amber-400 flex items-center justify-center shadow-xs group-hover:translate-x-0.5 transition-transform">
+                <ArrowRight className="w-3 h-3 text-amber-400" />
+              </div>
+            </div>
+          </motion.button>
         </div>
-      </motion.button>
+      ) : (
+        <motion.button
+          whileHover={{ scale: 1.01 }}
+          whileTap={{ scale: 0.99 }}
+          onClick={() => {
+            triggerHaptic('heavy');
+            onOpenScanner();
+          }}
+          className="w-full cursor-pointer p-4.5 rounded-2xl bg-gradient-to-r from-[#2aabee] via-[#229ed9] to-[#0088cc] text-white shadow-lg shadow-[#2aabee]/30 relative overflow-hidden group transition-all text-left border border-white/10"
+        >
+          <div className="flex items-center space-x-3.5 relative z-10">
+            <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-md p-0.5 shadow-md shrink-0 group-hover:scale-105 transition-transform flex items-center justify-center">
+              <Camera className="w-6 h-6 text-white animate-pulse" />
+            </div>
+
+            <div className="space-y-0.5 flex-1">
+              <div className="inline-flex items-center space-x-1 text-[9px] font-bold text-white uppercase tracking-widest px-2 py-0.5 rounded-full bg-white/20 border border-white/30 backdrop-blur-sm">
+                <Zap className="w-2.5 h-2.5 text-amber-300" />
+                <span>Главное действие</span>
+              </div>
+              <h2 className="text-base font-black text-white leading-tight">
+                СКАНИРОВАТЬ QR ОФИЦИАНТА
+              </h2>
+              <p className="text-[11px] text-blue-100 font-medium line-clamp-1">
+                Наведите камеру при оплате счёта и заберите 5 подарков!
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-3 pt-2.5 border-t border-white/20 flex items-center justify-between text-xs font-bold text-white">
+            <span>Нажмите для открытия сканера</span>
+            <div className="flex items-center space-x-1 px-3 py-1 rounded-lg bg-white text-[#2aabee] font-black shadow-sm group-hover:translate-x-1 transition-transform">
+              <span>Открыть</span>
+              <ArrowRight className="w-3.5 h-3.5 text-[#2aabee]" />
+            </div>
+          </div>
+        </motion.button>
+      )}
 
       {/* 3. БЛОК МОИ ПОДАРКИ (КОШЕЛЕК - ПОДНЯТ ВЫШЕ КАРТЫ) */}
       <div

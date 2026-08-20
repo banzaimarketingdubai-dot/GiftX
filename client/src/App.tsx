@@ -479,6 +479,8 @@ export const App: React.FC = () => {
           onScanTokenSuccess={(token) => {
             setClaimToken(token);
           }}
+          hasVenueRole={isBusinessUser || (staffInfo && staffInfo.role !== 'GUEST')}
+          onOpenWaiterQr={() => setRole('WAITER')}
         />
       )}
 
