@@ -276,18 +276,8 @@ export const App: React.FC = () => {
               )}
             </div>
 
-            {/* Telegram Search Bar */}
-            <div className="relative mb-2.5">
-              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input 
-                type="text"
-                placeholder="Поиск заведений и подарков..."
-                className="w-full bg-[#242f3d] text-slate-100 text-xs pl-8 pr-3 py-1.5 rounded-xl border border-transparent focus:border-[#2aabee]/50 outline-none placeholder-slate-400 transition-all"
-              />
-            </div>
-
             {/* TELEGRAM HIGHLIGHTS / STORIES STRIP (ЗЕЛЕНАЯ ОБВОДКА СТОРИС) */}
-            <div className="flex items-center space-x-3 overflow-x-auto pb-1 pt-0.5 no-scrollbar">
+            <div className="flex items-center space-x-3 overflow-x-auto pb-2 pt-0.5 no-scrollbar">
               {/* Story 1: О сервисе */}
               <button
                 onClick={() => {
@@ -389,6 +379,16 @@ export const App: React.FC = () => {
                 </div>
                 <span className="text-[10px] font-medium text-slate-300 group-hover:text-white transition-colors">Профиль</span>
               </button>
+            </div>
+
+            {/* Telegram Search Bar (Помещена под сторис) */}
+            <div className="relative mt-2.5 mb-1">
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input 
+                type="text"
+                placeholder="Поиск заведений и подарков..."
+                className="w-full bg-[#242f3d] text-slate-100 text-xs pl-8 pr-3 py-1.5 rounded-xl border border-transparent focus:border-[#2aabee]/50 outline-none placeholder-slate-400 transition-all"
+              />
             </div>
           </div>
 
