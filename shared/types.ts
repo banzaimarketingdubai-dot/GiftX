@@ -72,7 +72,7 @@ export interface StaffMember {
   telegramId?: number;
   name: string;
   role: 'WAITER' | 'MANAGER' | 'OWNER' | 'SUPER_ADMIN';
-  activeShiftsCount: number;
+  activeShiftsCount?: number;
   boxesIssuedCount: number;
   boxesIssuedToday?: number;
   boxesIssuedWeek?: number;

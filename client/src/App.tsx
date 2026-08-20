@@ -117,6 +117,16 @@ export const App: React.FC = () => {
           if (data.success && data.isStaff) {
             setIsBusinessUser(true);
             setStaffInfo(data.staff);
+            if (data.staff) {
+              useAppStore.getState().setSelectedStaff({
+                id: data.staff.id,
+                partnerId: data.staff.partnerId,
+                name: data.staff.name,
+                role: data.staff.role,
+                boxesIssuedCount: data.staff.boxesIssuedCount || 0,
+                partner: data.staff.partner
+              });
+            }
             if (data.staff.role === 'WAITER') {
               setRole('WAITER');
             } else if (['OWNER', 'MANAGER'].includes(data.staff.role)) {

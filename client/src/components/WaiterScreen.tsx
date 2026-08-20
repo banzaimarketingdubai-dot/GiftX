@@ -58,6 +58,67 @@ export const WaiterScreen: React.FC = () => {
     fetchMyApplications();
   }, []);
 
+  // Автоматическое определение профиля сотрудника, если selectedStaff не выбран
+  useEffect(() => {
+    if (selectedStaff) return;
+
+    const demoStaffStr = localStorage.getItem('giftx_demo_staff');
+    if (demoStaffStr) {
+      try {
+        const parsed = JSON.parse(demoStaffStr);
+        if (parsed && parsed.id) {
+          setSelectedStaff(parsed);
+          return;
+        }
+      } catch (e) {}
+    }
+
+    if (tgUser?.id) {
+      fetch(`/api/staff/check-member/${tgUser.id}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && data.isStaff && data.staff) {
+            const staffPartner = data.staff.partner || partners.find((p) => p.id === data.staff.partnerId);
+            setSelectedStaff({
+              id: data.staff.id,
+              partnerId: data.staff.partnerId,
+              name: data.staff.name,
+              role: data.staff.role,
+              boxesIssuedCount: data.staff.boxesIssuedCount || 0,
+              partner: staffPartner || {
+                id: data.staff.partnerId,
+                name: 'Заведение',
+                logoUrl: 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=200&q=80'
+              }
+            });
+            return;
+          } else {
+            const defaultPartner = partners[0] || displayPartners[0];
+            const defaultStaffList = defaultPartner?.staffMembers;
+            if (defaultPartner && defaultStaffList && defaultStaffList.length > 0) {
+              const defaultStaff = defaultStaffList[0];
+              setSelectedStaff({ ...defaultStaff, partner: defaultPartner });
+            }
+          }
+        })
+        .catch(() => {
+          const defaultPartner = partners[0] || displayPartners[0];
+          const defaultStaffList = defaultPartner?.staffMembers;
+          if (defaultPartner && defaultStaffList && defaultStaffList.length > 0) {
+            const defaultStaff = defaultStaffList[0];
+            setSelectedStaff({ ...defaultStaff, partner: defaultPartner });
+          }
+        });
+    } else {
+      const defaultPartner = partners[0] || displayPartners[0];
+      const defaultStaffList = defaultPartner?.staffMembers;
+      if (defaultPartner && defaultStaffList && defaultStaffList.length > 0) {
+        const defaultStaff = defaultStaffList[0];
+        setSelectedStaff({ ...defaultStaff, partner: defaultPartner });
+      }
+    }
+  }, [selectedStaff, tgUser?.id, partners]);
+
   const handleSubmitApplication = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedPartnerToApply || !applicantName.trim()) return;
