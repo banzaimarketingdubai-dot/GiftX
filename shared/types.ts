@@ -53,6 +53,8 @@ export interface Partner {
   moderationStatus?: ModerationStatus;
   rejectionReason?: string;
   ownerTelegramId?: number | string;
+  balanceUsd?: number;
+  costPerLeadUsd?: number;
   basicThreshold?: number;
   silverThreshold?: number;
   goldThreshold?: number;

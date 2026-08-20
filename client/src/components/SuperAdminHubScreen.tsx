@@ -117,7 +117,7 @@ export const SuperAdminHubScreen: React.FC<SuperAdminHubScreenProps> = ({ onClos
       </div>
 
       {/* 3. КОНТЕНТ ВЫБРАННОЙ РУБРИКИ */}
-      <div className="max-w-md mx-auto p-4 space-y-4">
+      <div className="max-w-md mx-auto px-4 py-1.5 space-y-4">
         {activeRubric === 'VENUES' && (
           <AdminDashboardScreen defaultTab="VENUES" hideHeaderAndTabs={true} />
         )}
@@ -131,7 +131,7 @@ export const SuperAdminHubScreen: React.FC<SuperAdminHubScreenProps> = ({ onClos
         )}
 
         {activeRubric === 'ANALYTICS' && (
-          <PlatformAnalyticsScreen />
+          <PlatformAnalyticsScreen hidePaddingTop={true} />
         )}
 
         {activeRubric === 'DATABASE' && (
@@ -158,7 +158,7 @@ export const SuperAdminHubScreen: React.FC<SuperAdminHubScreenProps> = ({ onClos
                 TEST MODE
               </span>
             </div>
-            <WaiterScreen />
+            <WaiterScreen hidePaddingTop={true} />
           </div>
         )}
 

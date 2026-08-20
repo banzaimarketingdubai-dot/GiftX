@@ -5,7 +5,11 @@ import { useAppStore } from '../store/useAppStore';
 import { triggerHaptic, triggerNotificationHaptic, getTelegramUserData } from '../telegram';
 import { VenueAvatar } from './VenueAvatar';
 
-export const WaiterScreen: React.FC = () => {
+interface WaiterScreenProps {
+  hidePaddingTop?: boolean;
+}
+
+export const WaiterScreen: React.FC<WaiterScreenProps> = ({ hidePaddingTop = false }) => {
   const { 
     partners, 
     selectedStaff, 
@@ -289,10 +293,10 @@ export const WaiterScreen: React.FC = () => {
   if (!selectedStaff) {
     return (
       <div 
-        className="p-4 max-w-md mx-auto min-h-screen flex flex-col justify-start space-y-4 pb-20 font-sans"
-        style={{
+        className={`p-4 max-w-md mx-auto min-h-screen flex flex-col justify-start space-y-4 pb-20 font-sans ${hidePaddingTop ? 'pt-1' : ''}`}
+        style={!hidePaddingTop ? {
           paddingTop: 'calc(max(env(safe-area-inset-top, 0px), var(--tg-safe-area-inset-top, 0px), var(--tg-content-safe-area-inset-top, 0px), 0px) + 72px)'
-        }}
+        } : undefined}
       >
         <div className="text-center">
           <div className="inline-flex p-3 bg-[#2aabee]/15 border border-[#2aabee]/30 rounded-full mb-3">
@@ -500,10 +504,10 @@ export const WaiterScreen: React.FC = () => {
 
   return (
     <div 
-      className="p-4 max-w-md mx-auto min-h-screen flex flex-col justify-between pb-8 font-sans"
-      style={{
+      className={`p-4 max-w-md mx-auto min-h-screen flex flex-col justify-between pb-8 font-sans ${hidePaddingTop ? 'pt-1' : ''}`}
+      style={!hidePaddingTop ? {
         paddingTop: 'calc(max(env(safe-area-inset-top, 0px), var(--tg-safe-area-inset-top, 0px), var(--tg-content-safe-area-inset-top, 0px), 0px) + 72px)'
-      }}
+      } : undefined}
     >
       {/* Шапка персонала */}
       <div className="bg-[#17212b] p-4 rounded-2xl border border-white/5 flex items-center justify-between shadow-md">

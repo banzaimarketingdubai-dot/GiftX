@@ -33,6 +33,24 @@ import { DemoBoxOpeningModal } from './DemoBoxOpeningModal';
 import { PlatformAnalyticsScreen } from './PlatformAnalyticsScreen';
 import { SuperAdminDbScreen } from './SuperAdminDbScreen';
 import { VenueAvatar } from './VenueAvatar';
+import { PaymentDepositModal } from './PaymentDepositModal';
+
+let memoryOverviewCache: { stats: any; partners: any[] } | null = null;
+
+const loadCachedOverview = () => {
+  if (memoryOverviewCache) return memoryOverviewCache;
+  try {
+    const localStr = localStorage.getItem('giftx_admin_overview_cache');
+    if (localStr) {
+      const parsed = JSON.parse(localStr);
+      if (parsed && parsed.stats && Array.isArray(parsed.partners)) {
+        memoryOverviewCache = parsed;
+        return parsed;
+      }
+    }
+  } catch (e) {}
+  return null;
+};
 
 interface AdminDashboardScreenProps {
   defaultTab?: 'VENUES' | 'MODERATION' | 'STAFF' | 'APPLICATIONS' | 'OFFERS' | 'ANALYTICS' | 'DATABASE';
@@ -40,21 +58,56 @@ interface AdminDashboardScreenProps {
 }
 
 export const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ defaultTab = 'VENUES', hideHeaderAndTabs = false }) => {
+  const initialCache = loadCachedOverview();
+
   const [activeTab, setActiveTab] = useState<'VENUES' | 'MODERATION' | 'STAFF' | 'APPLICATIONS' | 'OFFERS' | 'ANALYTICS' | 'DATABASE'>(defaultTab);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialCache);
   const [error, setError] = useState<string | null>(null);
   const [showDemoBoxModal, setShowDemoBoxModal] = useState(false);
 
-  const [stats, setStats] = useState({
-    totalPartners: 0,
-    totalStaff: 0,
-    totalOffers: 0,
-    totalClaimed: 0,
-    totalRedeemed: 0,
-    redemptionRate: 0,
+  // Стейты пополнения баланса и стоимости лида (Суперадмин)
+  const [selectedPartnerForDeposit, setSelectedPartnerForDeposit] = useState<any | null>(null);
+  const [showFeeModal, setShowFeeModal] = useState<boolean>(false);
+  const [editingFeePartner, setEditingFeePartner] = useState<any | null>(null);
+  const [customFeeInput, setCustomFeeInput] = useState<string>('1.00');
+
+  const handleManualBalanceTopup = async (partnerId: string, amount: number = 100) => {
+    triggerHaptic('heavy');
+    setPartners(prev => prev.map(p => p.id === partnerId ? { ...p, balanceUsd: (p.balanceUsd || 100) + amount } : p));
+    triggerNotificationHaptic('success');
+    try {
+      await fetch(`/api/admin/partner/${partnerId}/balance`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount })
+      });
+    } catch (e) {}
+  };
+
+  const handleSaveCostPerLead = async (partnerId: string, feeUsd: number) => {
+    triggerHaptic('medium');
+    setPartners(prev => prev.map(p => p.id === partnerId ? { ...p, costPerLeadUsd: feeUsd } : p));
+    triggerNotificationHaptic('success');
+    setShowFeeModal(false);
+    try {
+      await fetch(`/api/admin/partner/${partnerId}/fee`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ costPerLeadUsd: feeUsd })
+      });
+    } catch (e) {}
+  };
+
+  const [stats, setStats] = useState(initialCache?.stats || {
+    totalPartners: 3,
+    totalStaff: 4,
+    totalOffers: 6,
+    totalClaimed: 362,
+    totalRedeemed: 184,
+    redemptionRate: 51,
   });
 
-  const [partners, setPartners] = useState<any[]>([]);
+  const [partners, setPartners] = useState<any[]>(initialCache?.partners || []);
 
   // Состояние заявок персонала
   const [applications, setApplications] = useState<any[]>([]);
@@ -153,14 +206,20 @@ const getDemoPartnersList = () => [
   }
 ];
 
-  const fetchOverview = async () => {
+  const fetchOverview = async (isBackground = false) => {
     try {
-      setLoading(true);
+      if (!isBackground && !initialCache) {
+        setLoading(true);
+      }
       const res = await fetch('/api/admin/overview');
       const data = await res.json();
       if (data.success && Array.isArray(data.partners) && data.partners.length > 0) {
         setStats(data.stats);
         setPartners(data.partners);
+        memoryOverviewCache = { stats: data.stats, partners: data.partners };
+        try {
+          localStorage.setItem('giftx_admin_overview_cache', JSON.stringify(memoryOverviewCache));
+        } catch (e) {}
       } else {
         const staffRes = await fetch('/api/staff/partners');
         const staffData = await staffRes.json();
@@ -352,10 +411,10 @@ const getDemoPartnersList = () => [
 
   return (
     <div 
-      className="p-4 max-w-md mx-auto min-h-screen pb-24 text-slate-100 space-y-4 font-sans"
-      style={{
+      className={`p-4 max-w-md mx-auto min-h-screen pb-24 text-slate-100 space-y-4 font-sans ${hideHeaderAndTabs ? 'pt-1' : ''}`}
+      style={!hideHeaderAndTabs ? {
         paddingTop: 'calc(max(env(safe-area-inset-top, 0px), var(--tg-safe-area-inset-top, 0px), var(--tg-content-safe-area-inset-top, 0px), 0px) + 72px)'
-      }}
+      } : undefined}
     >
       {/* Шапка админ-панели (ТЕЛЕГРАМ СТИЛЬ) */}
       {!hideHeaderAndTabs && (
@@ -571,6 +630,63 @@ const getDemoPartnersList = () => [
                         <span>Открыть</span>
                         <ExternalLink className="w-3 h-3 text-white" />
                       </a>
+                    </div>
+                  </div>
+
+                  {/* ФИНАНСОВЫЙ БАЛАНС И СТАВКА ЗА ЛИДА (ФИН-МОДЕЛЬ) */}
+                  <div className="p-3 rounded-xl bg-[#242f3d] border border-emerald-500/30 space-y-2 text-xs">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-[9px] uppercase font-bold text-slate-400 block">Баланс заведения:</span>
+                        <div className="flex items-center space-x-1.5 mt-0.5">
+                          <strong className="text-emerald-400 font-extrabold text-sm font-mono">
+                            ${(partner.balanceUsd ?? 100.0).toFixed(2)} USD
+                          </strong>
+                          <span className="px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-400 text-[9px] font-bold border border-emerald-500/20">
+                            АКТИВЕН
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center space-x-1.5">
+                        <button
+                          onClick={() => handleManualBalanceTopup(partner.id, 100)}
+                          title="Ручное зачисление баланса суперадмином"
+                          className="px-2 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold flex items-center space-x-1 transition-all cursor-pointer active:scale-95 shadow-sm"
+                        >
+                          <span>+ $100</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            triggerHaptic('light');
+                            setSelectedPartnerForDeposit(partner);
+                          }}
+                          className="px-2.5 py-1 rounded-lg bg-[#2aabee] hover:bg-[#229ed9] text-white font-extrabold text-[10px] flex items-center space-x-1 transition-all cursor-pointer shadow-sm active:scale-95"
+                        >
+                          <span>💳 Пополнить</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[10px]">
+                      <div className="flex items-center space-x-1.5">
+                        <span className="text-slate-400">Списание за лида:</span>
+                        <strong className="text-amber-400 font-mono font-extrabold">
+                          ${(partner.costPerLeadUsd ?? 1.0).toFixed(2)} / лид
+                        </strong>
+                      </div>
+
+                      <button
+                        onClick={() => {
+                          triggerHaptic('light');
+                          setEditingFeePartner(partner);
+                          setCustomFeeInput((partner.costPerLeadUsd ?? 1.0).toFixed(2));
+                          setShowFeeModal(true);
+                        }}
+                        className="text-[#2aabee] hover:underline font-bold text-[10px] flex items-center space-x-1 cursor-pointer"
+                      >
+                        <span>⚙️ Настроить ставку</span>
+                      </button>
                     </div>
                   </div>
 
@@ -1510,6 +1626,114 @@ const getDemoPartnersList = () => [
       {/* Модалка Демо-открытия бокса */}
       {showDemoBoxModal && (
         <DemoBoxOpeningModal onClose={() => setShowDemoBoxModal(false)} />
+      )}
+
+      {/* Модалка Пополнения Баланса (Заглушка Платежной Страницы) */}
+      {selectedPartnerForDeposit && (
+        <PaymentDepositModal
+          partner={selectedPartnerForDeposit}
+          onClose={() => setSelectedPartnerForDeposit(null)}
+          onSuccess={(newBal) => {
+            setPartners(prev => prev.map(p => p.id === selectedPartnerForDeposit.id ? { ...p, balanceUsd: newBal } : p));
+            setSelectedPartnerForDeposit(null);
+          }}
+        />
+      )}
+
+      {/* МОДАЛКА НАСТРОЙКИ СТОИМОСТИ ЛИДА ДЛЯ СУПЕРАДМИНА */}
+      {showFeeModal && editingFeePartner && (
+        <div
+          onClick={() => setShowFeeModal(false)}
+          className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-[#0e1621]/90 backdrop-blur-md animate-fadeIn font-sans"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-sm bg-[#17212b] border border-white/10 rounded-2xl p-5 shadow-2xl space-y-4 text-slate-100"
+          >
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+              <div className="flex items-center space-x-2">
+                <span className="text-lg">⚙️</span>
+                <div>
+                  <h3 className="text-sm font-extrabold text-slate-100">Ставка списания за лида</h3>
+                  <p className="text-[10px] text-slate-400 truncate max-w-[180px]">{editingFeePartner.name}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowFeeModal(false)}
+                className="w-7 h-7 rounded-full bg-[#242f3d] text-slate-400 hover:text-white flex items-center justify-center text-xs"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <label className="block text-[10px] uppercase font-bold text-amber-400">
+                Быстрые пресеты ставки (USD):
+              </label>
+              <div className="grid grid-cols-4 gap-1.5">
+                {[0.50, 1.00, 2.00, 5.00].map((preset) => (
+                  <button
+                    key={preset}
+                    onClick={() => {
+                      triggerHaptic('light');
+                      setCustomFeeInput(preset.toFixed(2));
+                    }}
+                    className={`py-2 rounded-xl text-xs font-black border transition-all cursor-pointer ${
+                      parseFloat(customFeeInput) === preset
+                        ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-md'
+                        : 'bg-[#242f3d] border-white/5 text-slate-300 hover:text-white'
+                    }`}
+                  >
+                    ${preset.toFixed(2)}
+                  </button>
+                ))}
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-[10px] uppercase font-bold text-slate-400">
+                  Произвольная сумма за лида ($ USD):
+                </label>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm font-bold text-amber-400">$</span>
+                  <input
+                    type="number"
+                    step="0.10"
+                    min="0.10"
+                    value={customFeeInput}
+                    onChange={(e) => setCustomFeeInput(e.target.value)}
+                    className="flex-1 py-2 px-3 rounded-xl bg-slate-950 border border-amber-500/40 text-slate-100 text-xs font-mono font-bold outline-none focus:border-amber-400"
+                    placeholder="1.00"
+                  />
+                  <span className="text-xs font-bold text-slate-400">USD</span>
+                </div>
+              </div>
+
+              <p className="text-[10px] text-slate-400 leading-relaxed bg-[#242f3d] p-2.5 rounded-xl border border-white/5">
+                ℹ️ Данный тариф списывается с финансового баланса заведения за каждую гашеную акцию. Настройка доступна суперадмину в любое время (в том числе после модерации).
+              </p>
+            </div>
+
+            <div className="flex space-x-2 pt-2">
+              <button
+                onClick={() => setShowFeeModal(false)}
+                className="flex-1 py-2.5 rounded-xl bg-[#242f3d] text-slate-300 font-bold text-xs hover:bg-[#2b394a]"
+              >
+                Отмена
+              </button>
+              <button
+                onClick={() => {
+                  const feeNum = parseFloat(customFeeInput);
+                  if (!isNaN(feeNum) && feeNum > 0) {
+                    handleSaveCostPerLead(editingFeePartner.id, feeNum);
+                  }
+                }}
+                className="flex-1 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shadow-md shadow-amber-500/20"
+              >
+                Сохранить
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

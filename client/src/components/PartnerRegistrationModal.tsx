@@ -92,6 +92,7 @@ export const PartnerRegistrationModal: React.FC<PartnerRegistrationModalProps> =
   const [silverThreshold, setSilverThreshold] = useState<number>(initialPartner?.silverThreshold ?? 300000);
   const [goldThreshold, setGoldThreshold] = useState<number>(initialPartner?.goldThreshold ?? 600000);
   const [platinumThreshold, setPlatinumThreshold] = useState<number>(initialPartner?.platinumThreshold ?? 1000000);
+  const [costPerLeadUsd, setCostPerLeadUsd] = useState<number>(initialPartner?.costPerLeadUsd ?? 1.0);
   const [loading, setLoading] = useState(false);
   const [isParsingUrl, setIsParsingUrl] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -325,6 +326,7 @@ export const PartnerRegistrationModal: React.FC<PartnerRegistrationModalProps> =
           silverThreshold,
           goldThreshold,
           platinumThreshold,
+          costPerLeadUsd,
           telegramId: tgUser?.id,
           role
         }),
@@ -974,6 +976,61 @@ export const PartnerRegistrationModal: React.FC<PartnerRegistrationModalProps> =
                     </button>
                   ))}
                 </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ⚙️ Настройка списания за лида в USD (Только для Суперадмина, доступна даже после модерации) */}
+          <div className="p-4 rounded-2xl bg-[#242f3d] border border-amber-500/40 space-y-2.5 shadow-md">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className="text-sm">⚙️</span>
+                <span className="text-xs font-black uppercase text-amber-400 tracking-wider">
+                  Ставка списания за лида (Суперадмин)
+                </span>
+              </div>
+              <span className="text-[9px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded font-extrabold border border-amber-500/30">
+                USD
+              </span>
+            </div>
+
+            <p className="text-[10px] text-slate-300">
+              Сумма в USD, списываемая с активного баланса заведения за каждую активированную акцию. Доступно суперадмину в любое время (в том числе после модерации).
+            </p>
+
+            <div className="grid grid-cols-4 gap-1.5 pt-1">
+              {[0.50, 1.00, 2.00, 5.00].map((val) => (
+                <button
+                  key={val}
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    setCostPerLeadUsd(val);
+                  }}
+                  className={`py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                    costPerLeadUsd === val
+                      ? 'bg-amber-500 text-slate-950 border-amber-400 font-black shadow-md'
+                      : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  ${val.toFixed(2)}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex items-center space-x-2 pt-1">
+              <span className="text-xs font-bold text-slate-400 shrink-0">Произвольная сумма:</span>
+              <div className="flex items-center space-x-1 flex-1">
+                <span className="text-xs font-bold text-amber-400">$</span>
+                <input
+                  type="number"
+                  step="0.10"
+                  min="0.10"
+                  value={costPerLeadUsd}
+                  onChange={(e) => setCostPerLeadUsd(parseFloat(e.target.value) || 1.0)}
+                  className="w-full py-1.5 px-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-100 text-xs font-mono font-bold outline-none focus:border-amber-400"
+                  placeholder="1.00"
+                />
               </div>
             </div>
           </div>

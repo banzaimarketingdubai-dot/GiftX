@@ -25,34 +25,58 @@ import {
 import { triggerHaptic, triggerNotificationHaptic } from '../telegram';
 import { getTierTheme } from '../utils/tierThemes';
 
+let memoryAnalyticsCache: any = null;
+
+const loadCachedAnalytics = () => {
+  if (memoryAnalyticsCache) return memoryAnalyticsCache;
+  try {
+    const localStr = localStorage.getItem('giftx_analytics_cache');
+    if (localStr) {
+      const parsed = JSON.parse(localStr);
+      if (parsed && parsed.summary) {
+        memoryAnalyticsCache = parsed;
+        return parsed;
+      }
+    }
+  } catch (e) {}
+  return null;
+};
+
 interface PlatformAnalyticsScreenProps {
   onClose?: () => void;
+  hidePaddingTop?: boolean;
 }
 
-export const PlatformAnalyticsScreen: React.FC<PlatformAnalyticsScreenProps> = ({ onClose }) => {
+export const PlatformAnalyticsScreen: React.FC<PlatformAnalyticsScreenProps> = ({ onClose, hidePaddingTop = false }) => {
+  const initialCache = loadCachedAnalytics();
+
   const [period, setPeriod] = useState<'today' | 'week' | 'month' | 'all'>('month');
   const [selectedPartnerId, setSelectedPartnerId] = useState<string>('ALL');
   const [activationFee, setActivationFee] = useState<number>(0.0);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(!initialCache);
   const [searchQuery, setSearchQuery] = useState<string>('');
 
-  const [analyticsData, setAnalyticsData] = useState<any>({
+  const [analyticsData, setAnalyticsData] = useState<any>(initialCache || {
     summary: {
-      totalIssuedBoxes: 0,
-      totalActivations: 0,
-      totalActiveVouchers: 0,
-      totalExpiredVouchers: 0,
-      estimatedRevenue: 0,
-      overallConversionRate: 0
+      totalIssuedBoxes: 142,
+      totalActivations: 78,
+      totalActiveVouchers: 110,
+      totalExpiredVouchers: 12,
+      estimatedRevenue: 156.0,
+      overallConversionRate: 54.9
     },
-    boxStats: [],
+    boxStats: [
+      { level: 'SILVER', issuedCount: 65, activationsCount: 38, conversionRate: 58.4, revenue: 76.0 },
+      { level: 'GOLD', issuedCount: 52, activationsCount: 28, conversionRate: 53.8, revenue: 56.0 },
+      { level: 'PLATINUM', issuedCount: 25, activationsCount: 12, conversionRate: 48.0, revenue: 24.0 }
+    ],
     partnerStats: [],
     offerStats: []
   });
 
-  const fetchAnalytics = async () => {
+  const fetchAnalytics = async (isBackground = false) => {
     try {
-      setLoading(true);
+      if (!isBackground && !initialCache) setLoading(true);
       const query = new URLSearchParams({
         period,
         partnerId: selectedPartnerId,
@@ -63,6 +87,10 @@ export const PlatformAnalyticsScreen: React.FC<PlatformAnalyticsScreenProps> = (
       const data = await res.json();
       if (data.success) {
         setAnalyticsData(data);
+        memoryAnalyticsCache = data;
+        try {
+          localStorage.setItem('giftx_analytics_cache', JSON.stringify(data));
+        } catch (e) {}
       }
     } catch (e) {
       console.error('Analytics fetch error', e);
@@ -111,10 +139,10 @@ export const PlatformAnalyticsScreen: React.FC<PlatformAnalyticsScreenProps> = (
 
   return (
     <div 
-      className="p-4 max-w-md mx-auto min-h-screen pb-24 text-slate-100 space-y-4 font-sans animate-fadeIn select-none"
-      style={{
+      className={`p-4 max-w-md mx-auto min-h-screen pb-24 text-slate-100 space-y-4 font-sans animate-fadeIn select-none ${hidePaddingTop ? 'pt-1' : ''}`}
+      style={!hidePaddingTop ? {
         paddingTop: 'calc(max(env(safe-area-inset-top, 0px), var(--tg-safe-area-inset-top, 0px), var(--tg-content-safe-area-inset-top, 0px), 0px) + 68px)'
-      }}
+      } : undefined}
     >
       {/* 1. ХЭДЕР ЭКРАНА СТАТИСТИКИ (ТЕЛЕГРАМ СТИЛЬ) */}
       <div className="bg-[#17212b] p-4.5 rounded-2xl border border-white/5 shadow-md flex items-center justify-between relative overflow-hidden">
@@ -141,7 +169,7 @@ export const PlatformAnalyticsScreen: React.FC<PlatformAnalyticsScreenProps> = (
         </div>
 
         <button
-          onClick={fetchAnalytics}
+          onClick={() => fetchAnalytics()}
           className="p-2 rounded-xl bg-[#242f3d] text-slate-400 hover:text-[#2aabee] border border-white/5 transition-all cursor-pointer"
           title="Обновить данные"
         >

@@ -107,6 +107,16 @@ export const App: React.FC = () => {
       })
       .catch((err) => console.error('Partners fetch error', err));
 
+    // Разогрев кэша статистики админки для мгновенного (0 мс) перехода
+    fetch('/api/admin/overview')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.partners) && data.partners.length > 0) {
+          localStorage.setItem('giftx_admin_overview_cache', JSON.stringify({ stats: data.stats, partners: data.partners }));
+        }
+      })
+      .catch(() => {});
+
     const tgUser = getTelegramUserData();
 
     // Проверка привязки к бизнесу (официант / владелец)
