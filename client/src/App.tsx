@@ -127,11 +127,7 @@ export const App: React.FC = () => {
                 partner: data.staff.partner
               });
             }
-            if (data.staff.role === 'WAITER') {
-              setRole('WAITER');
-            } else if (['OWNER', 'MANAGER'].includes(data.staff.role)) {
-              setRole('ADMIN');
-            }
+            // Приложение всегда открывается с Главного экрана (GUEST)
           }
         })
         .catch((err) => console.error('Check staff error', err));
@@ -173,40 +169,14 @@ export const App: React.FC = () => {
 
     // ЛОГИКА АКТИВАЦИИ ПО ЕДИНОМУ КУАР-КОДУ ЗАВЕДЕНИЯ (VENUE QR)
     if (venueId) {
-      const demoStaffStr = localStorage.getItem('giftx_demo_staff');
-      const savedStaff = demoStaffStr ? JSON.parse(demoStaffStr) : null;
-
-      if (savedStaff && (savedStaff.partnerId === venueId || venueId.includes('demo'))) {
-        if (savedStaff.role === 'WAITER') {
-          setRole('WAITER');
-        } else {
-          setRole('ADMIN');
-        }
-      } else if (tgUser?.id) {
-        fetch(`/api/staff/check-member/${tgUser.id}`)
-          .then((res) => res.json())
-          .then((data) => {
-            if (data.success && data.isStaff) {
-              setRole(data.staff.role === 'WAITER' ? 'WAITER' : 'ADMIN');
-            } else {
-              setRole('GUEST');
-              setVenueModalPartnerId(venueId);
-            }
-          })
-          .catch(() => {
-            setRole('GUEST');
-            setVenueModalPartnerId(venueId);
-          });
-      } else {
-        setRole('GUEST');
-        setVenueModalPartnerId(venueId);
-      }
+      setRole('GUEST');
+      setVenueModalPartnerId(venueId);
     } else if (claim) {
       setClaimToken(claim);
       setRole('GUEST');
     } else if (roleParam && ['ADMIN', 'MAP', 'WALLET', 'WAITER', 'PROFILE', 'GUEST'].includes(roleParam)) {
       setRole(roleParam as any);
-    } else if (!role) {
+    } else {
       setRole('GUEST');
     }
 

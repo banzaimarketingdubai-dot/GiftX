@@ -398,8 +398,14 @@ export const GuestHomeScreen: React.FC<GuestHomeScreenProps> = ({
         </div>
       </div>
 
-      {/* 4. БЛОК КАРТЫ (ВЫСОТА УМЕНЬШЕНА В 2 РАЗА ДО ПРЕЖНИХ ЗНАЧЕНИЙ) */}
-      <div className="bg-[#17212b] p-4 rounded-2xl border border-white/5 space-y-3 shadow-md">
+      {/* 4. БЛОК КАРТЫ (КЛИК В ЛЮБОМ МЕСТЕ ПЕРЕВОДИТ НА ВКЛАДКУ КАРТЫ) */}
+      <div
+        onClick={() => {
+          triggerHaptic('medium');
+          onOpenMap();
+        }}
+        className="bg-[#17212b] hover:bg-[#1f2c3a] p-4 rounded-2xl border border-white/5 space-y-3 shadow-md cursor-pointer transition-all active:scale-[0.99]"
+      >
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <div className="w-8 h-8 rounded-full bg-[#2aabee]/15 border border-[#2aabee]/30 flex items-center justify-center text-[#2aabee]">
@@ -418,7 +424,7 @@ export const GuestHomeScreen: React.FC<GuestHomeScreenProps> = ({
         </div>
 
         {/* Контейнер интерактивного превью карты (высота в 2 раза меньше) */}
-        <div className="relative rounded-2xl overflow-hidden border border-white/5 shadow-inner h-44 w-full">
+        <div className="relative rounded-2xl overflow-hidden border border-white/5 shadow-inner h-44 w-full pointer-events-none">
           <div ref={mapRef} className="w-full h-full z-0" />
           <div className="absolute bottom-3 left-3 z-10 px-3 py-1.5 rounded-full bg-[#17212b]/90 backdrop-blur-md border border-white/10 text-[10px] font-bold text-slate-200 flex items-center space-x-1.5 shadow-md">
             <Navigation className="w-3 h-3 text-[#2aabee]" />
