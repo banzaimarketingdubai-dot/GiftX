@@ -90,20 +90,55 @@ export const GuestHomeScreen: React.FC<GuestHomeScreenProps> = ({
     }
   }, []);
 
-  // 2. Загрузка данных для статистики и карты
-  useEffect(() => {
+  const updateWalletState = (vouchers: ClaimedVoucher[]) => {
+    const active = vouchers.filter(
+      (v) => (v.status === 'ACTIVE' || !v.status) && new Date() < new Date(v.expiresAt)
+    );
+    setUserVouchers(vouchers);
+    setActiveVouchersCount(active.length);
+  };
+
+  const fetchRealWallet = () => {
+    let combinedVouchers: ClaimedVoucher[] = [];
+
+    try {
+      const localStr = localStorage.getItem('giftx_saved_vouchers');
+      const localVouchers: ClaimedVoucher[] = localStr ? JSON.parse(localStr) : [];
+      if (Array.isArray(localVouchers)) {
+        combinedVouchers = [...localVouchers];
+      }
+    } catch (e) {}
+
     if (tgUser?.id) {
       fetch(`/api/guest/wallet/${tgUser.id}`)
         .then((res) => res.json())
         .then((data) => {
-          if (data.success && data.wallet) {
-            setUserVouchers(data.wallet);
-            const activeCount = data.wallet.filter((v: any) => v.status === 'ACTIVE').length;
-            setActiveVouchersCount(activeCount);
+          if (data.success && Array.isArray(data.wallet)) {
+            const serverWallet: ClaimedVoucher[] = data.wallet;
+            for (const sv of serverWallet) {
+              const idx = combinedVouchers.findIndex((v) => v.id === sv.id);
+              if (idx === -1) {
+                combinedVouchers.push(sv);
+              } else {
+                combinedVouchers[idx] = sv;
+              }
+            }
           }
+          updateWalletState(combinedVouchers);
         })
-        .catch((err) => console.error('Wallet fetch error', err));
+        .catch(() => updateWalletState(combinedVouchers));
+    } else {
+      updateWalletState(combinedVouchers);
     }
+  };
+
+  // 2. Загрузка данных для статистики и карты
+  useEffect(() => {
+    fetchRealWallet();
+
+    const handleUpdate = () => fetchRealWallet();
+    window.addEventListener('giftx_vouchers_updated', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
 
     fetch('/api/staff/partners')
       .then((res) => res.json())
@@ -113,6 +148,11 @@ export const GuestHomeScreen: React.FC<GuestHomeScreenProps> = ({
         }
       })
       .catch((err) => console.error('Partners map fetch error', err));
+
+    return () => {
+      window.removeEventListener('giftx_vouchers_updated', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
   }, [tgUser?.id]);
 
   // 3. Инициализация Leaflet Map Preview с акцентным пульсирующим фоном для заведений с подарками
@@ -363,40 +403,72 @@ export const GuestHomeScreen: React.FC<GuestHomeScreenProps> = ({
         </motion.button>
       )}
 
-      {/* 3. БЛОК МОИ ПОДАРКИ (КОШЕЛЕК - ПОДНЯТ ВЫШЕ КАРТЫ) */}
-      <div
+      {/* 3. БЛОК МОИ ПОДАРКИ (КОШЕЛЕК - ПО ВЫСОТЕ И СТИЛЮ КАК КНОПКИ СКАНИРОВАНИЯ + 3D БОКС С СВЕЧЕНИЕМ) */}
+      <motion.div
+        whileHover={{ scale: 1.01 }}
+        whileTap={{ scale: 0.99 }}
         onClick={() => {
           triggerHaptic('medium');
           onOpenWallet();
         }}
-        className="cursor-pointer bg-[#17212b] hover:bg-[#1f2c3a] p-4.5 rounded-2xl border border-white/5 transition-all flex items-center justify-between shadow-md"
+        className="w-full cursor-pointer p-4.5 rounded-2xl bg-gradient-to-r from-[#1c0c30] via-[#24133c] to-[#120720] text-white shadow-lg shadow-purple-900/30 relative overflow-hidden group transition-all text-left border border-purple-400/40 space-y-2.5"
       >
-        <div className="flex items-center space-x-3.5">
-          <div className="w-11 h-11 rounded-full bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-purple-400 shrink-0">
-            <Gift className="w-5 h-5" />
-          </div>
-          <div>
-            <span className="text-[10px] uppercase font-bold text-purple-400 tracking-wider">
-              Ваш Кошелек
+        {/* Анимированный фоновый блик/свечение в правом верхнем углу */}
+        <div className="absolute -right-6 -top-6 w-32 h-32 bg-purple-500/25 rounded-full blur-2xl pointer-events-none animate-pulse" />
+
+        <div className="flex items-center space-x-3.5 relative z-10">
+          {/* Изображение 3D бокса GiftX с подсвеченным эффектом и пульсацией */}
+          <div className="relative shrink-0 group-hover:scale-105 transition-transform">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500/30 to-purple-900/60 p-1 border border-purple-400/50 flex items-center justify-center shadow-[0_0_20px_rgba(168,85,247,0.4)] relative overflow-hidden">
+              <img
+                src="https://images.unsplash.com/photo-1513151233558-d860c5398176?w=200&q=80"
+                alt="GiftX Box"
+                className="w-full h-full object-cover rounded-xl"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-purple-950/80 via-transparent to-transparent flex items-end justify-center pb-0.5">
+                <span className="text-[11px] font-black text-amber-300 drop-shadow-md">🎁 GX</span>
+              </div>
+            </div>
+            {/* Ореол свечения */}
+            <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-purple-500 border border-white/50"></span>
             </span>
-            <h3 className="font-bold text-slate-100 text-sm">Мои Подарки</h3>
-            <p className="text-xs text-slate-400">
+          </div>
+
+          <div className="space-y-0.5 flex-1 min-w-0">
+            <div className="flex items-center justify-between">
+              <div className="inline-flex items-center space-x-1 text-[9px] font-extrabold text-purple-300 uppercase tracking-widest px-2 py-0.5 rounded-full bg-purple-500/20 border border-purple-400/30 backdrop-blur-xs">
+                <Gift className="w-2.5 h-2.5 text-purple-300" />
+                <span>Ваш Кошелек</span>
+              </div>
+
+              {activeVouchersCount > 0 && (
+                <span className="text-[10px] font-black text-emerald-300 bg-emerald-500/20 px-2 py-0.5 rounded-full border border-emerald-400/40 shadow-xs">
+                  {activeVouchersCount} {activeVouchersCount === 1 ? 'подарок' : activeVouchersCount < 5 ? 'подарка' : 'подарков'}
+                </span>
+              )}
+            </div>
+
+            <h2 className="text-base font-black text-white leading-tight">
+              МОИ ПОДАРКИ
+            </h2>
+            <p className="text-[11px] text-purple-200/90 font-medium line-clamp-1">
               {activeVouchersCount > 0
-                ? `Вам доступно ${activeVouchersCount} активных подарков`
-                : 'Пока нет активных подарков'}
+                ? `Вам доступно ${activeVouchersCount} ${activeVouchersCount === 1 ? 'активный подарок' : activeVouchersCount < 5 ? 'активных подарка' : 'активных подарков'}`
+                : 'Пока нет активных подарков • Откройте 3D-бокс!'}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center space-x-2">
-          {activeVouchersCount > 0 && (
-            <span className="w-5 h-5 rounded-full bg-[#2aabee] text-white font-extrabold text-[11px] flex items-center justify-center shadow-md">
-              {activeVouchersCount}
-            </span>
-          )}
-          <ChevronRight className="w-5 h-5 text-slate-500" />
+        <div className="pt-2.5 border-t border-purple-500/30 flex items-center justify-between text-xs font-bold text-purple-200 relative z-10">
+          <span>Нажмите для перехода в кошелек</span>
+          <div className="flex items-center space-x-1 px-3 py-1 rounded-lg bg-purple-500 text-white font-black shadow-md shadow-purple-500/30 group-hover:translate-x-1 transition-transform">
+            <span>Открыть</span>
+            <ArrowRight className="w-3.5 h-3.5 text-white" />
+          </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* 4. БЛОК КАРТЫ (КЛИК В ЛЮБОМ МЕСТЕ ПЕРЕВОДИТ НА ВКЛАДКУ КАРТЫ) */}
       <div
