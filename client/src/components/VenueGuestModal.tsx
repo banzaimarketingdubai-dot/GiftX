@@ -413,55 +413,64 @@ export const VenueGuestModal: React.FC<VenueGuestModalProps> = ({
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
               {/* SILVER BOX */}
-              <div className="p-3 rounded-xl bg-[#242f3d] border border-white/5 space-y-1.5 shadow-sm">
+              <div className="p-3.5 rounded-xl bg-gradient-to-br from-slate-900 via-[#192634] to-[#0c1926] border border-cyan-400/50 shadow-[0_0_18px_rgba(34,211,238,0.15)] space-y-2 relative overflow-hidden">
+                <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-cyan-400 to-transparent" />
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-200 flex items-center space-x-1">
-                    <span>🥈 SILVER BOX</span>
-                  </span>
-                  <span className="text-[10px] font-bold text-slate-300 bg-[#17212b] px-2 py-0.5 rounded-full border border-white/5">
+                  <span className="text-[11px] font-black text-cyan-300 bg-cyan-500/20 px-2.5 py-0.5 rounded-full border border-cyan-400/40 shadow-xs">
                     от {formatVnd(partner?.silverThreshold || 300000)}
                   </span>
+                  <span className="text-xs font-black text-cyan-200 flex items-center space-x-1 tracking-wider">
+                    <span>🥈 SILVER BOX</span>
+                  </span>
                 </div>
-                <div className="p-2 rounded-lg bg-[#17212b] text-[11px] text-slate-300 space-y-0.5">
-                  <div className="font-bold text-slate-200">🎴 Содержимое (3 карты):</div>
-                  <div className="text-[10px] text-slate-400">
-                    • 2 <strong className="text-slate-300">Серебряные</strong> + 1 <strong className="text-amber-400">Золотая</strong>
+                <div className="p-2 rounded-lg bg-[#0a111a]/85 border border-cyan-500/20 text-[11px] text-cyan-100/90 space-y-0.5 backdrop-blur-xs">
+                  <div className="font-extrabold text-cyan-300 flex items-center space-x-1">
+                    <span>🎴 Содержимое (3 карты):</span>
+                  </div>
+                  <div className="text-[10px] text-slate-300">
+                    • 2 <strong className="text-cyan-300">Серебряные</strong> + 1 <strong className="text-amber-400">Золотая</strong>
                   </div>
                 </div>
               </div>
 
               {/* GOLD BOX */}
-              <div className="p-3 rounded-xl bg-[#242f3d] border border-white/5 space-y-1.5 shadow-sm">
+              <div className="p-3.5 rounded-xl bg-gradient-to-br from-[#261c0a] via-[#1c1406] to-[#120c02] border border-amber-400/60 shadow-[0_0_18px_rgba(251,191,36,0.18)] space-y-2 relative overflow-hidden">
+                <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-amber-400 to-transparent" />
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-amber-400 flex items-center space-x-1">
-                    <span>🥇 GOLD BOX</span>
-                  </span>
-                  <span className="text-[10px] font-bold text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
+                  <span className="text-[11px] font-black text-amber-300 bg-amber-500/25 px-2.5 py-0.5 rounded-full border border-amber-400/50 shadow-xs">
                     от {formatVnd(partner?.goldThreshold || 600000)}
                   </span>
+                  <span className="text-xs font-black text-amber-400 flex items-center space-x-1 tracking-wider">
+                    <span>🥇 GOLD BOX</span>
+                  </span>
                 </div>
-                <div className="p-2 rounded-lg bg-[#17212b] text-[11px] text-amber-200/90 space-y-0.5">
-                  <div className="font-bold text-amber-300">🎴 Содержимое (4 карты):</div>
-                  <div className="text-[10px] text-slate-300">
-                    • 1 <strong className="text-slate-300">Серебряная</strong> + 2 <strong className="text-amber-400">Золотые</strong> + 1 <strong className="text-purple-400">Платиновая</strong>
+                <div className="p-2 rounded-lg bg-[#120a02]/85 border border-amber-500/25 text-[11px] text-amber-100/90 space-y-0.5 backdrop-blur-xs">
+                  <div className="font-extrabold text-amber-300 flex items-center space-x-1">
+                    <span>🎴 Содержимое (4 карты):</span>
+                  </div>
+                  <div className="text-[10px] text-amber-200/90">
+                    • 1 <strong className="text-cyan-300">Серебряная</strong> + 2 <strong className="text-amber-400">Золотые</strong> + 1 <strong className="text-purple-400">Платиновая</strong>
                   </div>
                 </div>
               </div>
 
               {/* PLATINUM BOX */}
-              <div className="p-3 rounded-xl bg-[#242f3d] border border-white/5 space-y-1.5 shadow-sm">
+              <div className="p-3.5 rounded-xl bg-gradient-to-br from-[#1c0c30] via-[#140824] to-[#0d041a] border border-purple-400/60 shadow-[0_0_18px_rgba(192,132,252,0.2)] space-y-2 relative overflow-hidden">
+                <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-purple-400 to-transparent" />
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-purple-400 flex items-center space-x-1">
-                    <span>💎 PLATINUM BOX</span>
-                  </span>
-                  <span className="text-[10px] font-bold text-purple-300 bg-purple-500/10 px-2 py-0.5 rounded-full border border-purple-500/20">
+                  <span className="text-[11px] font-black text-purple-300 bg-purple-500/25 px-2.5 py-0.5 rounded-full border border-purple-400/50 shadow-xs">
                     от {formatVnd(partner?.platinumThreshold || 1000000)}
                   </span>
+                  <span className="text-xs font-black text-purple-300 flex items-center space-x-1 tracking-wider">
+                    <span>💎 PLATINUM BOX</span>
+                  </span>
                 </div>
-                <div className="p-2 rounded-lg bg-[#17212b] text-[11px] text-purple-200/90 space-y-0.5">
-                  <div className="font-bold text-purple-300">🎴 Содержимое (5 карт):</div>
-                  <div className="text-[10px] text-slate-300">
-                    • 1 <strong className="text-slate-300">Серебряная</strong> + 2 <strong className="text-amber-400">Золотые</strong> + 2 <strong className="text-purple-400">Платиновые VIP</strong>
+                <div className="p-2 rounded-lg bg-[#0b0314]/85 border border-purple-500/25 text-[11px] text-purple-100/90 space-y-0.5 backdrop-blur-xs">
+                  <div className="font-extrabold text-purple-300 flex items-center space-x-1">
+                    <span>🎴 Содержимое (5 карт):</span>
+                  </div>
+                  <div className="text-[10px] text-purple-200/90">
+                    • 1 <strong className="text-cyan-300">Серебряная</strong> + 2 <strong className="text-amber-400">Золотые</strong> + 2 <strong className="text-purple-400">Платиновые VIP</strong>
                   </div>
                 </div>
               </div>
